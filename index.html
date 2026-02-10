@@ -1,0 +1,2977 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메이딘 | 차원을 넘어선 자연의 정수</title>
+    <!-- Kakao Map API -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=00bc19cb1abd4fd7b6a8e654cfcd95a6&libraries=services"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --bg: #ffffff;
+            --main: #1d1d1f;
+            --accent: #2d5a4c;
+            --glass: rgba(255, 255, 255, 0.75);
+            --text-main: #1d1d1f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        body { 
+            background: var(--bg); 
+            color: var(--main); 
+            font-family: 'Pretendard', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* 1. 배경 유기체 애니메이션 */
+        .bg-animate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; filter: blur(80px); opacity: 0.35;
+        }
+        .blob {
+            position: absolute; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            animation: move 20s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
+        }
+        @keyframes move {
+            0% { transform: translate(-10%, -10%) scale(1); }
+            100% { transform: translate(60%, 50%) scale(1.4); }
+        }
+
+        /* 2. 반응형 네비게이션 */
+        nav {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 1100px; height: 54px;
+            background: var(--glass); backdrop-filter: blur(25px);
+            border-radius: 100px; border: 1px solid rgba(255,255,255,0.4);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 25px; z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        }
+        .logo { font-weight: 900; color: var(--accent); font-size: 1.1rem; letter-spacing: -0.5px; cursor: pointer; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--main); font-size: 0.75rem; font-weight: 700; opacity: 0.6; transition: opacity 0.3s; }
+        .nav-links a:hover { opacity: 1; }
+        .nav-links .pharmacy-link { 
+            background: var(--accent); 
+            color: white; 
+            padding: 8px 20px; 
+            border-radius: 20px; 
+            opacity: 1; 
+            font-weight: 800;
+        }
+        .nav-links .pharmacy-link:hover { opacity: 0.9; }
+        .nav-links .login-btn {
+            background: transparent;
+            color: var(--accent);
+            padding: 8px 20px;
+            border: 2px solid var(--accent);
+            border-radius: 20px;
+            opacity: 1;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-links .login-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .nav-links .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-links .user-name {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 0.75rem;
+        }
+        .nav-links .logout-btn {
+            background: transparent;
+            color: var(--main);
+            padding: 6px 15px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.3s;
+        }
+        .nav-links .logout-btn:hover {
+            opacity: 1;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 0 15px; }
+            .nav-links { gap: 8px; flex-wrap: wrap; }
+            .nav-links a { font-size: 0.7rem; }
+            .nav-links .pharmacy-link { padding: 6px 15px; }
+            .nav-links .login-btn { padding: 6px 15px; font-size: 0.7rem; }
+            .nav-links .user-name { font-size: 0.65rem; }
+            .nav-links .logout-btn { padding: 5px 12px; font-size: 0.65rem; }
+            .modal { padding: 30px 20px; }
+        }
+
+        /* 3. Hero Section */
+        .hero {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding: 0 20px;
+        }
+        .hero-sub { font-size: clamp(0.7rem, 2vw, 0.9rem); letter-spacing: 0.4em; color: var(--accent); margin-bottom: 20px; font-weight: 700; }
+        .hero h1 {
+            font-size: clamp(3rem, 10vw, 7.5rem);
+            font-weight: 900; letter-spacing: -0.05em; line-height: 0.9;
+        }
+
+        /* 4. 시네마틱 스태킹 카드 섹션 (반응형 핵심) */
+        .stack-container { 
+            padding: 0 4%; 
+            max-width: 1400px; 
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .stack-card {
+            position: sticky; 
+            top: 100px;
+            width: 100%; 
+            height: 75vh;
+            background: var(--glass); 
+            backdrop-filter: blur(40px);
+            border-radius: 40px; 
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 25vh;
+            padding: clamp(30px, 5vw, 70px);
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.05);
+            overflow: hidden;
+            /* 애니메이션의 핵심: 변환 중심점 설정 */
+            transform-origin: center center;
+            transition: transform 0.1s linear, opacity 0.1s linear, filter 0.1s linear;
+        }
+
+        /* 모바일 대응: 카드를 1열로 전환 */
+        @media (max-width: 850px) {
+            .stack-card { grid-template-columns: 1fr; min-height: auto; padding: 40px 30px; }
+            .visual-box { height: 200px; order: -1; } /* 이미지를 텍스트 위로 */
+            .hero h1 { line-height: 1.1; }
+            .click-hint {
+                font-size: 0.75rem;
+                padding: 8px 16px;
+                margin-top: 15px;
+            }
+            .visual-box.clickable-hint::after {
+                font-size: 0.6rem;
+                bottom: 10px;
+            }
+        }
+
+        .card-content { display: flex; flex-direction: column; justify-content: center; }
+        .card-content span { font-weight: 800; color: var(--accent); font-size: 0.8rem; margin-bottom: 15px; }
+        .card-content h2 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 20px; letter-spacing: -0.03em; }
+        .card-content p { font-size: clamp(1rem, 1.5vw, 1.15rem); color: var(--text-main); opacity: 0.7; line-height: 1.7; }
+
+        .visual-box {
+            background: rgba(255,255,255,0.4); border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; letter-spacing: 3px; font-weight: 600; color: var(--accent);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .stack-card.clickable {
+            cursor: pointer;
+            position: relative;
+            /* 스크롤 효과와 hover 효과가 함께 작동하도록 transition 설정 */
+            transition: transform 0.4s ease-out, box-shadow 0.4s ease-out, filter 0.4s ease-out, opacity 0.4s ease-out;
+        }
+        .stack-card.clickable::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 32px;
+            border: 2px solid var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .stack-card.clickable:hover::before {
+            opacity: 0.3;
+        }
+        /* hover 효과는 JavaScript에서 처리하므로 CSS에서는 box-shadow만 */
+        .stack-card.clickable:hover {
+            box-shadow: 0 50px 100px rgba(0,0,0,0.15);
+        }
+        .click-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(45, 90, 76, 0.1);
+            border: 1px solid rgba(45, 90, 76, 0.2);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+        }
+        .click-hint-icon {
+            display: inline-block;
+            animation: bounce 1.5s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(5px);
+            }
+        }
+        .visual-box.clickable-hint {
+            position: relative;
+            overflow: hidden;
+        }
+        .visual-box.clickable-hint::after {
+            content: '클릭하여 상세보기 →';
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            opacity: 0.9;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* 5. 약사전용몰 섹션 */
+        .pharmacy-section {
+            padding: 120px 4% 80px;
+            max-width: 1400px; margin: 0 auto;
+            background: linear-gradient(to bottom, var(--bg) 0%, rgba(45, 90, 76, 0.02) 100%);
+            display: none;
+        }
+        .pharmacy-section.active {
+            display: block;
+        }
+
+        .pharmacy-header {
+            text-align: center; margin-bottom: 60px;
+        }
+        .pharmacy-header span {
+            display: inline-block;
+            font-weight: 800; color: var(--accent); font-size: 0.8rem;
+            letter-spacing: 0.3em; margin-bottom: 20px;
+        }
+        .pharmacy-header h2 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900; letter-spacing: -0.03em;
+            margin-bottom: 15px;
+        }
+        .pharmacy-header p {
+            font-size: clamp(1rem, 1.5vw, 1.15rem);
+            opacity: 0.6; max-width: 600px; margin: 0 auto;
+        }
+
+        /* 로그인 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 40px;
+            max-width: 450px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--main);
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .auth-tabs {
+            display: flex; gap: 10px; margin-bottom: 30px;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+        }
+        .auth-tab {
+            flex: 1; padding: 15px; text-align: center;
+            font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; opacity: 0.5; transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .auth-tab.active {
+            opacity: 1; color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block; font-size: 0.85rem; font-weight: 700;
+            margin-bottom: 8px; color: var(--main);
+        }
+        .form-group input {
+            width: 100%; padding: 14px 18px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 12px; font-size: 0.95rem;
+            font-family: 'Pretendard', sans-serif;
+            background: rgba(255,255,255,0.6);
+            transition: all 0.3s;
+        }
+        .form-group input:focus {
+            outline: none; border-color: var(--accent);
+            background: rgba(255,255,255,0.9);
+        }
+
+        .btn-primary {
+            width: 100%; padding: 16px;
+            background: var(--accent); color: white;
+            border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 800;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer; transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-primary:hover {
+            opacity: 0.9; transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 90, 76, 0.3);
+        }
+
+        /* 소셜 로그인 버튼 */
+        .social-login {
+            margin-top: 25px;
+            margin-bottom: 20px;
+        }
+        .social-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 25px 0;
+            color: rgba(0,0,0,0.3);
+            font-size: 0.85rem;
+        }
+        .social-divider::before,
+        .social-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .social-divider span {
+            padding: 0 15px;
+        }
+        .social-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn-social {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+        }
+        .btn-social:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .btn-kakao {
+            background: #FEE500;
+            color: #000000;
+            border-color: #FEE500;
+        }
+        .btn-kakao:hover {
+            background: #FDD835;
+            border-color: #FDD835;
+        }
+        .btn-google {
+            background: #ffffff;
+            color: #5F6368;
+            border-color: rgba(0,0,0,0.15);
+        }
+        .btn-google:hover {
+            background: #f8f9fa;
+            border-color: rgba(0,0,0,0.2);
+        }
+        .social-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+
+        /* 제품 목록 섹션 */
+        .products-section {
+            margin-top: 80px;
+        }
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px; margin-top: 40px;
+        }
+
+        .product-card {
+            background: var(--glass); backdrop-filter: blur(40px);
+            border-radius: 24px; border: 1px solid rgba(255,255,255,0.5);
+            padding: 30px; transition: all 0.4s;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+            cursor: pointer;
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+        }
+        .product-card.clickable {
+            cursor: pointer;
+            position: relative;
+        }
+        .product-card.clickable::after {
+            content: '클릭하여 상세보기';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .product-card.clickable:hover::after {
+            opacity: 1;
+        }
+        .product-card.clickable:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 35px 70px rgba(0,0,0,0.12);
+        }
+
+        .product-image {
+            width: 100%; height: 200px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 16px; margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; letter-spacing: 2px;
+            color: var(--accent); font-weight: 600;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .product-info h3 {
+            font-size: 1.3rem; font-weight: 800;
+            margin-bottom: 10px; letter-spacing: -0.02em;
+        }
+        .product-info p {
+            font-size: 0.9rem; opacity: 0.6;
+            line-height: 1.6; margin-bottom: 15px;
+        }
+        .product-price {
+            font-size: 1.4rem; font-weight: 900;
+            color: var(--accent); margin-bottom: 15px;
+        }
+        .product-actions {
+            display: flex; gap: 10px;
+        }
+        .btn-secondary {
+            flex: 1; padding: 12px;
+            background: transparent; color: var(--accent);
+            border: 2px solid var(--accent); border-radius: 10px;
+            font-size: 0.85rem; font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: var(--accent); color: white;
+        }
+
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .auth-section {
+                padding: 30px 20px;
+            }
+            .pharmacy-header h2 {
+                font-size: clamp(2rem, 8vw, 3rem);
+            }
+            .product-card {
+                padding: 20px;
+            }
+            .product-card.clickable::after {
+                top: 10px;
+                right: 10px;
+                font-size: 0.65rem;
+                padding: 5px 10px;
+            }
+            .btn-social {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+            .social-icon {
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav { width: 95%; height: auto; min-height: 50px; padding: 8px 12px; }
+            .logo { font-size: 0.95rem; }
+            .nav-links { gap: 6px; }
+            .nav-links a { font-size: 0.65rem; }
+            .nav-links .pharmacy-link { padding: 5px 12px; font-size: 0.65rem; }
+            .nav-links .login-btn { padding: 5px 12px; font-size: 0.65rem; }
+            .nav-links .user-info { flex-direction: column; gap: 5px; }
+            .stack-card { padding: 30px 20px; }
+            .pharmacy-section { padding: 100px 3% 60px; }
+        }
+
+        /* 주문 섹션 (로그인 후 표시) */
+        .order-section {
+            display: none;
+            background: var(--glass); backdrop-filter: blur(40px);
+            border-radius: 32px; border: 1px solid rgba(255,255,255,0.5);
+            padding: 50px; margin-top: 60px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.06);
+        }
+        .order-section.active {
+            display: block;
+        }
+
+        .cart-items {
+            margin-bottom: 30px;
+        }
+        .cart-item {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 20px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .cart-item-info h4 {
+            font-weight: 800; margin-bottom: 5px;
+        }
+        .cart-item-info p {
+            font-size: 0.85rem; opacity: 0.6;
+        }
+        .cart-item-price {
+            font-weight: 800; color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        .order-summary {
+            background: rgba(255,255,255,0.4);
+            border-radius: 16px; padding: 30px;
+            margin-top: 30px;
+        }
+        .summary-row {
+            display: flex; justify-content: space-between;
+            margin-bottom: 15px; font-size: 1rem;
+        }
+        .summary-row.total {
+            font-size: 1.3rem; font-weight: 900;
+            color: var(--accent); padding-top: 15px;
+            border-top: 2px solid rgba(0,0,0,0.05);
+        }
+
+        /* 6. 제휴 약국 지도 섹션 */
+        .pharmacy-map-section {
+            padding: 120px 4% 80px;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, var(--bg) 0%, rgba(45, 90, 76, 0.02) 100%);
+        }
+        .pharmacy-map-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .pharmacy-map-header span {
+            display: inline-block;
+            font-weight: 800;
+            color: var(--accent);
+            font-size: 0.8rem;
+            letter-spacing: 0.3em;
+            margin-bottom: 20px;
+        }
+        .pharmacy-map-header h2 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            margin-bottom: 15px;
+        }
+        .pharmacy-map-header p {
+            font-size: clamp(1rem, 1.5vw, 1.15rem);
+            opacity: 0.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .map-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .map-wrapper {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.5);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+            height: 600px;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        .map-controls {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: 'Pretendard', sans-serif;
+            background: rgba(255,255,255,0.6);
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.9);
+        }
+        .search-btn {
+            padding: 14px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .search-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .location-btn {
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .location-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .pharmacy-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .pharmacy-item {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .pharmacy-item:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        .pharmacy-item:last-child {
+            border-bottom: none;
+        }
+        .pharmacy-item h4 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        .pharmacy-item p {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin-bottom: 5px;
+        }
+        .pharmacy-item .phone {
+            font-weight: 700;
+            color: var(--main);
+        }
+
+        @media (max-width: 968px) {
+            .map-container {
+                grid-template-columns: 1fr;
+            }
+            .map-wrapper {
+                height: 400px;
+            }
+        }
+
+        /* 7. Footer */
+        footer {
+            height: 60vh; background: var(--main); color: white;
+            border-radius: 40px 40px 0 0; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding: 0 20px;
+        }
+        footer h2 { font-size: clamp(2.5rem, 8vw, 6rem); font-weight: 900; letter-spacing: -0.04em; margin-bottom: 20px; }
+        footer p { opacity: 0.4; font-size: 0.8rem; letter-spacing: 1px; }
+
+        /* 제품 상세 모달 */
+        .product-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .product-detail-modal.active {
+            display: flex;
+        }
+        .product-detail-content {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.5);
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        .product-detail-header {
+            position: sticky;
+            top: 0;
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            padding: 30px 40px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .product-detail-header h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: var(--accent);
+        }
+        .product-detail-close {
+            background: transparent;
+            border: none;
+            font-size: 2rem;
+            color: var(--main);
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-detail-close:hover {
+            opacity: 1;
+        }
+        .product-detail-body {
+            padding: 40px;
+        }
+        .product-detail-image {
+            width: 100%;
+            height: 400px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 24px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            color: var(--accent);
+            font-weight: 600;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .product-detail-info {
+            margin-bottom: 30px;
+        }
+        .product-detail-info h3 {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 900;
+            margin-bottom: 15px;
+            letter-spacing: -0.02em;
+        }
+        .product-detail-price {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin-bottom: 30px;
+        }
+        .product-detail-description {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+        .product-detail-specs {
+            background: rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .product-detail-specs h4 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .spec-item:last-child {
+            border-bottom: none;
+        }
+        .spec-label {
+            font-weight: 700;
+            opacity: 0.7;
+        }
+        .spec-value {
+            font-weight: 600;
+        }
+        .product-detail-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+        }
+        .product-detail-actions .btn-primary {
+            flex: 1;
+            margin-top: 0;
+        }
+        .product-detail-actions .btn-secondary {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        @media (max-width: 768px) {
+            .product-detail-content {
+                max-width: 100%;
+                margin: 10px;
+            }
+            .product-detail-header {
+                padding: 20px;
+            }
+            .product-detail-body {
+                padding: 30px 20px;
+            }
+            .product-detail-image {
+                height: 250px;
+            }
+            .product-detail-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* 인증 섹션 레이아웃 */
+        .trust-section {
+            padding: 150px 8%;
+            background: transparent;
+            position: relative;
+        }
+
+        .trust-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .trust-header h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 20px;
+        }
+
+        /* 인증 카드 그리드 */
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .trust-card {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 32px;
+            padding: 50px 40px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
+            border: 1px solid rgba(255,255,255,0.5);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .trust-card.reveal.show {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.6s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        /* 마우스 호버 시 스캔 효과 */
+        .trust-card:hover {
+            transform: translateY(-15px);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 30px 60px rgba(45, 90, 76, 0.1);
+            border-color: var(--accent);
+        }
+
+        .trust-card::after {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(45, 90, 76, 0.05), transparent);
+            transition: 0.5s;
+            pointer-events: none;
+        }
+
+        .trust-card:hover::after {
+            top: 100%;
+            left: 100%;
+        }
+
+        /* 인증 아이콘 공간 (심플한 원형 디자인) */
+        .cert-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+            font-size: 1.5rem;
+            color: var(--accent);
+            font-weight: 900;
+        }
+
+        .trust-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--main);
+        }
+
+        .trust-card p {
+            font-size: 1rem;
+            color: var(--text-main);
+            opacity: 0.7;
+            line-height: 1.6;
+        }
+
+        .reg-num {
+            margin-top: 25px;
+            padding: 8px 18px;
+            background: rgba(45, 90, 76, 0.08);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 900px) {
+            .trust-section {
+                padding: 100px 4%;
+            }
+            .trust-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .trust-card {
+                padding: 40px 30px;
+            }
+        }
+
+        /* 소식 섹션 전용 스타일 */
+        .news-section {
+            padding: 150px 0;
+            background: transparent;
+            position: relative;
+        }
+
+        .news-header {
+            padding: 0 8%;
+            margin-bottom: 60px;
+        }
+
+        .news-header h2 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        /* 가로 스크롤 / 벤토 카드 컨테이너 */
+        .news-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px 8% 60px;
+            gap: 30px;
+            scroll-snap-type: x mandatory;
+            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .news-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .news-card {
+            flex: 0 0 400px;
+            height: 500px;
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 40px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            scroll-snap-align: start;
+            transition: all 0.6s cubic-bezier(0.2, 0, 0, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .news-card:hover {
+            transform: translateY(-20px) scale(1.02);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 40px 80px rgba(45, 90, 76, 0.1);
+        }
+
+        .news-tag {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .news-card h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            word-break: keep-all;
+        }
+
+        .news-card .date {
+            font-size: 0.9rem;
+            opacity: 0.4;
+            font-weight: 500;
+        }
+
+        /* 장식적 요소: 배경 숫자 */
+        .bg-num {
+            position: absolute;
+            bottom: -20px;
+            right: 20px;
+            font-size: 8rem;
+            font-weight: 900;
+            color: var(--accent);
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 850px) {
+            .news-section {
+                padding: 100px 0;
+            }
+            .news-header {
+                padding: 0 4%;
+                margin-bottom: 40px;
+            }
+            .news-container {
+                padding: 20px 4% 40px;
+                gap: 20px;
+            }
+            .news-card {
+                flex: 0 0 300px;
+                height: 400px;
+                padding: 30px;
+            }
+            .news-card h3 {
+                font-size: 1.4rem;
+            }
+            .bg-num {
+                font-size: 6rem;
+                bottom: -10px;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .news-card {
+                flex: 0 0 280px;
+                height: 380px;
+                padding: 25px;
+            }
+            .news-card h3 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* R&D 프로세스 모달 스타일 */
+        #rnd-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: 0.5s;
+        }
+
+        #rnd-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        #rnd-modal .modal-window {
+            width: 90%;
+            max-width: 1000px;
+            height: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #rnd-modal.active .modal-window {
+            transform: scale(1);
+        }
+
+        #rnd-modal .modal-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            color: var(--main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        #rnd-modal .modal-close:hover {
+            background: rgba(255,255,255,0.9);
+            transform: rotate(90deg);
+        }
+
+        #rnd-modal .modal-content {
+            display: flex;
+            height: 100%;
+        }
+
+        #rnd-modal .modal-visual {
+            flex: 1;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.2rem;
+            position: relative;
+        }
+
+        #rnd-modal #modal-step-tag {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            opacity: 0.9;
+        }
+
+        #rnd-modal .modal-text {
+            flex: 1.2;
+            padding: 60px;
+            overflow-y: auto;
+        }
+
+        #rnd-modal .modal-divider {
+            width: 40px;
+            height: 4px;
+            background: var(--accent);
+            margin: 20px 0 30px;
+            border-radius: 2px;
+        }
+
+        #rnd-modal .modal-text h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -0.03em;
+        }
+
+        #rnd-modal .modal-text p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            opacity: 0.8;
+        }
+
+        #rnd-modal .detail-list {
+            list-style: none;
+            margin-top: 30px;
+            padding: 0;
+        }
+
+        #rnd-modal .detail-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            line-height: 1.6;
+        }
+
+        #rnd-modal .detail-list li::before {
+            content: '•';
+            color: var(--accent);
+            margin-right: 15px;
+            font-weight: 900;
+            font-size: 1.2rem;
+        }
+
+        #rnd-modal .detail-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* 모바일 팝업 대응 */
+        @media (max-width: 850px) {
+            #rnd-modal .modal-content {
+                flex-direction: column;
+            }
+            #rnd-modal .modal-visual {
+                height: 200px;
+                flex: none;
+            }
+            #rnd-modal .modal-window {
+                height: 90vh;
+                overflow-y: auto;
+            }
+            #rnd-modal .modal-text {
+                padding: 40px 30px;
+            }
+            #rnd-modal .modal-text h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* R&D 프로세스 모달 스타일 */
+        #rnd-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: 0.5s;
+        }
+
+        #rnd-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        #rnd-modal .modal-window {
+            width: 90%;
+            max-width: 1000px;
+            height: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #rnd-modal.active .modal-window {
+            transform: scale(1);
+        }
+
+        #rnd-modal .modal-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            color: var(--main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        #rnd-modal .modal-close:hover {
+            background: rgba(255,255,255,0.9);
+            transform: rotate(90deg);
+        }
+
+        #rnd-modal .modal-content {
+            display: flex;
+            height: 100%;
+        }
+
+        #rnd-modal .modal-visual {
+            flex: 1;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.2rem;
+            position: relative;
+        }
+
+        #rnd-modal #modal-step-tag {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            opacity: 0.9;
+            font-weight: 700;
+        }
+
+        #rnd-modal .step-buttons {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        #rnd-modal .step-buttons button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+            background: transparent;
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Pretendard', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        #rnd-modal .step-buttons button:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: white;
+        }
+
+        #rnd-modal .step-buttons button.active {
+            background: white;
+            color: var(--accent);
+            border-color: white;
+        }
+
+        #rnd-modal .modal-text {
+            flex: 1.2;
+            padding: 60px;
+            overflow-y: auto;
+        }
+
+        #rnd-modal .modal-divider {
+            width: 40px;
+            height: 4px;
+            background: var(--accent);
+            margin: 20px 0 30px;
+            border-radius: 2px;
+        }
+
+        #rnd-modal .modal-text h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -0.03em;
+            color: var(--main);
+        }
+
+        #rnd-modal .modal-text p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            opacity: 0.8;
+            color: var(--text-main);
+        }
+
+        #rnd-modal .detail-list {
+            list-style: none;
+            margin-top: 30px;
+            padding: 0;
+        }
+
+        #rnd-modal .detail-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        #rnd-modal .detail-list li::before {
+            content: '•';
+            color: var(--accent);
+            margin-right: 15px;
+            font-weight: 900;
+            font-size: 1.2rem;
+        }
+
+        #rnd-modal .detail-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* 모바일 팝업 대응 */
+        @media (max-width: 850px) {
+            #rnd-modal .modal-content {
+                flex-direction: column;
+            }
+            #rnd-modal .modal-visual {
+                height: 200px;
+                flex: none;
+            }
+            #rnd-modal .modal-window {
+                height: 90vh;
+                overflow-y: auto;
+            }
+            #rnd-modal .modal-text {
+                padding: 40px 30px;
+            }
+            #rnd-modal .modal-text h2 {
+                font-size: 2rem;
+            }
+            #rnd-modal .step-buttons {
+                bottom: 15px;
+            }
+            #rnd-modal .step-buttons button {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* 유틸리티 클래스 */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+
+    </style>
+</head>
+<body>
+
+    <div class="bg-animate"><div class="blob"></div></div>
+
+    <nav>
+        <div class="logo" onclick="scrollToTop()">MAYDIN</div>
+        <div class="nav-links" id="navLinks">
+            <a href="#philosophy">브랜드</a>
+            <a href="#technology">연구소</a>
+            <a href="#news">소식</a>
+            <a href="#pharmacyMap">제휴 약국</a>
+            <a href="#pharmacy" class="pharmacy-link" id="pharmacyNavLink" onclick="handlePharmacyNav(event)">약사전용몰</a>
+            <button class="login-btn" id="loginNavBtn" onclick="openLoginModal()">로그인</button>
+            <div class="user-info hidden" id="userInfo">
+                <span class="user-name" id="userName"></span>
+                <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 로그인 모달 -->
+    <div class="modal-overlay" id="loginModal" onclick="closeModalOnOverlay(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchTab('login')">로그인</div>
+                <div class="auth-tab" onclick="switchTab('register')">회원가입</div>
+            </div>
+
+            <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+                <!-- 소셜 로그인 -->
+                <div class="social-login">
+                    <div class="social-buttons">
+                        <button type="button" class="btn-social btn-kakao" onclick="handleKakaoLogin()">
+                            <span class="social-icon">K</span>
+                            <span>카카오로 로그인</span>
+                        </button>
+                        <button type="button" class="btn-social btn-google" onclick="handleGoogleLogin()">
+                            <span class="social-icon">G</span>
+                            <span>구글로 로그인</span>
+                        </button>
+                    </div>
+                    <div class="social-divider">
+                        <span>또는</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>약사 면허번호</label>
+                    <input type="text" id="loginLicense" placeholder="면허번호를 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="loginPassword" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <button type="submit" class="btn-primary">로그인</button>
+            </form>
+
+            <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>약사 면허번호</label>
+                    <input type="text" id="registerLicense" placeholder="면허번호를 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>이름</label>
+                    <input type="text" id="registerName" placeholder="이름을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="registerEmail" placeholder="이메일을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="registerPassword" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>전화번호</label>
+                    <input type="tel" id="registerPhone" placeholder="전화번호를 입력하세요" required>
+                </div>
+                <button type="submit" class="btn-primary">회원가입</button>
+            </form>
+        </div>
+    </div>
+
+    <section class="hero" id="hero">
+        <p class="hero-sub">PREMIUM BIO-SCIENCE</p>
+        <h1>DESIGNED<br><span style="color: var(--accent)">BY NATURE.</span></h1>
+    </section>
+
+    <!-- 소식 섹션 -->
+    <section class="news-section" id="news">
+        <div class="news-header">
+            <p style="font-weight: 800; color: var(--accent); letter-spacing: 5px; margin-bottom: 15px; font-size: 0.8rem;">LATEST UPDATES</p>
+            <h2>메이딘의 새로운<br>흐름을 만나보세요.</h2>
+        </div>
+
+        <div class="news-container">
+            <div class="news-card" onclick="openNewsDetail(1)">
+                <div>
+                    <span class="news-tag">NOTICE</span>
+                    <h3>메이딘 공식 홈페이지<br>디지털 익스피리언스 오픈</h3>
+                </div>
+                <div>
+                    <span class="date">2026.02.10</span>
+                    <div class="bg-num">01</div>
+                </div>
+            </div>
+
+            <div class="news-card" onclick="openNewsDetail(2)">
+                <div>
+                    <span class="news-tag">PRESS</span>
+                    <h3>ISO 9001 국제 표준 인증으로<br>품질 경영의 격을 높이다</h3>
+                </div>
+                <div>
+                    <span class="date">2026.01.28</span>
+                    <div class="bg-num">02</div>
+                </div>
+            </div>
+
+            <div class="news-card" onclick="openNewsDetail(3)">
+                <div>
+                    <span class="news-tag">AWARD</span>
+                    <h3>CES 2026 바이오 테크 부문<br>혁신상 수상 영예</h3>
+                </div>
+                <div>
+                    <span class="date">2026.01.15</span>
+                    <div class="bg-num">03</div>
+                </div>
+            </div>
+
+            <div class="news-card" style="background: var(--accent); color: white;" onclick="openNewsDetail(4)">
+                <div>
+                    <span class="news-tag" style="color: #fff; opacity: 0.8;">EVENT</span>
+                    <h3>센시비 론칭 기념<br>정기 구독 멤버십 혜택</h3>
+                </div>
+                <div>
+                    <span class="date" style="opacity: 0.6;">2026.01.05</span>
+                    <div class="bg-num" style="color: #fff;">04</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="stack-container">
+        <div class="stack-card" id="philosophy">
+            <div class="card-content">
+                <span>01. PHILOSOPHY</span>
+                <h2>자연의 지혜에<br>과학을 더하다.</h2>
+                <p>메이딘은 우리 몸의 자연스러운 방어 기제를 연구합니다. 가장 순수한 원료를 찾아 정교한 과학적 공법으로 그 정수만을 담아냅니다.</p>
+            </div>
+            <div class="visual-box">PURE EXTRACTION VIDEO</div>
+        </div>
+
+        <div class="stack-card clickable" id="technology" onclick="openRndModal('01')">
+            <div class="card-content">
+                <span>02. TECHNOLOGY</span>
+                <h2>영하 180도,<br>시간의 정제.</h2>
+                <p>GMP, HACCP, ISO 9001 인증 실험실에서 탄생하는 무결점 공정. 0.01%의 불순물도 허용하지 않는 메이딘의 고집을 경험하세요.</p>
+                <div class="click-hint" onclick="event.stopPropagation(); openRndModal('01')">
+                    <span class="click-hint-icon">→</span>
+                    <span>연구 프로세스 보기</span>
+                </div>
+            </div>
+            <div class="visual-box clickable-hint">MOLECULAR DESIGN</div>
+        </div>
+
+        <div class="stack-card clickable" onclick="openProductDetail(1)">
+            <div class="card-content">
+                <span>03. SIGNATURE</span>
+                <h2>센시비 (SENSIBI)</h2>
+                <p>민감한 현대인을 위해 설계된 메이딘의 첫 번째 해답. 자연 유래 성분으로 당신의 신체 밸런스를 다시 세웁니다.</p>
+                <div class="click-hint" onclick="event.stopPropagation(); openProductDetail(1)">
+                    <span class="click-hint-icon">→</span>
+                    <span>상세 정보 보기</span>
+                </div>
+            </div>
+            <div class="visual-box clickable-hint" style="background: var(--accent); color: white;">PRODUCT VIEW</div>
+        </div>
+    </div>
+
+    <!-- 인증 및 등록 섹션 -->
+    <section class="trust-section" id="certifications">
+        <div class="trust-header">
+            <p style="font-weight: 800; color: var(--accent); letter-spacing: 5px; margin-bottom: 15px; font-size: 0.8rem;">CERTIFIED QUALITY</p>
+            <h2>엄격한 기준이 만드는<br>정직한 신뢰.</h2>
+        </div>
+
+        <div class="trust-grid">
+            <div class="trust-card reveal">
+                <div class="cert-icon">✓</div>
+                <h3>정식 등록 사업자</h3>
+                <p>메이딘은 관련 법규를 준수하며<br>투명한 경영 원칙을 지킵니다.</p>
+                <div class="reg-num">463-05-03407</div>
+            </div>
+
+            <div class="trust-card reveal">
+                <div class="cert-icon">®</div>
+                <h3>센시비 상표권 보유</h3>
+                <p>독자적인 브랜드 가치를 위해<br>SENSIBEE 상표를 공식 등록하였습니다.</p>
+                <div class="reg-num">제 40-2404407 호</div>
+            </div>
+
+            <div class="trust-card reveal">
+                <div class="cert-icon">🛡️</div>
+                <h3>건강기능식품 영업신고</h3>
+                <p>적법한 판매 절차를 거쳐 안전한<br>건강기능식품만을 유통합니다.</p>
+                <div class="reg-num">제 2025-0350699 호</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 약사전용몰 섹션 (로그인 후에만 표시) -->
+    <section class="pharmacy-section" id="pharmacy">
+        <div class="pharmacy-header">
+            <span>PHARMACY PORTAL</span>
+            <h2>약사전용몰</h2>
+            <p>인증된 약사만을 위한 특별한 공간입니다. 메이딘의 프리미엄 제품을 전문가 가격으로 만나보세요.</p>
+        </div>
+
+        <!-- 제품 목록 섹션 -->
+        <div class="products-section" id="productsSection">
+            <div class="pharmacy-header">
+                <h2>제품 목록</h2>
+                <p>메이딘의 프리미엄 영양제를 만나보세요</p>
+            </div>
+
+            <div class="products-grid" id="productsGrid">
+                <!-- 제품 카드들이 동적으로 추가됩니다 -->
+            </div>
+        </div>
+
+        <!-- 주문 섹션 (로그인 후 표시) -->
+        <div class="order-section hidden" id="orderSection">
+            <div class="pharmacy-header">
+                <h2>주문 내역</h2>
+            </div>
+
+            <div class="cart-items" id="cartItems">
+                <!-- 장바구니 아이템들이 동적으로 추가됩니다 -->
+            </div>
+
+            <div class="order-summary">
+                <div class="summary-row">
+                    <span>상품 합계</span>
+                    <span id="subtotal">0원</span>
+                </div>
+                <div class="summary-row">
+                    <span>배송비</span>
+                    <span>무료</span>
+                </div>
+                <div class="summary-row total">
+                    <span>총 결제금액</span>
+                    <span id="total">0원</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="handleOrder()" style="margin-top: 30px;">주문하기</button>
+        </div>
+    </section>
+
+    <!-- R&D 프로세스 모달 -->
+    <div id="rnd-modal" class="modal-overlay" onclick="closeRndModalOnOverlay(event)">
+        <div class="modal-window" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeRndModal()">&times;</button>
+            <div class="modal-content">
+                <div class="modal-visual" id="modal-img">
+                    <span id="modal-step-tag">STEP 01</span>
+                    <div class="step-buttons"></div>
+                </div>
+                <div class="modal-text">
+                    <h2 id="modal-title">원료 선정</h2>
+                    <div class="modal-divider"></div>
+                    <p id="modal-desc">상세 설명이 여기에 들어갑니다.</p>
+                    <ul class="detail-list" id="modal-list">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 제품 상세 모달 -->
+    <div class="product-detail-modal" id="productDetailModal" onclick="closeProductDetailOnOverlay(event)">
+        <div class="product-detail-content" onclick="event.stopPropagation()">
+            <div class="product-detail-header">
+                <h2 id="detailProductName">센시비 (SENSIBI)</h2>
+                <button class="product-detail-close" onclick="closeProductDetail()">&times;</button>
+            </div>
+            <div class="product-detail-body" id="productDetailBody">
+                <!-- 제품 상세 내용이 동적으로 추가됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 제휴 약국 지도 섹션 -->
+    <section class="pharmacy-map-section" id="pharmacyMap">
+        <div class="pharmacy-map-header">
+            <span>PARTNER PHARMACIES</span>
+            <h2>제휴 약국 찾기</h2>
+            <p>MAYDIN 제품을 구매할 수 있는 제휴 약국을 지도에서 찾아보세요.</p>
+        </div>
+
+        <div class="map-container">
+            <div class="map-wrapper">
+                <div id="map"></div>
+            </div>
+
+            <div class="map-controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="search-input" placeholder="약국명 또는 지역명 검색">
+                    <button class="search-btn" onclick="searchPharmacy()">검색</button>
+                </div>
+                <button class="location-btn" onclick="getCurrentLocation()">📍 내 위치로 찾기</button>
+                
+                <div class="pharmacy-list" id="pharmacyList">
+                    <!-- 약국 목록이 동적으로 추가됩니다 -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <h2>MAYDIN.</h2>
+        <p>© 2026 MAYDIN LABS. ALL RIGHTS RESERVED.</p>
+    </footer>
+
+    <script>
+        // 전역 상태 관리
+        let currentUser = null;
+        let cart = [];
+        let products = [
+            {
+                id: 1,
+                name: '센시비 (SENSIBI)',
+                description: '민감한 현대인을 위한 자연 유래 성분 영양제',
+                price: 89000,
+                image: 'PRODUCT 1',
+                fullDescription: '센시비는 메이딘의 첫 번째 시그니처 제품으로, 민감한 현대인을 위해 특별히 설계되었습니다. 자연에서 추출한 순수한 성분만을 사용하여 신체의 자연스러운 밸런스를 회복하고 유지하는 데 도움을 줍니다.',
+                specs: {
+                    '주요 성분': '프로바이오틱스, 프리바이오틱스, 천연 추출물',
+                    '용량': '30정 (1개월분)',
+                    '섭취 방법': '1일 1정, 식후 복용',
+                    '보관 방법': '직사광선을 피해 서늘한 곳에 보관',
+                    '유통기한': '제조일로부터 24개월',
+                    '인증': 'GMP, HACCP, ISO 9001 인증'
+                },
+                benefits: [
+                    '자연 유래 성분으로 안전하게 설계',
+                    '민감한 체질에도 부담 없는 순한 성분',
+                    '신체 밸런스 조절 및 유지',
+                    '무첨가, 무방부제'
+                ]
+            },
+            {
+                id: 2,
+                name: '프리미엄 프로바이오틱스',
+                description: '고농도 유산균과 프리바이오틱스 복합제',
+                price: 129000,
+                image: 'PRODUCT 2'
+            },
+            {
+                id: 3,
+                name: '오메가-3 프리미엄',
+                description: '순수 어유 추출 고농도 오메가-3',
+                price: 149000,
+                image: 'PRODUCT 3'
+            },
+            {
+                id: 4,
+                name: '비타민 D3+K2',
+                description: '칼슘 흡수 촉진을 위한 비타민 복합제',
+                price: 69000,
+                image: 'PRODUCT 4'
+            }
+        ];
+
+        // 탭 전환
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.auth-tab');
+            const forms = document.querySelectorAll('.auth-form');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            forms.forEach(f => f.classList.remove('active'));
+            
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        // 로그인 모달 열기
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 로그인 모달 닫기
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.body.style.overflow = '';
+            // 폼 초기화
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            switchTab('login');
+        }
+
+        // 모달 오버레이 클릭 시 닫기
+        function closeModalOnOverlay(event) {
+            if (event.target.id === 'loginModal') {
+                closeLoginModal();
+            }
+        }
+
+        // 약사전용몰 네비게이션 클릭 처리
+        function handlePharmacyNav(event) {
+            if (!currentUser) {
+                event.preventDefault();
+                openLoginModal();
+            } else {
+                document.getElementById('pharmacy').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // 로그인 처리
+        // TODO: API 연결 - POST /api/auth/login
+        async function handleLogin(event) {
+            event.preventDefault();
+            const license = document.getElementById('loginLicense').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // 임시: 로컬 스토리지 확인 (나중에 API로 대체)
+            // API 연결 예시:
+            // try {
+            //     const response = await fetch('/api/auth/login', {
+            //         method: 'POST',
+            //         headers: { 'Content-Type': 'application/json' },
+            //         body: JSON.stringify({ license, password })
+            //     });
+            //     const data = await response.json();
+            //     if (data.success) {
+            //         currentUser = data.user;
+            //         localStorage.setItem('token', data.token);
+            //         updateNavAfterLogin();
+            //         closeLoginModal();
+            //         showPharmacySection();
+            //     }
+            // } catch (error) { ... }
+            
+            const users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
+            const user = users.find(u => u.license === license && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                updateNavAfterLogin();
+                closeLoginModal();
+                showPharmacySection();
+                alert('로그인 성공!');
+            } else {
+                alert('면허번호 또는 비밀번호가 올바르지 않습니다.');
+            }
+        }
+
+        // 네비게이션 업데이트 (로그인 후)
+        function updateNavAfterLogin() {
+            document.getElementById('loginNavBtn').classList.add('hidden');
+            document.getElementById('userInfo').classList.remove('hidden');
+            document.getElementById('userName').textContent = currentUser.name + ' 약사님';
+        }
+
+        // 네비게이션 업데이트 (로그아웃 후)
+        function updateNavAfterLogout() {
+            document.getElementById('loginNavBtn').classList.remove('hidden');
+            document.getElementById('userInfo').classList.add('hidden');
+        }
+
+        // 로그아웃 처리
+        function handleLogout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                currentUser = null;
+                cart = [];
+                localStorage.removeItem('currentUser');
+                updateNavAfterLogout();
+                hidePharmacySection();
+                alert('로그아웃 되었습니다.');
+            }
+        }
+
+        // 약사전용몰 섹션 표시
+        function showPharmacySection() {
+            document.getElementById('pharmacy').classList.add('active');
+            showProducts();
+        }
+
+        // 약사전용몰 섹션 숨기기
+        function hidePharmacySection() {
+            document.getElementById('pharmacy').classList.remove('active');
+        }
+
+        // 회원가입 처리
+        // TODO: API 연결 - POST /api/auth/register
+        async function handleRegister(event) {
+            event.preventDefault();
+            const user = {
+                license: document.getElementById('registerLicense').value,
+                name: document.getElementById('registerName').value,
+                email: document.getElementById('registerEmail').value,
+                password: document.getElementById('registerPassword').value,
+                phone: document.getElementById('registerPhone').value
+            };
+            
+            // 임시: 로컬 스토리지 저장 (나중에 API로 대체)
+            // API 연결 예시:
+            // try {
+            //     const response = await fetch('/api/auth/register', {
+            //         method: 'POST',
+            //         headers: { 'Content-Type': 'application/json' },
+            //         body: JSON.stringify(user)
+            //     });
+            //     const data = await response.json();
+            //     if (data.success) {
+            //         alert('회원가입이 완료되었습니다. 로그인해주세요.');
+            //         switchTab('login');
+            //     }
+            // } catch (error) { ... }
+            
+            const users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
+            users.push(user);
+            localStorage.setItem('pharmacyUsers', JSON.stringify(users));
+            
+            alert('회원가입이 완료되었습니다. 로그인해주세요.');
+            switchTab('login');
+            // 회원가입 폼 초기화
+            document.getElementById('registerForm').reset();
+        }
+
+        // 제품 목록 표시
+        // TODO: API 연결 - GET /api/products
+        async function showProducts() {
+            // API 연결 예시:
+            // try {
+            //     const response = await fetch('/api/products', {
+            //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            //     });
+            //     products = await response.json();
+            // } catch (error) { ... }
+            
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(product => `
+                <div class="product-card clickable" onclick="openProductDetail(${product.id})">
+                    <div class="product-image">${product.image}</div>
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <div class="product-price">${product.price.toLocaleString()}원</div>
+                        <div class="product-actions">
+                            <button class="btn-secondary" onclick="event.stopPropagation(); addToCart(${product.id})">장바구니</button>
+                            <button class="btn-secondary" onclick="event.stopPropagation(); viewOrder()">주문하기</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 장바구니에 추가
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                cart.push(product);
+                updateCart();
+                alert(`${product.name}이(가) 장바구니에 추가되었습니다.`);
+            }
+        }
+
+        // 주문 섹션 보기
+        function viewOrder() {
+            document.getElementById('orderSection').classList.add('active');
+            document.getElementById('orderSection').scrollIntoView({ behavior: 'smooth' });
+            updateCart();
+        }
+
+        // 장바구니 업데이트
+        function updateCart() {
+            const cartItems = document.getElementById('cartItems');
+            const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.description}</p>
+                    </div>
+                    <div class="cart-item-price">${item.price.toLocaleString()}원</div>
+                </div>
+            `).join('') || '<p class="text-center" style="opacity: 0.6;">장바구니가 비어있습니다.</p>';
+            
+            document.getElementById('subtotal').textContent = subtotal.toLocaleString() + '원';
+            document.getElementById('total').textContent = subtotal.toLocaleString() + '원';
+        }
+
+        // 주문 처리
+        // TODO: API 연결 - POST /api/orders
+        // TODO: 이메일 발송 - POST /api/email/send-order-confirmation
+        async function handleOrder() {
+            if (cart.length === 0) {
+                alert('장바구니가 비어있습니다.');
+                return;
+            }
+            
+            const order = {
+                userId: currentUser.license,
+                userEmail: currentUser.email,
+                items: cart,
+                total: cart.reduce((sum, item) => sum + item.price, 0),
+                date: new Date().toISOString()
+            };
+            
+            // API 연결 예시:
+            // try {
+            //     const response = await fetch('/api/orders', {
+            //         method: 'POST',
+            //         headers: { 
+            //             'Content-Type': 'application/json',
+            //             'Authorization': `Bearer ${localStorage.getItem('token')}`
+            //         },
+            //         body: JSON.stringify(order)
+            //     });
+            //     const data = await response.json();
+            //     if (data.success) {
+            //         // 이메일 발송
+            //         await fetch('/api/email/send-order-confirmation', {
+            //             method: 'POST',
+            //             headers: { 'Content-Type': 'application/json' },
+            //             body: JSON.stringify({ orderId: data.orderId, email: currentUser.email })
+            //         });
+            //         alert('주문이 완료되었습니다! 확인 이메일을 발송했습니다.');
+            //         cart = [];
+            //         updateCart();
+            //     }
+            // } catch (error) { ... }
+            
+            // 임시: 로컬 스토리지 저장
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(orders));
+            
+            alert('주문이 완료되었습니다! (나중에 이메일 발송 기능 추가 예정)');
+            cart = [];
+            updateCart();
+        }
+
+        // 페이지 로드 시 로그인 상태 확인 및 카드 hover 이벤트 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateNavAfterLogin();
+                showPharmacySection();
+            } else {
+                updateNavAfterLogout();
+            }
+            
+        });
+
+        // 카카오 로그인 처리
+        // TODO: 카카오 API 연결 - 카카오 로그인 SDK 연동
+        function handleKakaoLogin() {
+            // 카카오 로그인 API 연결 예시:
+            // Kakao.Auth.login({
+            //     success: function(authObj) {
+            //         Kakao.API.request({
+            //             url: '/v2/user/me',
+            //             success: async function(res) {
+            //                 const kakaoUser = {
+            //                     id: res.id,
+            //                     email: res.kakao_account.email,
+            //                     name: res.kakao_account.profile.nickname,
+            //                     provider: 'kakao'
+            //                 };
+            //                 // 백엔드 API로 카카오 사용자 정보 전송
+            //                 const response = await fetch('/api/auth/kakao', {
+            //                     method: 'POST',
+            //                     headers: { 'Content-Type': 'application/json' },
+            //                     body: JSON.stringify(kakaoUser)
+            //                 });
+            //                 const data = await response.json();
+            //                 if (data.success) {
+            //                     currentUser = data.user;
+            //                     localStorage.setItem('token', data.token);
+            //                     updateNavAfterLogin();
+            //                     closeLoginModal();
+            //                     showPharmacySection();
+            //                 }
+            //             }
+            //         });
+            //     },
+            //     fail: function(err) {
+            //         alert('카카오 로그인에 실패했습니다.');
+            //     }
+            // });
+            
+            alert('카카오 로그인 기능은 준비 중입니다. (API 연결 필요)');
+        }
+
+        // 구글 로그인 처리
+        // TODO: 구글 API 연결 - Google OAuth 2.0 연동
+        function handleGoogleLogin() {
+            // 구글 로그인 API 연결 예시:
+            // gapi.load('auth2', function() {
+            //     gapi.auth2.init({
+            //         client_id: 'YOUR_GOOGLE_CLIENT_ID'
+            //     }).then(function() {
+            //         const authInstance = gapi.auth2.getAuthInstance();
+            //         authInstance.signIn().then(async function(googleUser) {
+            //             const profile = googleUser.getBasicProfile();
+            //             const googleUserData = {
+            //                 id: profile.getId(),
+            //                 email: profile.getEmail(),
+            //                 name: profile.getName(),
+            //                 provider: 'google'
+            //             };
+            //             // 백엔드 API로 구글 사용자 정보 전송
+            //             const response = await fetch('/api/auth/google', {
+            //                 method: 'POST',
+            //                 headers: { 'Content-Type': 'application/json' },
+            //                 body: JSON.stringify(googleUserData)
+            //             });
+            //             const data = await response.json();
+            //             if (data.success) {
+            //                 currentUser = data.user;
+            //                 localStorage.setItem('token', data.token);
+            //                 updateNavAfterLogin();
+            //                 closeLoginModal();
+            //                 showPharmacySection();
+            //             }
+            //         });
+            //     });
+            // });
+            
+            alert('구글 로그인 기능은 준비 중입니다. (API 연결 필요)');
+        }
+
+        // 제품 상세 모달 열기
+        function openProductDetail(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            document.getElementById('detailProductName').textContent = product.name;
+            
+            const detailBody = document.getElementById('productDetailBody');
+            const specsHtml = product.specs ? Object.entries(product.specs).map(([key, value]) => `
+                <div class="spec-item">
+                    <span class="spec-label">${key}</span>
+                    <span class="spec-value">${value}</span>
+                </div>
+            `).join('') : '';
+
+            const benefitsHtml = product.benefits ? product.benefits.map(benefit => `
+                <li style="margin-bottom: 10px; opacity: 0.8;">${benefit}</li>
+            `).join('') : '';
+
+            detailBody.innerHTML = `
+                <div class="product-detail-image">${product.image}</div>
+                <div class="product-detail-info">
+                    <h3>${product.name}</h3>
+                    <div class="product-detail-price">${product.price.toLocaleString()}원</div>
+                    <div class="product-detail-description">
+                        ${product.fullDescription || product.description}
+                    </div>
+                </div>
+                ${product.specs ? `
+                <div class="product-detail-specs">
+                    <h4>제품 정보</h4>
+                    ${specsHtml}
+                </div>
+                ` : ''}
+                ${product.benefits ? `
+                <div class="product-detail-specs">
+                    <h4>주요 효과</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        ${benefitsHtml}
+                    </ul>
+                </div>
+                ` : ''}
+                <div class="product-detail-actions">
+                    ${currentUser ? `
+                        <button class="btn-primary" onclick="addToCartFromDetail(${product.id})">장바구니에 추가</button>
+                        <button class="btn-secondary" onclick="viewOrderFromDetail()">주문하기</button>
+                    ` : `
+                        <button class="btn-primary" onclick="openLoginModal(); closeProductDetail();">로그인 후 구매하기</button>
+                    `}
+                </div>
+            `;
+
+            document.getElementById('productDetailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 제품 상세 모달 닫기
+        function closeProductDetail() {
+            document.getElementById('productDetailModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 모달 오버레이 클릭 시 닫기
+        function closeProductDetailOnOverlay(event) {
+            if (event.target.id === 'productDetailModal') {
+                closeProductDetail();
+            }
+        }
+
+        // 상세 페이지에서 장바구니 추가
+        function addToCartFromDetail(productId) {
+            addToCart(productId);
+            closeProductDetail();
+        }
+
+        // 상세 페이지에서 주문 보기
+        function viewOrderFromDetail() {
+            closeProductDetail();
+            if (currentUser) {
+                viewOrder();
+            } else {
+                openLoginModal();
+            }
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLoginModal();
+                closeProductDetail();
+                closeRndModal();
+            }
+        });
+
+        // 1. 스크롤 시 카드가 겹치면서 작아지는 효과 (차원이 다른 깊이감)
+        window.addEventListener('scroll', () => {
+            const scroll = window.scrollY;
+            const hero = document.getElementById('hero');
+            const cards = document.querySelectorAll('.stack-card');
+            
+            // 히어로 텍스트 패럴랙스
+            hero.style.transform = `translateY(${scroll * 0.4}px)`;
+            hero.style.opacity = 1 - scroll / 700;
+
+            // 카드 시네마틱 스태킹: 각 카드가 고정된 뒤 스크롤 시 스스로 작아지며 퇴장
+            const transitionDistance = window.innerHeight * 0.5; // 애니메이션이 진행될 거리
+            const stickyPoint = 100; // top 설정값과 동일하게
+
+            cards.forEach((card, index) => {
+                const rect = card.getBoundingClientRect();
+
+                if (rect.top <= stickyPoint) {
+                    // 카드가 상단에 고정된 후 아래로 더 스크롤될 때의 거리 계산
+                    const offset = stickyPoint - rect.top;
+                    const progress = Math.min(offset / transitionDistance, 1);
+
+                    // 1. 깊이감 있게 작아짐 (Scale)
+                    const scale = 1 - (progress * 0.15); // 최대 0.85까지 작아짐
+                    // 2. 투명해지며 퇴장 (Opacity)
+                    const opacity = 1 - progress;
+                    // 3. 약간 뒤로 밀리는 느낌 (TranslateY)
+                    const moveY = progress * 50;
+
+                    // 마지막 카드는 퇴장시키지 않음 (항상 최상단 카드가 선명하게)
+                    if (index < cards.length - 1) {
+                        card.style.transform = `scale(${scale}) translateY(${moveY}px)`;
+                        card.style.opacity = opacity;
+                        card.style.filter = `blur(${progress * 10}px)`;
+                    } else {
+                        card.style.transform = `scale(1) translateY(0)`;
+                        card.style.opacity = 1;
+                        card.style.filter = `blur(0px)`;
+                    }
+                } else {
+                    // 고정되기 전 상태로 복구
+                    card.style.transform = `scale(1) translateY(0)`;
+                    card.style.opacity = 1;
+                    card.style.filter = `blur(0px)`;
+                }
+            });
+        });
+
+        // 상단으로 스크롤
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 인증 카드 스크롤 애니메이션
+        const trustCards = document.querySelectorAll('.trust-card');
+        const trustObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('show');
+                    }, index * 150); // 순차적으로 나타나도록
+                }
+            });
+        }, { threshold: 0.1 });
+
+        trustCards.forEach(card => trustObserver.observe(card));
+
+        // 소식 섹션 가로 스크롤 (마우스 휠)
+        const newsContainer = document.querySelector('.news-container');
+        if (newsContainer) {
+            newsContainer.addEventListener('wheel', (evt) => {
+                // 데스크톱에서만 마우스 휠로 가로 스크롤 가능
+                if (window.innerWidth > 850) {
+                    evt.preventDefault();
+                    newsContainer.scrollLeft += evt.deltaY;
+                }
+            });
+        }
+
+        // 소식 상세 보기 (나중에 구현)
+        function openNewsDetail(newsId) {
+            // TODO: 소식 상세 모달 또는 페이지 구현
+            console.log('소식 상세:', newsId);
+            // 예시: alert('소식 상세 페이지는 준비 중입니다.');
+        }
+
+        // R&D 프로세스 데이터
+        const rndData = {
+            "01": {
+                title: "원료 선정",
+                desc: "메이딘은 전 세계 원산지를 직접 추적하여 유효 성분 함량이 가장 높은 시기의 원료만을 채집합니다.",
+                details: [
+                    "전 성분 원산지 100% 공개",
+                    "중금속 및 잔류 농약 검사 통과",
+                    "유전자 변형 없는(Non-GMO) 원료 엄선"
+                ]
+            },
+            "02": {
+                title: "연구 · 검증",
+                desc: "단순 배합을 넘어, 분자 구조 단위에서 성분의 흡수율을 극대화하는 배합 설계 기술을 보유하고 있습니다.",
+                details: [
+                    "독자적 성분 배합 설계 기술",
+                    "대학 병원 연계 임상 데이터 확보",
+                    "국제 학술지 논문 근거 기반 설계"
+                ]
+            },
+            "03": {
+                title: "제조",
+                desc: "무결점 클린룸 시스템에서 모든 공정이 이루어지며, 외부 오염을 완벽히 차단합니다.",
+                details: [
+                    "GMP 인증 전용 라인 생산",
+                    "24시간 온/습도 자동 제어 시스템",
+                    "Batch별 제조 이력 추적 시스템"
+                ]
+            },
+            "04": {
+                title: "품질 관리",
+                desc: "우리의 기준은 법적 기준보다 높습니다. 모든 완제품은 3단계 정밀 검사를 거쳐야만 출고될 수 있습니다.",
+                details: [
+                    "HACCP 및 ISO 9001 기준 준수",
+                    "출하 전 전수 정밀 검사 실시",
+                    "고객 경험 기반 품질 피드백 시스템"
+                ]
+            }
+        };
+
+        // R&D 모달 열기
+        function openRndModal(stepNum = "01") {
+            const modal = document.getElementById('rnd-modal');
+            const data = rndData[stepNum];
+
+            if (!data) return;
+
+            // 데이터 반영
+            document.getElementById('modal-step-tag').textContent = `STEP ${stepNum}`;
+            document.getElementById('modal-title').textContent = data.title;
+            document.getElementById('modal-desc').textContent = data.desc;
+            
+            const listContainer = document.getElementById('modal-list');
+            listContainer.innerHTML = data.details.map(item => `<li>${item}</li>`).join('');
+
+            // 모달 열기
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => modal.classList.add('active'), 10);
+
+            // 단계 선택 버튼 추가 (선택사항)
+            addStepButtons(stepNum);
+        }
+
+        // 단계 선택 버튼 추가
+        function addStepButtons(currentStep) {
+            const modalVisual = document.getElementById('modal-img');
+            let buttonsHtml = modalVisual.querySelector('.step-buttons');
+            
+            if (!buttonsHtml) {
+                buttonsHtml = document.createElement('div');
+                buttonsHtml.className = 'step-buttons';
+                buttonsHtml.style.cssText = 'position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;';
+                modalVisual.appendChild(buttonsHtml);
+            }
+
+            buttonsHtml.innerHTML = Object.keys(rndData).map(step => `
+                <button onclick="event.stopPropagation(); openRndModal('${step}')" 
+                        style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid ${step === currentStep ? 'white' : 'rgba(255,255,255,0.5)'}; 
+                               background: ${step === currentStep ? 'white' : 'transparent'}; 
+                               color: ${step === currentStep ? 'var(--accent)' : 'white'}; 
+                               font-weight: 800; cursor: pointer; transition: all 0.3s;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                        onmouseout="this.style.background='${step === currentStep ? 'white' : 'transparent'}'">
+                    ${step}
+                </button>
+            `).join('');
+        }
+
+        // R&D 모달 닫기
+        function closeRndModal() {
+            const modal = document.getElementById('rnd-modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 500);
+        }
+
+        // 배경 클릭 시 닫기
+        function closeRndModalOnOverlay(event) {
+            if (event.target.id === 'rnd-modal') {
+                closeRndModal();
+            }
+        }
+
+        // 제휴 약국 지도 관련
+        let map = null;
+        let markers = [];
+        let geocoder = null;
+        let currentPosition = null;
+
+        // 제휴 약국 데이터 (나중에 API로 대체)
+        const partnerPharmacies = [
+            {
+                id: 1,
+                name: '건강약국',
+                address: '서울특별시 강남구 테헤란로 123',
+                lat: 37.5665,
+                lng: 127.0780,
+                phone: '02-1234-5678',
+                hours: '09:00 - 21:00'
+            },
+            {
+                id: 2,
+                name: '메이딘 약국',
+                address: '서울특별시 서초구 서초대로 456',
+                lat: 37.4837,
+                lng: 127.0324,
+                phone: '02-2345-6789',
+                hours: '09:00 - 20:00'
+            },
+            {
+                id: 3,
+                name: '프리미엄 약국',
+                address: '서울특별시 송파구 올림픽로 789',
+                lat: 37.5145,
+                lng: 127.1050,
+                phone: '02-3456-7890',
+                hours: '08:30 - 21:30'
+            },
+            {
+                id: 4,
+                name: '자연약국',
+                address: '경기도 성남시 분당구 정자동 101',
+                lat: 37.3595,
+                lng: 127.1086,
+                phone: '031-1234-5678',
+                hours: '09:00 - 20:00'
+            },
+            {
+                id: 5,
+                name: '센시비 약국',
+                address: '인천광역시 연수구 송도동 202',
+                lat: 37.3886,
+                lng: 126.6588,
+                phone: '032-1234-5678',
+                hours: '09:00 - 21:00'
+            }
+        ];
+
+        // 지도 초기화
+        function initMap() {
+            // TODO: Kakao Map API 키를 발급받아서 위의 script 태그에 입력하세요
+            // https://developers.kakao.com/ 에서 앱을 등록하고 JavaScript 키를 발급받으세요
+            
+            const container = document.getElementById('map');
+            const options = {
+                center: new kakao.maps.LatLng(37.5665, 127.0780), // 서울 중심
+                level: 5
+            };
+
+            try {
+                map = new kakao.maps.Map(container, options);
+                geocoder = new kakao.maps.services.Geocoder();
+                
+                // 약국 마커 표시
+                displayPharmacies();
+                displayPharmacyList();
+            } catch (error) {
+                // API 키가 없을 경우 대체 메시지
+                container.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; padding: 40px;">
+                        <p style="font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: var(--accent);">지도를 불러오는 중...</p>
+                        <p style="font-size: 0.9rem; opacity: 0.6; text-align: center;">
+                            Kakao Map API 키를 설정해주세요.<br>
+                            index.html의 script 태그에서 YOUR_KAKAO_MAP_API_KEY를 실제 키로 변경하세요.
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        // 약국 마커 표시
+        function displayPharmacies() {
+            if (!map) return;
+
+            // 기존 마커 제거
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+
+            partnerPharmacies.forEach(pharmacy => {
+                const markerPosition = new kakao.maps.LatLng(pharmacy.lat, pharmacy.lng);
+                
+                // 커스텀 마커 이미지 (선택사항)
+                const markerImage = new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png',
+                    new kakao.maps.Size(30, 30),
+                    { offset: new kakao.maps.Point(15, 30) }
+                );
+
+                const marker = new kakao.maps.Marker({
+                    position: markerPosition,
+                    image: markerImage,
+                    map: map
+                });
+
+                // 인포윈도우
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: `
+                        <div style="padding: 10px; min-width: 200px;">
+                            <h4 style="font-weight: 800; margin-bottom: 8px; color: var(--accent);">${pharmacy.name}</h4>
+                            <p style="font-size: 0.85rem; margin-bottom: 5px; opacity: 0.7;">${pharmacy.address}</p>
+                            <p style="font-size: 0.85rem; font-weight: 700;">${pharmacy.phone}</p>
+                            <p style="font-size: 0.8rem; opacity: 0.6;">${pharmacy.hours}</p>
+                        </div>
+                    `
+                });
+
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    infowindow.open(map, marker);
+                    // 약국 목록에서 해당 약국 강조
+                    highlightPharmacy(pharmacy.id);
+                });
+
+                markers.push(marker);
+            });
+
+            // 모든 마커가 보이도록 지도 범위 조정
+            const bounds = new kakao.maps.LatLngBounds();
+            partnerPharmacies.forEach(pharmacy => {
+                bounds.extend(new kakao.maps.LatLng(pharmacy.lat, pharmacy.lng));
+            });
+            map.setBounds(bounds);
+        }
+
+        // 약국 목록 표시
+        function displayPharmacyList() {
+            const listContainer = document.getElementById('pharmacyList');
+            listContainer.innerHTML = partnerPharmacies.map(pharmacy => `
+                <div class="pharmacy-item" onclick="focusPharmacy(${pharmacy.id})">
+                    <h4>${pharmacy.name}</h4>
+                    <p>${pharmacy.address}</p>
+                    <p class="phone">${pharmacy.phone}</p>
+                    <p style="font-size: 0.85rem; opacity: 0.5;">${pharmacy.hours}</p>
+                </div>
+            `).join('');
+        }
+
+        // 약국 포커스
+        function focusPharmacy(pharmacyId) {
+            const pharmacy = partnerPharmacies.find(p => p.id === pharmacyId);
+            if (!pharmacy || !map) return;
+
+            const position = new kakao.maps.LatLng(pharmacy.lat, pharmacy.lng);
+            map.setCenter(position);
+            map.setLevel(3);
+
+            // 해당 마커의 인포윈도우 열기
+            const marker = markers[pharmacyId - 1];
+            if (marker) {
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: `
+                        <div style="padding: 10px; min-width: 200px;">
+                            <h4 style="font-weight: 800; margin-bottom: 8px; color: var(--accent);">${pharmacy.name}</h4>
+                            <p style="font-size: 0.85rem; margin-bottom: 5px; opacity: 0.7;">${pharmacy.address}</p>
+                            <p style="font-size: 0.85rem; font-weight: 700;">${pharmacy.phone}</p>
+                            <p style="font-size: 0.8rem; opacity: 0.6;">${pharmacy.hours}</p>
+                        </div>
+                    `
+                });
+                infowindow.open(map, marker);
+            }
+
+            highlightPharmacy(pharmacyId);
+        }
+
+        // 약국 강조
+        function highlightPharmacy(pharmacyId) {
+            const items = document.querySelectorAll('.pharmacy-item');
+            items.forEach((item, index) => {
+                if (partnerPharmacies[index].id === pharmacyId) {
+                    item.style.background = 'rgba(45, 90, 76, 0.1)';
+                    item.style.borderLeft = '3px solid var(--accent)';
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    item.style.background = '';
+                    item.style.borderLeft = '';
+                }
+            });
+        }
+
+        // 약국 검색
+        function searchPharmacy() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('검색어를 입력해주세요.');
+                return;
+            }
+
+            // 약국명 또는 주소로 검색
+            const results = partnerPharmacies.filter(pharmacy => 
+                pharmacy.name.includes(query) || 
+                pharmacy.address.includes(query)
+            );
+
+            if (results.length === 0) {
+                alert('검색 결과가 없습니다.');
+                return;
+            }
+
+            // 첫 번째 결과로 이동
+            focusPharmacy(results[0].id);
+
+            // 검색 결과만 필터링하여 표시
+            const listContainer = document.getElementById('pharmacyList');
+            listContainer.innerHTML = results.map(pharmacy => `
+                <div class="pharmacy-item" onclick="focusPharmacy(${pharmacy.id})">
+                    <h4>${pharmacy.name}</h4>
+                    <p>${pharmacy.address}</p>
+                    <p class="phone">${pharmacy.phone}</p>
+                    <p style="font-size: 0.85rem; opacity: 0.5;">${pharmacy.hours}</p>
+                </div>
+            `).join('');
+        }
+
+        // 현재 위치로 찾기
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    currentPosition = { lat, lng };
+
+                    if (map) {
+                        const currentPos = new kakao.maps.LatLng(lat, lng);
+                        map.setCenter(currentPos);
+                        map.setLevel(3);
+
+                        // 현재 위치 마커
+                        const marker = new kakao.maps.Marker({
+                            position: currentPos,
+                            map: map
+                        });
+
+                        // 가장 가까운 약국 찾기
+                        let nearestPharmacy = null;
+                        let minDistance = Infinity;
+
+                        partnerPharmacies.forEach(pharmacy => {
+                            const distance = getDistance(lat, lng, pharmacy.lat, pharmacy.lng);
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                nearestPharmacy = pharmacy;
+                            }
+                        });
+
+                        if (nearestPharmacy) {
+                            setTimeout(() => {
+                                focusPharmacy(nearestPharmacy.id);
+                                alert(`가장 가까운 약국: ${nearestPharmacy.name} (약 ${Math.round(minDistance)}km)`);
+                            }, 500);
+                        }
+                    }
+                },
+                (error) => {
+                    alert('위치 정보를 가져올 수 없습니다. 위치 권한을 확인해주세요.');
+                }
+            );
+        }
+
+        // 두 지점 간 거리 계산 (km)
+        function getDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // 지구 반지름 (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // 검색 입력창에서 Enter 키 처리
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        searchPharmacy();
+                    }
+                });
+            }
+
+            // 지도 초기화 (페이지 로드 시)
+            initMap();
+        });
+    </script>
+</body>
+</html>

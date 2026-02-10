@@ -2,6 +2,8 @@
 
 자연 추출물 기반 영양제를 제조하는 메이딘의 공식 웹사이트입니다.
 
+**배포:** [https://baeshh.github.io/maydin/](https://baeshh.github.io/maydin/) (GitHub Pages)
+
 ## 프로젝트 구조
 
 ```

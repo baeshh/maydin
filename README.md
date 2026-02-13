@@ -77,6 +77,12 @@ maydin/
 - Vanilla JavaScript
 - Pretendard 폰트
 
+## 제휴 약국 지도 (Kakao Map API)
+
+- 지도가 **표시되지 않을 때**: 카카오맵 API 도메인 제한 때문일 수 있습니다.
+  - **해결**: [Kakao 개발자 콘솔](https://developers.kakao.com/console/app) → 해당 앱 → **플랫폼** → **Web** → 사이트 도메인에 배포 주소 추가 (예: `https://baeshh.github.io`).
+- 지도가 안 나와도 **제휴 약국 목록**은 항상 표시되며, 각 약국 행의 **카카오맵** / **구글맵** 버튼으로 외부 지도에서 위치를 확인할 수 있습니다.
+
 ## 실행 방법
 
 1. `index.html` 파일을 브라우저에서 직접 열기

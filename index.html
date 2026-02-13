@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>메이딘 | 차원을 넘어선 자연의 정수</title>
-    <!-- Kakao Map API -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=00bc19cb1abd4fd7b6a8e654cfcd95a6&libraries=services"></script>
+    <!-- Kakao Map API: 동적 로드로 도메인 오류 시 폴백 표시 -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
@@ -250,6 +249,22 @@
                 transform: translateX(5px);
             }
         }
+        .click-hint-outline {
+            background: transparent !important;
+            border: 2px solid rgba(45, 90, 76, 0.5);
+        }
+        .click-hint-outline:hover {
+            background: rgba(45, 90, 76, 0.08) !important;
+        }
+        .visual-box-img {
+            padding: 20px;
+        }
+        .visual-box-img img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
         .visual-box.clickable-hint {
             position: relative;
             overflow: hidden;
@@ -337,6 +352,7 @@
                 transform: translateY(0);
             }
         }
+        .modal.register-active { max-width: 520px; }
         .modal-close {
             position: absolute;
             top: 20px;
@@ -400,6 +416,90 @@
             outline: none; border-color: var(--accent);
             background: rgba(255,255,255,0.9);
         }
+        .register-intro {
+            background: rgba(45, 90, 76, 0.08);
+            border: 1px solid rgba(45, 90, 76, 0.15);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--main);
+        }
+        .register-intro ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+        .register-intro li { margin-bottom: 4px; }
+        .agreement-group {
+            margin-bottom: 20px;
+        }
+        .agreement-group .agreement-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        .agreement-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .agreement-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .agreement-item.required label { font-weight: 700; }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+        .form-row .form-group { flex: 1; margin-bottom: 0; }
+        .form-row .btn-secondary {
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .file-upload-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .file-upload-row input[type="file"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+        .file-upload-row .file-name { font-size: 0.8rem; color: #666; margin-top: 4px; }
+        .pharmacy-section-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 28px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(45, 90, 76, 0.2);
+        }
+        .pharmacy-section-title .required-note {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888;
+            margin-left: 8px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+        }
+        .radio-group label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500; }
 
         .btn-primary {
             width: 100%; padding: 16px;
@@ -805,6 +905,61 @@
             font-weight: 700;
             color: var(--main);
         }
+        .pharmacy-item .map-links {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pharmacy-item .map-links a {
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+        .pharmacy-item .map-links a.link-kakao {
+            background: #FEE500;
+            color: #191919;
+        }
+        .pharmacy-item .map-links a.link-google {
+            background: #e8e8e8;
+            color: #333;
+        }
+        .pharmacy-item .map-links a:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .map-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            padding: 40px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(45,90,76,0.06) 0%, rgba(255,255,255,0.5) 100%);
+            border-radius: 20px;
+        }
+        .map-fallback .fallback-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+        .map-fallback .fallback-desc {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            max-width: 320px;
+        }
+        .map-fallback .fallback-hint {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            margin-top: 16px;
+        }
 
         @media (max-width: 968px) {
             .map-container {
@@ -892,6 +1047,80 @@
         .product-detail-close:hover {
             opacity: 1;
         }
+        /* 리플릿(카탈로그) 모달 */
+        .pamphlet-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 2100;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        .pamphlet-modal.active {
+            display: flex;
+        }
+        .pamphlet-content {
+            background: #fff;
+            border-radius: 24px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.25);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        .pamphlet-header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .pamphlet-header h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        .pamphlet-close {
+            background: transparent;
+            border: none;
+            font-size: 1.75rem;
+            color: var(--main);
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pamphlet-close:hover {
+            opacity: 1;
+        }
+        .pamphlet-body {
+            padding: 24px;
+            text-align: center;
+        }
+        .pamphlet-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
+        }
         .product-detail-body {
             padding: 40px;
         }
@@ -909,6 +1138,12 @@
             color: var(--accent);
             font-weight: 600;
             border: 1px solid rgba(0,0,0,0.03);
+        }
+        .product-detail-image .product-detail-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 24px;
         }
         .product-detail-info {
             margin-bottom: 30px;
@@ -1695,26 +1930,108 @@
             </form>
 
             <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="register-intro">
+                    <ul>
+                        <li>교육자료 및 쇼핑몰 이용은 <strong>개국 약사님</strong>만 가능합니다.</li>
+                        <li>약사면허증, 사업자등록증 사본을 직접 업로드 해주세요.</li>
+                    </ul>
+                </div>
+
+                <div class="agreement-group">
+                    <div class="agreement-title">약관 동의</div>
+                    <label class="agreement-item">
+                        <input type="checkbox" id="agreeTerms" name="agreeTerms">
+                        <span>회원가입약관에 동의합니다.</span>
+                    </label>
+                    <label class="agreement-item">
+                        <input type="checkbox" id="agreePrivacy" name="agreePrivacy">
+                        <span>개인정보 수집·이용에 동의합니다. (제3자·위탁업체 포함)</span>
+                    </label>
+                    <label class="agreement-item required">
+                        <input type="checkbox" id="agreeAge" name="agreeAge" required>
+                        <span>만 14세 이상입니다. (필수)</span>
+                    </label>
+                    <label class="agreement-item required">
+                        <input type="checkbox" id="agreeTrade" name="agreeTrade" required>
+                        <span>메이딘 거래 규정에 동의합니다. (필수)</span>
+                    </label>
+                </div>
+
                 <div class="form-group">
-                    <label>약사 면허번호</label>
-                    <input type="text" id="registerLicense" placeholder="면허번호를 입력하세요" required>
+                    <label>세금계산서 받을 이메일 *</label>
+                    <input type="email" id="registerTaxEmail" placeholder="세금계산서 수령 이메일을 입력하세요" required>
+                    <div class="radio-group" style="margin-top:10px;">
+                        <label><input type="radio" name="emailOptIn" value="yes" checked> 이메일을 받으시겠습니까? 예</label>
+                        <label><input type="radio" name="emailOptIn" value="no"> 아니오</label>
+                    </div>
+                </div>
+
+                <div class="pharmacy-section-title">약국정보 <span class="required-note">*는 필수 입력 사항입니다.</span></div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>사업자번호 *</label>
+                        <input type="text" id="registerBizNo" placeholder="숫자만 입력 (국세청 등록 정보 기준)" required>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="checkBizNoDuplicate()">중복확인</button>
+                </div>
+                <div class="file-upload-row form-group">
+                    <div style="flex:1;">
+                        <label>사업자등록증 사본 *</label>
+                        <input type="file" id="registerBizCert" accept=".pdf,.jpg,.jpeg,.png" required onchange="document.getElementById('bizCertFileName').textContent = this.files[0] ? this.files[0].name : ''">
+                        <div class="file-name" id="bizCertFileName"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>약사 면허번호 *</label>
+                        <input type="text" id="registerLicense" placeholder="숫자만 입력하세요" required>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="checkLicenseDuplicate()">중복확인</button>
+                </div>
+                <div class="file-upload-row form-group">
+                    <div style="flex:1;">
+                        <label>약사면허증 사본 *</label>
+                        <input type="file" id="registerLicenseCert" accept=".pdf,.jpg,.jpeg,.png" required onchange="document.getElementById('licenseCertFileName').textContent = this.files[0] ? this.files[0].name : ''">
+                        <div class="file-name" id="licenseCertFileName"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>약국 요양기관기호 *</label>
+                    <input type="text" id="registerPharmacyCode" placeholder="요양기관기호를 입력하세요" required>
                 </div>
                 <div class="form-group">
-                    <label>이름</label>
+                    <label>약국명 *</label>
+                    <input type="text" id="registerPharmacyName" placeholder="약국명을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>약학대학 *</label>
+                    <input type="text" id="registerPharmacyUniv" placeholder="졸업 약학대학을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label>가입경로 *</label>
+                    <input type="text" id="registerJoinPath" placeholder="예: 검색, 지인 소개 등" required>
+                </div>
+
+                <div class="form-group">
+                    <label>이름 *</label>
                     <input type="text" id="registerName" placeholder="이름을 입력하세요" required>
                 </div>
                 <div class="form-group">
-                    <label>이메일</label>
+                    <label>이메일 (로그인/연락용) *</label>
                     <input type="email" id="registerEmail" placeholder="이메일을 입력하세요" required>
                 </div>
                 <div class="form-group">
-                    <label>비밀번호</label>
+                    <label>비밀번호 *</label>
                     <input type="password" id="registerPassword" placeholder="비밀번호를 입력하세요" required>
                 </div>
                 <div class="form-group">
-                    <label>전화번호</label>
+                    <label>전화번호 *</label>
                     <input type="tel" id="registerPhone" placeholder="전화번호를 입력하세요" required>
                 </div>
+
                 <button type="submit" class="btn-primary">회원가입</button>
             </form>
         </div>
@@ -1747,7 +2064,7 @@
             <div class="news-card" onclick="openNewsDetail(2)">
                 <div>
                     <span class="news-tag">PRESS</span>
-                    <h3>ISO 9001 국제 표준 인증으로<br>품질 경영의 격을 높이다</h3>
+                    <h3>메이딘 면역력 강화 건강기능식품<br>센시비 론칭</h3>
                 </div>
                 <div>
                     <span class="date">2026.01.28</span>
@@ -1757,8 +2074,8 @@
 
             <div class="news-card" onclick="openNewsDetail(3)">
                 <div>
-                    <span class="news-tag">AWARD</span>
-                    <h3>CES 2026 바이오 테크 부문<br>혁신상 수상 영예</h3>
+                    <span class="news-tag">PATENT</span>
+                    <h3>'혈중 중성지방 개선용 참당귀 추출물 및<br>이의 제조방법' 특허 출원 진행</h3>
                 </div>
                 <div>
                     <span class="date">2026.01.15</span>
@@ -1784,7 +2101,7 @@
             <div class="card-content">
                 <span>01. PHILOSOPHY</span>
                 <h2>자연의 지혜에<br>과학을 더하다.</h2>
-                <p>메이딘은 우리 몸의 자연스러운 방어 기제를 연구합니다. 가장 순수한 원료를 찾아 정교한 과학적 공법으로 그 정수만을 담아냅니다.</p>
+                <p>메이딘은 우리 몸의 자연스러운 방어 기제를 연구합니다.<br>가장 순수한 원료를 찾아 정교한 과학적 공법으로 그 정수만을 담아냅니다.</p>
             </div>
             <div class="visual-box">PURE EXTRACTION VIDEO</div>
         </div>
@@ -1792,7 +2109,7 @@
         <div class="stack-card clickable" id="technology" onclick="openRndModal('01')">
             <div class="card-content">
                 <span>02. TECHNOLOGY</span>
-                <h2>영하 180도,<br>시간의 정제.</h2>
+                <h2>건강하고 행복한 삶을 위한<br>우리의 도전.</h2>
                 <p>GMP, HACCP, ISO 9001 인증 실험실에서 탄생하는 무결점 공정. 0.01%의 불순물도 허용하지 않는 메이딘의 고집을 경험하세요.</p>
                 <div class="click-hint" onclick="event.stopPropagation(); openRndModal('01')">
                     <span class="click-hint-icon">→</span>
@@ -1806,13 +2123,19 @@
             <div class="card-content">
                 <span>03. SIGNATURE</span>
                 <h2>센시비 (SENSIBI)</h2>
-                <p>민감한 현대인을 위해 설계된 메이딘의 첫 번째 해답. 자연 유래 성분으로 당신의 신체 밸런스를 다시 세웁니다.</p>
+                <p>민감한 현대인을 위해 설계된 메이딘의 첫 번째 해답.<br>자연 유래 성분으로 당신의 신체 밸런스를 다시 세웁니다.</p>
                 <div class="click-hint" onclick="event.stopPropagation(); openProductDetail(1)">
                     <span class="click-hint-icon">→</span>
                     <span>상세 정보 보기</span>
                 </div>
+                <div class="click-hint click-hint-outline" onclick="event.stopPropagation(); openPamphletModal()" style="margin-top: 12px;">
+                    <span class="click-hint-icon">→</span>
+                    <span>리플릿 보기</span>
+                </div>
             </div>
-            <div class="visual-box clickable-hint" style="background: var(--accent); color: white;">PRODUCT VIEW</div>
+            <div class="visual-box visual-box-img clickable-hint" style="background: var(--accent); color: white;">
+                <img src="assets/sensibee-rendering.png" alt="센시비 SENSIBEE 제품" onclick="event.stopPropagation(); openProductDetail(1)">
+            </div>
         </div>
     </div>
 
@@ -1929,6 +2252,20 @@
         </div>
     </div>
 
+    <!-- 리플릿(센시비 카탈로그) 모달 -->
+    <div class="pamphlet-modal" id="pamphletModal" onclick="closePamphletOnOverlay(event)">
+        <div class="pamphlet-content" onclick="event.stopPropagation()">
+            <div class="pamphlet-header">
+                <h3>08. 센시비 카탈로그</h3>
+                <button type="button" class="pamphlet-close" onclick="closePamphletModal()" aria-label="닫기">&times;</button>
+            </div>
+            <div class="pamphlet-body">
+                <img id="pamphletImg" src="assets/sensibee-catalog.png" alt="센시비 카탈로그 리플릿" onerror="this.style.display='none'; document.getElementById('pamphletPlaceholder').style.display='block';">
+                <p id="pamphletPlaceholder" style="display:none; padding: 60px 20px; color: #999; font-size: 0.95rem;">카탈로그 이미지 파일(<code>assets/sensibee-catalog.png</code>)을 추가하면 여기에 표시됩니다.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- 제휴 약국 지도 섹션 -->
     <section class="pharmacy-map-section" id="pharmacyMap">
         <div class="pharmacy-map-header">
@@ -1972,13 +2309,13 @@
                 description: '민감한 현대인을 위한 자연 유래 성분 영양제',
                 price: 89000,
                 image: 'PRODUCT 1',
-                fullDescription: '센시비는 메이딘의 첫 번째 시그니처 제품으로, 민감한 현대인을 위해 특별히 설계되었습니다. 자연에서 추출한 순수한 성분만을 사용하여 신체의 자연스러운 밸런스를 회복하고 유지하는 데 도움을 줍니다.',
+                fullDescription: '센시비는 메이딘의 첫 번째 시그니처 제품으로, 민감한 현대인을 위해 특별히 설계되었습니다.<br>자연에서 추출한 순수한 성분만을 사용하여 신체의 자연스러운 밸런스를 회복하고 유지하는 데 도움을 줍니다.',
                 specs: {
-                    '주요 성분': '프로바이오틱스, 프리바이오틱스, 천연 추출물',
-                    '용량': '30정 (1개월분)',
-                    '섭취 방법': '1일 1정, 식후 복용',
+                    '주요 성분': '비타민D, 아연, 셀렌, 강황추출물, 참당귀추출물',
+                    '용량': '60정 (1개월 분)',
+                    '섭취 방법': '1일 2정, 식후 복용',
                     '보관 방법': '직사광선을 피해 서늘한 곳에 보관',
-                    '유통기한': '제조일로부터 24개월',
+                    '유통기한': '제조일로부터 24개월 (형상 확인 필요)',
                     '인증': 'GMP, HACCP, ISO 9001 인증'
                 },
                 benefits: [
@@ -2019,12 +2356,15 @@
             tabs.forEach(t => t.classList.remove('active'));
             forms.forEach(f => f.classList.remove('active'));
             
+            var modalEl = document.querySelector('#loginModal .modal');
             if (tab === 'login') {
                 tabs[0].classList.add('active');
                 document.getElementById('loginForm').classList.add('active');
+                if (modalEl) modalEl.classList.remove('register-active');
             } else {
                 tabs[1].classList.add('active');
                 document.getElementById('registerForm').classList.add('active');
+                if (modalEl) modalEl.classList.add('register-active');
             }
         }
 
@@ -2038,9 +2378,13 @@
         function closeLoginModal() {
             document.getElementById('loginModal').classList.remove('active');
             document.body.style.overflow = '';
-            // 폼 초기화
             document.getElementById('loginForm').reset();
             document.getElementById('registerForm').reset();
+            var bizFn = document.getElementById('bizCertFileName');
+            var licFn = document.getElementById('licenseCertFileName');
+            if (bizFn) bizFn.textContent = '';
+            if (licFn) licFn.textContent = '';
+            document.querySelector('#loginModal .modal').classList.remove('register-active');
             switchTab('login');
         }
 
@@ -2137,41 +2481,83 @@
             document.getElementById('pharmacy').classList.remove('active');
         }
 
-        // 회원가입 처리
-        // TODO: API 연결 - POST /api/auth/register
+        // 회원가입 처리 (약사 전용: 동의·세금이메일·약국정보·서류 업로드)
+        // TODO: API 연결 시 FormData로 파일 전송
         async function handleRegister(event) {
             event.preventDefault();
-            const user = {
-                license: document.getElementById('registerLicense').value,
-                name: document.getElementById('registerName').value,
-                email: document.getElementById('registerEmail').value,
+
+            if (!document.getElementById('agreeAge').checked) {
+                alert('만 14세 이상 동의가 필요합니다.');
+                return;
+            }
+            if (!document.getElementById('agreeTrade').checked) {
+                alert('메이딘 거래 규정에 동의해 주세요.');
+                return;
+            }
+            if (!document.getElementById('agreeTerms').checked) {
+                alert('회원가입약관에 동의해 주세요.');
+                return;
+            }
+            if (!document.getElementById('agreePrivacy').checked) {
+                alert('개인정보 수집·이용에 동의해 주세요.');
+                return;
+            }
+
+            var bizCert = document.getElementById('registerBizCert');
+            var licenseCert = document.getElementById('registerLicenseCert');
+            if (!bizCert.files || !bizCert.files.length) {
+                alert('사업자등록증 사본을 업로드해 주세요.');
+                return;
+            }
+            if (!licenseCert.files || !licenseCert.files.length) {
+                alert('약사면허증 사본을 업로드해 주세요.');
+                return;
+            }
+
+            var emailOptIn = document.querySelector('input[name="emailOptIn"]:checked');
+            var user = {
+                license: document.getElementById('registerLicense').value.trim(),
+                name: document.getElementById('registerName').value.trim(),
+                email: document.getElementById('registerEmail').value.trim(),
                 password: document.getElementById('registerPassword').value,
-                phone: document.getElementById('registerPhone').value
+                phone: document.getElementById('registerPhone').value.trim(),
+                taxEmail: document.getElementById('registerTaxEmail').value.trim(),
+                emailOptIn: emailOptIn ? emailOptIn.value : 'yes',
+                bizNo: document.getElementById('registerBizNo').value.trim(),
+                pharmacyCode: document.getElementById('registerPharmacyCode').value.trim(),
+                pharmacyName: document.getElementById('registerPharmacyName').value.trim(),
+                pharmacyUniv: document.getElementById('registerPharmacyUniv').value.trim(),
+                joinPath: document.getElementById('registerJoinPath').value.trim(),
+                bizCertFileName: bizCert.files[0].name,
+                licenseCertFileName: licenseCert.files[0].name
             };
-            
-            // 임시: 로컬 스토리지 저장 (나중에 API로 대체)
-            // API 연결 예시:
-            // try {
-            //     const response = await fetch('/api/auth/register', {
-            //         method: 'POST',
-            //         headers: { 'Content-Type': 'application/json' },
-            //         body: JSON.stringify(user)
-            //     });
-            //     const data = await response.json();
-            //     if (data.success) {
-            //         alert('회원가입이 완료되었습니다. 로그인해주세요.');
-            //         switchTab('login');
-            //     }
-            // } catch (error) { ... }
-            
-            const users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
+
+            var users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
             users.push(user);
             localStorage.setItem('pharmacyUsers', JSON.stringify(users));
-            
-            alert('회원가입이 완료되었습니다. 로그인해주세요.');
+
+            alert('회원가입이 완료되었습니다. 로그인해 주세요.');
             switchTab('login');
-            // 회원가입 폼 초기화
             document.getElementById('registerForm').reset();
+            document.getElementById('bizCertFileName').textContent = '';
+            document.getElementById('licenseCertFileName').textContent = '';
+        }
+
+        function checkBizNoDuplicate() {
+            var bizNo = document.getElementById('registerBizNo').value.trim();
+            if (!bizNo) { alert('사업자번호를 입력한 뒤 중복확인해 주세요.'); return; }
+            // TODO: API로 중복 검사
+            alert('사업자번호 중복확인은 서비스 연동 후 제공됩니다.');
+        }
+        function checkLicenseDuplicate() {
+            var license = document.getElementById('registerLicense').value.trim();
+            if (!license) { alert('약사 면허번호를 입력한 뒤 중복확인해 주세요.'); return; }
+            var users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
+            if (users.some(function(u) { return u.license === license; })) {
+                alert('이미 가입된 면허번호입니다.');
+                return;
+            }
+            alert('사용 가능한 면허번호입니다.');
         }
 
         // 제품 목록 표시
@@ -2399,8 +2785,12 @@
                 <li style="margin-bottom: 10px; opacity: 0.8;">${benefit}</li>
             `).join('') : '';
 
+            const imageHtml = product.id === 1
+                ? `<div class="product-detail-image"><img src="assets/sensibee-rendering.png" alt="${product.name}" class="product-detail-img"></div>`
+                : `<div class="product-detail-image">${product.image}</div>`;
+
             detailBody.innerHTML = `
-                <div class="product-detail-image">${product.image}</div>
+                ${imageHtml}
                 <div class="product-detail-info">
                     <h3>${product.name}</h3>
                     <div class="product-detail-price">${product.price.toLocaleString()}원</div>
@@ -2448,6 +2838,19 @@
                 closeProductDetail();
             }
         }
+        function openPamphletModal() {
+            document.getElementById('pamphletModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closePamphletModal() {
+            document.getElementById('pamphletModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        function closePamphletOnOverlay(event) {
+            if (event.target.id === 'pamphletModal') {
+                closePamphletModal();
+            }
+        }
 
         // 상세 페이지에서 장바구니 추가
         function addToCartFromDetail(productId) {
@@ -2471,6 +2874,7 @@
                 closeLoginModal();
                 closeProductDetail();
                 closeRndModal();
+                closePamphletModal();
             }
         });
 
@@ -2721,35 +3125,60 @@
             }
         ];
 
-        // 지도 초기화
+        // 지도 초기화 (Kakao SDK load 콜백 사용 + 실패 시 폴백)
         function initMap() {
-            // TODO: Kakao Map API 키를 발급받아서 위의 script 태그에 입력하세요
-            // https://developers.kakao.com/ 에서 앱을 등록하고 JavaScript 키를 발급받으세요
-            
             const container = document.getElementById('map');
-            const options = {
-                center: new kakao.maps.LatLng(37.5665, 127.0780), // 서울 중심
-                level: 5
-            };
+            if (!container) return;
 
-            try {
-                map = new kakao.maps.Map(container, options);
-                geocoder = new kakao.maps.services.Geocoder();
-                
-                // 약국 마커 표시
-                displayPharmacies();
-                displayPharmacyList();
-            } catch (error) {
-                // API 키가 없을 경우 대체 메시지
+            function showMapFallback() {
                 container.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; padding: 40px;">
-                        <p style="font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: var(--accent);">지도를 불러오는 중...</p>
-                        <p style="font-size: 0.9rem; opacity: 0.6; text-align: center;">
-                            Kakao Map API 키를 설정해주세요.<br>
-                            index.html의 script 태그에서 YOUR_KAKAO_MAP_API_KEY를 실제 키로 변경하세요.
+                    <div class="map-fallback">
+                        <p class="fallback-title">지도를 불러올 수 없습니다</p>
+                        <p class="fallback-desc">
+                            카카오맵 API 도메인 제한이거나, 키가 JavaScript 키가 아닐 수 있습니다.
+                        </p>
+                        <p class="fallback-desc">
+                            오른쪽 <strong>제휴 약국 목록</strong>에서 <strong>「카카오맵」「구글맵」</strong> 버튼으로 위치를 확인하세요.
+                        </p>
+                        <p class="fallback-hint">
+                            <a href="https://github.com/baeshh/maydin/blob/main/docs/KAKAO_MAP_SETUP.md" target="_blank" rel="noopener">지도 설정 방법</a> — Kakao 콘솔에서 <code>https://baeshh.github.io</code> 등록 + <strong>JavaScript 키</strong> 사용 확인.
                         </p>
                     </div>
                 `;
+                displayPharmacyList();
+            }
+
+            if (typeof kakao === 'undefined' || !kakao.maps) {
+                showMapFallback();
+                return;
+            }
+
+            // SDK가 완전히 준비된 뒤 지도 생성 (도메인 미등록 시 load에서 실패할 수 있음)
+            var loadTimeout = setTimeout(function() {
+                if (!map) showMapFallback();
+            }, 8000);
+
+            function doInitMap() {
+                var options = {
+                    center: new kakao.maps.LatLng(37.5665, 127.0780),
+                    level: 5
+                };
+                try {
+                    map = new kakao.maps.Map(container, options);
+                    geocoder = new kakao.maps.services.Geocoder();
+                    displayPharmacies();
+                    displayPharmacyList();
+                    clearTimeout(loadTimeout);
+                } catch (e) {
+                    showMapFallback();
+                    clearTimeout(loadTimeout);
+                }
+            }
+
+            if (typeof kakao.maps.load === 'function') {
+                kakao.maps.load(doInitMap);
+            } else {
+                doInitMap();
             }
         }
 
@@ -2806,42 +3235,55 @@
             map.setBounds(bounds);
         }
 
-        // 약국 목록 표시
+        // 외부 지도에서 열기 (지도 API 미동작 시 활용)
+        function openPharmacyInKakaoMap(address) {
+            window.open('https://map.kakao.com/?q=' + encodeURIComponent(address), '_blank', 'noopener');
+        }
+        function openPharmacyInGoogleMaps(address) {
+            window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address), '_blank', 'noopener');
+        }
+
+        // 약국 목록 표시 (카카오맵/구글맵 링크 포함)
         function displayPharmacyList() {
             const listContainer = document.getElementById('pharmacyList');
+            if (!listContainer) return;
             listContainer.innerHTML = partnerPharmacies.map(pharmacy => `
-                <div class="pharmacy-item" onclick="focusPharmacy(${pharmacy.id})">
+                <div class="pharmacy-item" onclick="focusPharmacy(${pharmacy.id})" data-pharmacy-id="${pharmacy.id}">
                     <h4>${pharmacy.name}</h4>
                     <p>${pharmacy.address}</p>
                     <p class="phone">${pharmacy.phone}</p>
                     <p style="font-size: 0.85rem; opacity: 0.5;">${pharmacy.hours}</p>
+                    <div class="map-links" onclick="event.stopPropagation();">
+                        <a href="https://map.kakao.com/?q=${encodeURIComponent(pharmacy.address)}" target="_blank" rel="noopener" class="link-kakao">카카오맵</a>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pharmacy.address)}" target="_blank" rel="noopener" class="link-google">구글맵</a>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // 약국 포커스
+        // 약국 포커스 (지도 없을 때는 목록에서만 강조 + 스크롤)
         function focusPharmacy(pharmacyId) {
             const pharmacy = partnerPharmacies.find(p => p.id === pharmacyId);
-            if (!pharmacy || !map) return;
+            if (!pharmacy) return;
 
-            const position = new kakao.maps.LatLng(pharmacy.lat, pharmacy.lng);
-            map.setCenter(position);
-            map.setLevel(3);
-
-            // 해당 마커의 인포윈도우 열기
-            const marker = markers[pharmacyId - 1];
-            if (marker) {
-                const infowindow = new kakao.maps.InfoWindow({
-                    content: `
-                        <div style="padding: 10px; min-width: 200px;">
-                            <h4 style="font-weight: 800; margin-bottom: 8px; color: var(--accent);">${pharmacy.name}</h4>
-                            <p style="font-size: 0.85rem; margin-bottom: 5px; opacity: 0.7;">${pharmacy.address}</p>
-                            <p style="font-size: 0.85rem; font-weight: 700;">${pharmacy.phone}</p>
-                            <p style="font-size: 0.8rem; opacity: 0.6;">${pharmacy.hours}</p>
-                        </div>
-                    `
-                });
-                infowindow.open(map, marker);
+            if (map && typeof kakao !== 'undefined') {
+                const position = new kakao.maps.LatLng(pharmacy.lat, pharmacy.lng);
+                map.setCenter(position);
+                map.setLevel(3);
+                const marker = markers[pharmacyId - 1];
+                if (marker) {
+                    const infowindow = new kakao.maps.InfoWindow({
+                        content: `
+                            <div style="padding: 10px; min-width: 200px;">
+                                <h4 style="font-weight: 800; margin-bottom: 8px; color: var(--accent);">${pharmacy.name}</h4>
+                                <p style="font-size: 0.85rem; margin-bottom: 5px; opacity: 0.7;">${pharmacy.address}</p>
+                                <p style="font-size: 0.85rem; font-weight: 700;">${pharmacy.phone}</p>
+                                <p style="font-size: 0.8rem; opacity: 0.6;">${pharmacy.hours}</p>
+                            </div>
+                        `
+                    });
+                    infowindow.open(map, marker);
+                }
             }
 
             highlightPharmacy(pharmacyId);
@@ -2884,19 +3326,23 @@
             // 첫 번째 결과로 이동
             focusPharmacy(results[0].id);
 
-            // 검색 결과만 필터링하여 표시
+            // 검색 결과만 필터링하여 표시 (카카오맵/구글맵 링크 포함)
             const listContainer = document.getElementById('pharmacyList');
             listContainer.innerHTML = results.map(pharmacy => `
-                <div class="pharmacy-item" onclick="focusPharmacy(${pharmacy.id})">
+                <div class="pharmacy-item" onclick="focusPharmacy(${pharmacy.id})" data-pharmacy-id="${pharmacy.id}">
                     <h4>${pharmacy.name}</h4>
                     <p>${pharmacy.address}</p>
                     <p class="phone">${pharmacy.phone}</p>
                     <p style="font-size: 0.85rem; opacity: 0.5;">${pharmacy.hours}</p>
+                    <div class="map-links" onclick="event.stopPropagation();">
+                        <a href="https://map.kakao.com/?q=${encodeURIComponent(pharmacy.address)}" target="_blank" rel="noopener" class="link-kakao">카카오맵</a>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pharmacy.address)}" target="_blank" rel="noopener" class="link-google">구글맵</a>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // 현재 위치로 찾기
+        // 현재 위치로 찾기 (지도 없어도 가장 가까운 약국 안내)
         function getCurrentLocation() {
             if (!navigator.geolocation) {
                 alert('이 브라우저는 위치 서비스를 지원하지 않습니다.');
@@ -2909,35 +3355,26 @@
                     const lng = position.coords.longitude;
                     currentPosition = { lat, lng };
 
-                    if (map) {
+                    let nearestPharmacy = null;
+                    let minDistance = Infinity;
+                    partnerPharmacies.forEach(pharmacy => {
+                        const distance = getDistance(lat, lng, pharmacy.lat, pharmacy.lng);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestPharmacy = pharmacy;
+                        }
+                    });
+
+                    if (map && typeof kakao !== 'undefined') {
                         const currentPos = new kakao.maps.LatLng(lat, lng);
                         map.setCenter(currentPos);
                         map.setLevel(3);
+                        new kakao.maps.Marker({ position: currentPos, map: map });
+                    }
 
-                        // 현재 위치 마커
-                        const marker = new kakao.maps.Marker({
-                            position: currentPos,
-                            map: map
-                        });
-
-                        // 가장 가까운 약국 찾기
-                        let nearestPharmacy = null;
-                        let minDistance = Infinity;
-
-                        partnerPharmacies.forEach(pharmacy => {
-                            const distance = getDistance(lat, lng, pharmacy.lat, pharmacy.lng);
-                            if (distance < minDistance) {
-                                minDistance = distance;
-                                nearestPharmacy = pharmacy;
-                            }
-                        });
-
-                        if (nearestPharmacy) {
-                            setTimeout(() => {
-                                focusPharmacy(nearestPharmacy.id);
-                                alert(`가장 가까운 약국: ${nearestPharmacy.name} (약 ${Math.round(minDistance)}km)`);
-                            }, 500);
-                        }
+                    if (nearestPharmacy) {
+                        focusPharmacy(nearestPharmacy.id);
+                        alert(`가장 가까운 약국: ${nearestPharmacy.name} (약 ${Math.round(minDistance)}km)\n\n지도가 보이지 않을 경우 오른쪽 목록에서 해당 약국의 「카카오맵」 또는 「구글맵」으로 위치를 확인하세요.`);
                     }
                 },
                 (error) => {
@@ -2958,6 +3395,16 @@
             return R * c;
         }
 
+        // Kakao 지도 스크립트 동적 로드 (로드 실패 시 initMap에서 kakao 미정의 → 폴백)
+        function loadKakaoMapAndInit() {
+            var s = document.createElement('script');
+            s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=87f6c996d0f83fd42534d1a8a391e6b0&libraries=services';
+            s.async = false;
+            s.onload = function() { initMap(); };
+            s.onerror = function() { initMap(); };
+            document.head.appendChild(s);
+        }
+
         // 검색 입력창에서 Enter 키 처리
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('searchInput');
@@ -2969,8 +3416,7 @@
                 });
             }
 
-            // 지도 초기화 (페이지 로드 시)
-            initMap();
+            loadKakaoMapAndInit();
         });
     </script>
 </body>

@@ -11,7 +11,10 @@
         :root {
             --bg: #ffffff;
             --main: #1d1d1f;
+            /* 메이딘 브랜드 초록 (글자색/배경 통일) */
             --accent: #2d5a4c;
+            --accent-on-white: #2d5a4c;   /* 초록 글자 + 흰 배경 */
+            --white-on-accent: #ffffff;    /* 초록 배경 + 흰 글자 */
             --glass: rgba(255, 255, 255, 0.75);
             --text-main: #1d1d1f;
         }
@@ -40,43 +43,91 @@
             100% { transform: translate(60%, 50%) scale(1.4); }
         }
 
-        /* 2. 반응형 네비게이션 */
+        /* 2. 배너 네비게이션 (가로 꽉 참, 디알에스 스타일) */
         nav {
-            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 1100px; height: 54px;
-            background: var(--glass); backdrop-filter: blur(25px);
-            border-radius: 100px; border: 1px solid rgba(255,255,255,0.4);
+            position: fixed; top: 0; left: 0; right: 0;
+            width: 100%; height: 64px;
+            background: #ffffff;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 25px; z-index: 1000;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+            padding: 0 5% 0 4%; z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.04);
         }
-        .logo { font-weight: 900; color: var(--accent); font-size: 1.1rem; letter-spacing: -0.5px; cursor: pointer; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { text-decoration: none; color: var(--main); font-size: 0.75rem; font-weight: 700; opacity: 0.6; transition: opacity 0.3s; }
-        .nav-links a:hover { opacity: 1; }
-        .nav-links .pharmacy-link { 
-            background: var(--accent); 
-            color: white; 
-            padding: 8px 20px; 
-            border-radius: 20px; 
-            opacity: 1; 
+        .logo {
+            font-weight: 900; color: var(--accent-on-white); font-size: 1.65rem;
+            letter-spacing: -0.03em; cursor: pointer;
+        }
+        .nav-links { display: flex; gap: 8px; align-items: center; }
+        .nav-item { position: relative; }
+        .nav-item > a, .nav-item .nav-trigger {
+            display: inline-block;
+            text-decoration: none; color: var(--main); font-size: 0.9rem;
+            font-weight: 700; opacity: 0.75; transition: opacity 0.3s;
+            padding: 8px 4px; cursor: pointer;
+        }
+        .nav-item > a:hover, .nav-item .nav-trigger:hover { opacity: 1; color: var(--accent); }
+        .nav-trigger { background: none; border: none; font-family: inherit; }
+        .nav-trigger::after {
+            content: ''; display: inline-block; margin-left: 4px;
+            border: 5px solid transparent; border-top-color: currentColor;
+            vertical-align: middle;
+        }
+        .nav-dropdown {
+            position: absolute; top: 100%; left: 0;
+            min-width: 180px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0,0,0,0.06);
+            padding: 10px 0;
+            opacity: 0; visibility: hidden; transform: translateY(-6px);
+            transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+            z-index: 1001;
+        }
+        .nav-item:hover .nav-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .nav-dropdown a {
+            display: block; padding: 10px 20px; font-size: 0.85rem; font-weight: 600;
+            color: var(--main); text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        .nav-dropdown a:hover { background: rgba(45, 90, 76, 0.08); color: var(--accent); }
+        .nav-links .pharmacy-link {
+            background: var(--accent);
+            color: var(--white-on-accent);
+            padding: 10px 22px;
+            border-radius: 24px;
+            opacity: 1;
             font-weight: 800;
+            font-size: 0.9rem;
         }
-        .nav-links .pharmacy-link:hover { opacity: 0.9; }
+        .nav-links .pharmacy-link:hover { opacity: 0.92; }
+        .nav-auth {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.9rem; font-weight: 700; color: var(--main);
+        }
+        .nav-auth .auth-divider { opacity: 0.35; user-select: none; }
+        .nav-auth button, .nav-auth .auth-link {
+            background: none; border: none; padding: 0;
+            color: var(--accent-on-white); cursor: pointer; font-weight: 800;
+            font-size: 0.9rem; font-family: inherit;
+        }
+        .nav-auth button:hover, .nav-auth .auth-link:hover { text-decoration: underline; }
         .nav-links .login-btn {
-            background: transparent;
-            color: var(--accent);
-            padding: 8px 20px;
+            background: var(--white-on-accent);
+            color: var(--accent-on-white);
+            padding: 8px 18px;
             border: 2px solid var(--accent);
             border-radius: 20px;
             opacity: 1;
             font-weight: 800;
             cursor: pointer;
+            font-size: 0.85rem;
             transition: all 0.3s;
         }
         .nav-links .login-btn:hover {
             background: var(--accent);
-            color: white;
+            color: var(--white-on-accent);
         }
         .nav-links .user-info {
             display: flex;
@@ -107,27 +158,71 @@
         }
 
         @media (max-width: 768px) {
-            nav { padding: 0 15px; }
-            .nav-links { gap: 8px; flex-wrap: wrap; }
-            .nav-links a { font-size: 0.7rem; }
-            .nav-links .pharmacy-link { padding: 6px 15px; }
-            .nav-links .login-btn { padding: 6px 15px; font-size: 0.7rem; }
+            nav { padding: 0 12px; height: 56px; }
+            .logo { font-size: 1.25rem; }
+            .nav-links { gap: 10px; flex-wrap: wrap; }
+            .nav-item > a, .nav-item .nav-trigger { font-size: 0.75rem; padding: 6px 2px; }
+            .nav-dropdown { min-width: 160px; padding: 8px 0; }
+            .nav-dropdown a { padding: 8px 16px; font-size: 0.8rem; }
+            .nav-links a { font-size: 0.75rem; }
+            .nav-links .pharmacy-link { padding: 6px 14px; font-size: 0.75rem; }
+            .nav-auth, .nav-links .login-btn { font-size: 0.75rem; }
             .nav-links .user-name { font-size: 0.65rem; }
             .nav-links .logout-btn { padding: 5px 12px; font-size: 0.65rem; }
             .modal { padding: 30px 20px; }
         }
 
-        /* 3. Hero Section */
+        /* 3. Hero Section (가로 꽉 참, 연구/약 테마 배경 이미지) */
         .hero {
-            height: 100vh; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
-            padding: 0 20px;
+            width: 100%;
+            min-height: 85vh;
+            margin-top: 64px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            text-align: left;
+            padding: 0 8% 0 8%;
+            position: relative;
+            background: #1d2f28;
+            color: #fff;
+            overflow: hidden;
         }
-        .hero-sub { font-size: clamp(0.7rem, 2vw, 0.9rem); letter-spacing: 0.4em; color: var(--accent); margin-bottom: 20px; font-weight: 700; }
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+        .hero-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(90deg, rgba(29,29,31,0.75) 0%, rgba(29,29,31,0.2) 60%, transparent 100%);
+            pointer-events: none;
+        }
+        .hero-content { position: relative; z-index: 2; max-width: 640px; }
+        .hero-sub {
+            font-size: clamp(0.8rem, 1.8vw, 1rem);
+            letter-spacing: 0.25em;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
         .hero h1 {
-            font-size: clamp(3rem, 10vw, 7.5rem);
-            font-weight: 900; letter-spacing: -0.05em; line-height: 0.9;
+            font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1.15;
+            color: #fff;
+            text-shadow: 0 2px 24px rgba(0,0,0,0.2);
         }
+        .hero h1 .hero-accent { color: #a8d5ba; }
 
         /* 4. 시네마틱 스태킹 카드 섹션 (반응형 핵심) */
         .stack-container { 
@@ -258,12 +353,17 @@
         }
         .visual-box-img {
             padding: 20px;
+            min-height: 320px;
         }
         .visual-box-img img {
+            width: 100%;
+            height: 100%;
+            min-height: 280px;
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
             border-radius: 12px;
+            display: block;
         }
         .visual-box.clickable-hint {
             position: relative;
@@ -503,7 +603,7 @@
 
         .btn-primary {
             width: 100%; padding: 16px;
-            background: var(--accent); color: white;
+            background: var(--accent); color: var(--white-on-accent);
             border: none; border-radius: 12px;
             font-size: 1rem; font-weight: 800;
             font-family: 'Pretendard', sans-serif;
@@ -705,12 +805,12 @@
         }
 
         @media (max-width: 480px) {
-            nav { width: 95%; height: auto; min-height: 50px; padding: 8px 12px; }
-            .logo { font-size: 0.95rem; }
-            .nav-links { gap: 6px; }
-            .nav-links a { font-size: 0.65rem; }
-            .nav-links .pharmacy-link { padding: 5px 12px; font-size: 0.65rem; }
-            .nav-links .login-btn { padding: 5px 12px; font-size: 0.65rem; }
+            nav { height: auto; min-height: 50px; padding: 8px 10px; }
+            .logo { font-size: 1.1rem; }
+            .nav-links { gap: 8px; }
+            .nav-links a { font-size: 0.7rem; }
+            .nav-links .pharmacy-link { padding: 5px 12px; font-size: 0.7rem; }
+            .nav-auth, .nav-links .login-btn { font-size: 0.7rem; }
             .nav-links .user-info { flex-direction: column; gap: 5px; }
             .stack-card { padding: 30px 20px; }
             .pharmacy-section { padding: 100px 3% 60px; }
@@ -972,13 +1072,19 @@
 
         /* 7. Footer */
         footer {
-            height: 60vh; background: var(--main); color: white;
-            border-radius: 40px 40px 0 0; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
+            height: 60vh;
+            background: var(--accent);
+            color: var(--white-on-accent);
+            border-radius: 40px 40px 0 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
             padding: 0 20px;
         }
-        footer h2 { font-size: clamp(2.5rem, 8vw, 6rem); font-weight: 900; letter-spacing: -0.04em; margin-bottom: 20px; }
-        footer p { opacity: 0.4; font-size: 0.8rem; letter-spacing: 1px; }
+        footer h2 { font-size: clamp(2.5rem, 8vw, 6rem); font-weight: 900; letter-spacing: -0.04em; margin-bottom: 20px; color: #fff; }
+        footer p { opacity: 0.85; font-size: 0.8rem; letter-spacing: 1px; color: #fff; }
 
         /* 제품 상세 모달 */
         .product-detail-modal {
@@ -1358,6 +1464,143 @@
             }
         }
 
+        /* 첫 페이지: 제품소개 (디알에스 스타일) */
+        .product-intro-section {
+            padding: 80px 8% 100px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .product-intro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 0 4px;
+        }
+        .product-intro-header h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--main);
+        }
+        .product-intro-header .more-link {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+        .product-intro-header .more-link:hover { opacity: 0.8; }
+        .product-intro-grid {
+            display: flex;
+            gap: 28px;
+            overflow-x: auto;
+            padding: 10px 0 20px;
+            scroll-snap-type: x mandatory;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .product-intro-grid::-webkit-scrollbar { display: none; }
+        .product-intro-card {
+            flex: 0 0 280px;
+            scroll-snap-align: start;
+            background: #fff;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .product-intro-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 48px rgba(45, 90, 76, 0.12);
+        }
+        .product-intro-card .card-img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: contain;
+            background: linear-gradient(180deg, rgba(45,90,76,0.04) 0%, #fafafa 100%);
+            padding: 24px;
+        }
+        .product-intro-card .card-name {
+            padding: 20px 24px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--main);
+        }
+
+        /* 첫 페이지: 공식 블로그 (디알에스 스타일, placeholder) */
+        .blog-section {
+            padding: 60px 8% 120px;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, transparent 0%, rgba(45,90,76,0.02) 100%);
+        }
+        .blog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 0 4px;
+        }
+        .blog-header h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--main);
+        }
+        .blog-header .blog-link {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.3s;
+        }
+        .blog-header .blog-link:hover { opacity: 0.8; }
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+        }
+        .blog-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .blog-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+        }
+        .blog-card .blog-thumb {
+            width: 100%;
+            aspect-ratio: 16/10;
+            object-fit: cover;
+            background: #eee;
+        }
+        .blog-card .blog-tag {
+            display: inline-block;
+            margin: 16px 20px 0;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+        .blog-card .blog-title {
+            padding: 8px 20px 20px;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: var(--main);
+        }
+
         /* 소식 섹션 전용 스타일 */
         .news-section {
             padding: 150px 0;
@@ -1449,6 +1692,10 @@
 
         /* 모바일 대응 */
         @media (max-width: 850px) {
+            .product-intro-section { padding: 50px 4% 60px; }
+            .product-intro-card { flex: 0 0 240px; }
+            .blog-section { padding: 40px 4% 80px; }
+            .blog-grid { grid-template-columns: 1fr; }
             .news-section {
                 padding: 100px 0;
             }
@@ -1878,12 +2125,35 @@
     <nav>
         <div class="logo" onclick="scrollToTop()">MAYDIN</div>
         <div class="nav-links" id="navLinks">
-            <a href="#philosophy">브랜드</a>
-            <a href="#technology">연구소</a>
-            <a href="#news">소식</a>
-            <a href="#pharmacyMap">제휴 약국</a>
+            <div class="nav-item">
+                <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">회사소개</button>
+                <div class="nav-dropdown">
+                    <a href="#philosophy">메이딘 소개</a>
+                    <a href="#philosophy">연혁</a>
+                    <a href="#certifications">협력사</a>
+                </div>
+            </div>
+            <div class="nav-item">
+                <a href="#philosophy">제품소개</a>
+            </div>
+            <div class="nav-item">
+                <a href="#technology">제품소개 영상</a>
+            </div>
+            <div class="nav-item">
+                <a href="#news">공식블로그</a>
+            </div>
+            <div class="nav-item">
+                <button type="button" class="nav-trigger" aria-haspopup="true">상담문의</button>
+                <div class="nav-dropdown">
+                    <a href="javascript:void(0)" onclick="openKakaoChat()">메이딘 카톡 문의</a>
+                </div>
+            </div>
             <a href="#pharmacy" class="pharmacy-link" id="pharmacyNavLink" onclick="handlePharmacyNav(event)">약사전용몰</a>
-            <button class="login-btn" id="loginNavBtn" onclick="openLoginModal()">로그인</button>
+            <div class="nav-auth" id="navAuth">
+                <button type="button" id="loginNavBtn" onclick="openLoginModal()">로그인</button>
+                <span class="auth-divider">|</span>
+                <button type="button" onclick="openRegisterModal()">회원가입</button>
+            </div>
             <div class="user-info hidden" id="userInfo">
                 <span class="user-name" id="userName"></span>
                 <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
@@ -2038,15 +2308,21 @@
     </div>
 
     <section class="hero" id="hero">
-        <p class="hero-sub">PREMIUM BIO-SCIENCE</p>
-        <h1>DESIGNED<br><span style="color: var(--accent)">BY NATURE.</span></h1>
+        <div class="hero-bg">
+            <img src="assets/nature-research-section.png" alt="">
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <p class="hero-sub">바이오 연구기업, 메이딘</p>
+            <h1>자연의 지혜에<br><span class="hero-accent">과학을 더하다.</span></h1>
+        </div>
     </section>
 
-    <!-- 소식 섹션 -->
+    <!-- 1. 소식 섹션 -->
     <section class="news-section" id="news">
         <div class="news-header">
             <p style="font-weight: 800; color: var(--accent); letter-spacing: 5px; margin-bottom: 15px; font-size: 0.8rem;">LATEST UPDATES</p>
-            <h2>메이딘의 새로운<br>흐름을 만나보세요.</h2>
+            <h2>메이딘의 소식</h2>
         </div>
 
         <div class="news-container">
@@ -2096,6 +2372,7 @@
         </div>
     </section>
 
+    <!-- 2. 회사 소개 (철학·기술·시그니처) -->
     <div class="stack-container">
         <div class="stack-card" id="philosophy">
             <div class="card-content">
@@ -2103,7 +2380,9 @@
                 <h2>자연의 지혜에<br>과학을 더하다.</h2>
                 <p>메이딘은 우리 몸의 자연스러운 방어 기제를 연구합니다.<br>가장 순수한 원료를 찾아 정교한 과학적 공법으로 그 정수만을 담아냅니다.</p>
             </div>
-            <div class="visual-box">PURE EXTRACTION VIDEO</div>
+            <div class="visual-box visual-box-img">
+                <img src="assets/nature-research-section.png" alt="자연 친화적 연구, 자연의 지혜에 과학을 더하다">
+            </div>
         </div>
 
         <div class="stack-card clickable" id="technology" onclick="openRndModal('01')">
@@ -2138,6 +2417,45 @@
             </div>
         </div>
     </div>
+
+    <!-- 3. 공식 블로그 (placeholder) -->
+    <section class="blog-section" id="officialBlog">
+        <div class="blog-header">
+            <h2>공식 블로그</h2>
+            <a href="#news" class="blog-link">블로그 이동 →</a>
+        </div>
+        <div class="blog-grid">
+            <div class="blog-card" onclick="document.getElementById('news').scrollIntoView({ behavior: 'smooth' })">
+                <div class="blog-thumb" style="background: linear-gradient(135deg, rgba(45,90,76,0.15) 0%, rgba(45,90,76,0.05) 100%);"></div>
+                <span class="blog-tag">제품소개</span>
+                <h3 class="blog-title">메이딘 센시비 소개</h3>
+            </div>
+            <div class="blog-card" onclick="document.getElementById('news').scrollIntoView({ behavior: 'smooth' })">
+                <div class="blog-thumb" style="background: linear-gradient(135deg, rgba(45,90,76,0.1) 0%, #f0f0f0 100%);"></div>
+                <span class="blog-tag">건강정보</span>
+                <h3 class="blog-title">자연 유래 성분과 면역력</h3>
+            </div>
+            <div class="blog-card" onclick="document.getElementById('news').scrollIntoView({ behavior: 'smooth' })">
+                <div class="blog-thumb" style="background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);"></div>
+                <span class="blog-tag">소식</span>
+                <h3 class="blog-title">메이딘의 새로운 소식</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- 제품소개 (첫 페이지, 디알에스 스타일) -->
+    <section class="product-intro-section" id="productIntro">
+        <div class="product-intro-header">
+            <h2>제품소개</h2>
+            <a href="#philosophy" class="more-link">더 보기</a>
+        </div>
+        <div class="product-intro-grid">
+            <div class="product-intro-card" onclick="openProductDetail(1)">
+                <img src="assets/sensibee-rendering.png" alt="센시비 SENSIBI" class="card-img">
+                <div class="card-name">센시비 (SENSIBI)</div>
+            </div>
+        </div>
+    </section>
 
     <!-- 인증 및 등록 섹션 -->
     <section class="trust-section" id="certifications">
@@ -2315,7 +2633,6 @@
                     '용량': '60정 (1개월 분)',
                     '섭취 방법': '1일 2정, 식후 복용',
                     '보관 방법': '직사광선을 피해 서늘한 곳에 보관',
-                    '유통기한': '제조일로부터 24개월 (형상 확인 필요)',
                     '인증': 'GMP, HACCP, ISO 9001 인증'
                 },
                 benefits: [
@@ -2369,6 +2686,13 @@
         }
 
         // 로그인 모달 열기
+        // 메이딘 카카오톡 채널 문의 (채널 URL은 추후 교체)
+        function openKakaoChat() {
+            var url = 'https://pf.kakao.com/_MAYDIN'; // TODO: 실제 카카오 채널 ID로 변경
+            if (window.confirm('메이딘 카카오톡 채널로 이동할까요?')) {
+                window.open(url, '_blank', 'noopener');
+            }
+        }
         function openLoginModal() {
             document.getElementById('loginModal').classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -2447,15 +2771,21 @@
 
         // 네비게이션 업데이트 (로그인 후)
         function updateNavAfterLogin() {
-            document.getElementById('loginNavBtn').classList.add('hidden');
+            document.getElementById('navAuth').classList.add('hidden');
             document.getElementById('userInfo').classList.remove('hidden');
             document.getElementById('userName').textContent = currentUser.name + ' 약사님';
         }
 
         // 네비게이션 업데이트 (로그아웃 후)
         function updateNavAfterLogout() {
-            document.getElementById('loginNavBtn').classList.remove('hidden');
+            document.getElementById('navAuth').classList.remove('hidden');
             document.getElementById('userInfo').classList.add('hidden');
+        }
+
+        // 회원가입 버튼 클릭 시 모달 열고 회원가입 탭으로
+        function openRegisterModal() {
+            openLoginModal();
+            switchTab('register');
         }
 
         // 로그아웃 처리
@@ -2793,7 +3123,6 @@
                 ${imageHtml}
                 <div class="product-detail-info">
                     <h3>${product.name}</h3>
-                    <div class="product-detail-price">${product.price.toLocaleString()}원</div>
                     <div class="product-detail-description">
                         ${product.fullDescription || product.description}
                     </div>

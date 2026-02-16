@@ -18,14 +18,19 @@ GitHub Pages 등으로 배포한 주소(예: `https://baeshh.github.io/maydin`)�
 1. 왼쪽 메뉴에서 **앱 설정** → **플랫폼** 클릭
 2. **Web** 플랫폼이 있는지 확인
    - 없으면 **Web** 선택 후 **저장**해서 플랫폼 추가
-3. **Web** 항목에서 **사이트 도메인** 입력란에 아래처럼 **배포 주소만** 입력 후 **저장**
+3. **Web** 항목에서 **사이트 도메인**에 아래 주소를 **한 줄에 하나씩** 입력 후 **저장**
 
-   ```
-   https://baeshh.github.io
-   ```
+   - **배포 사이트** (필수):
+     ```
+     https://baeshh.github.io
+     ```
+   - **로컬 테스트** (localhost:8080에서 지도 보려면 추가):
+     ```
+     http://localhost:8080
+     ```
 
-   - 반드시 `https://` 포함
-   - `https://baeshh.github.io/maydin` 처럼 경로까지 넣지 말고, **도메인만** `https://baeshh.github.io` 로 등록
+   - 반드시 프로토콜(`https://` 또는 `http://`) 포함
+   - 경로(`/maydin` 등)는 넣지 말고 **도메인만** 입력
 
 ---
 
@@ -38,7 +43,12 @@ GitHub Pages 등으로 배포한 주소(예: `https://baeshh.github.io/maydin`)�
 
 ---
 
-## 4. 배포 후 확인
+## 4. 로컬(localhost:8080)에서 지도가 안 뜨는 경우
+
+- **이유**: Kakao Map API는 등록된 도메인에서만 동작합니다. `localhost`는 기본 등록이 아닙니다.
+- **해결**: 위 2번에서 **사이트 도메인**에 `http://localhost:8080` 을 **추가**로 입력하고 저장한 뒤, 브라우저 새로고침하면 로컬에서도 지도가 표시됩니다.
+
+## 5. 배포 후 확인
 
 - 저장 후 1~2분 지나서 **https://baeshh.github.io/maydin** 새로고침
 - 그래도 안 되면 **캐시 없이 새로고침** (Ctrl+Shift+R 또는 Cmd+Shift+R)
@@ -50,8 +60,8 @@ GitHub Pages 등으로 배포한 주소(예: `https://baeshh.github.io/maydin`)�
 | 단계 | 할 일 |
 |------|--------|
 | 1 | developers.kakao.com → 내 애플리케이션 → 앱 선택 |
-| 2 | 플랫폼 → Web → 사이트 도메인에 `https://baeshh.github.io` 입력 후 저장 |
+| 2 | 플랫폼 → Web → 사이트 도메인에 `https://baeshh.github.io` + (로컬 테스트 시) `http://localhost:8080` 입력 후 저장 |
 | 3 | 앱 키에서 JavaScript 키가 index.html의 appkey와 같은지 확인 |
-| 4 | 배포 사이트 새로고침 후 지도 표시 확인 |
+| 4 | 배포 사이트 / 로컬 새로고침 후 지도 표시 확인 |
 
-도메인만 위와 같이 등록하면 배포한 페이지에서도 지도가 정상적으로 표시됩니다.
+도메인만 위와 같이 등록하면 **배포 사이트**와 **localhost** 모두에서 지도가 정상 표시됩니다.

@@ -6,6 +6,8 @@
     <title>메이딘 | 차원을 넘어선 자연의 정수</title>
     <!-- Kakao Map API (JavaScript 키) -->
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=87f6c996d0f83fd42534d1a8a391e6b0&libraries=services"></script>
+    <!-- Kakao 로그인 SDK (간편 로그인/회원가입) -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.9/kakao.min.js" crossorigin="anonymous"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
@@ -3008,6 +3010,10 @@
 
         // 페이지 로드 시 로그인 상태 확인 및 카드 hover 이벤트 초기화
         window.addEventListener('DOMContentLoaded', () => {
+            // 카카오 로그인 SDK 초기화 (제공 키 사용)
+            if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+                Kakao.init('87f6c996d0f83fd42534d1a8a391e6b0');
+            }
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -3016,47 +3022,22 @@
             } else {
                 updateNavAfterLogout();
             }
-            
         });
 
-        // 카카오 로그인 처리
-        // TODO: 카카오 API 연결 - 카카오 로그인 SDK 연동
+        // 카카오 간편 로그인/회원가입 (리다이렉트 방식)
         function handleKakaoLogin() {
-            // 카카오 로그인 API 연결 예시:
-            // Kakao.Auth.login({
-            //     success: function(authObj) {
-            //         Kakao.API.request({
-            //             url: '/v2/user/me',
-            //             success: async function(res) {
-            //                 const kakaoUser = {
-            //                     id: res.id,
-            //                     email: res.kakao_account.email,
-            //                     name: res.kakao_account.profile.nickname,
-            //                     provider: 'kakao'
-            //                 };
-            //                 // 백엔드 API로 카카오 사용자 정보 전송
-            //                 const response = await fetch('/api/auth/kakao', {
-            //                     method: 'POST',
-            //                     headers: { 'Content-Type': 'application/json' },
-            //                     body: JSON.stringify(kakaoUser)
-            //                 });
-            //                 const data = await response.json();
-            //                 if (data.success) {
-            //                     currentUser = data.user;
-            //                     localStorage.setItem('token', data.token);
-            //                     updateNavAfterLogin();
-            //                     closeLoginModal();
-            //                     showPharmacySection();
-            //                 }
-            //             }
-            //         });
-            //     },
-            //     fail: function(err) {
-            //         alert('카카오 로그인에 실패했습니다.');
-            //     }
-            // });
-            
-            alert('카카오 로그인 기능은 준비 중입니다. (API 연결 필요)');
+            if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+                alert('카카오 로그인을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+                return;
+            }
+            var base = location.origin + location.pathname;
+            if (base.endsWith('index.html')) base = base.replace(/index\.html$/, '');
+            else if (!base.endsWith('/')) base = base.substring(0, base.lastIndexOf('/') + 1);
+            var redirectUri = base + (base.endsWith('/') ? '' : '/') + 'kakao-callback.html';
+            Kakao.Auth.authorize({
+                redirectUri: redirectUri,
+                scope: 'profile_nickname,account_email'
+            });
         }
 
         // 구글 로그인 처리

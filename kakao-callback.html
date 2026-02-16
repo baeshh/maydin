@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카카오 로그인 중 | 메이딘</title>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.9/kakao.min.js" crossorigin="anonymous"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .box {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 40px;
+            max-width: 400px;
+            text-align: center;
+        }
+        .box h1 { font-size: 1.1rem; color: #1d1d1f; margin-bottom: 12px; }
+        .box p { color: #666; font-size: 0.9rem; line-height: 1.5; }
+        .accent { color: #2d5a4c; font-weight: 700; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid #eee;
+            border-top-color: #2d5a4c;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { color: #c00; }
+        a { color: #2d5a4c; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="box" id="statusBox">
+        <div class="spinner" id="spinner"></div>
+        <h1 id="title">로그인 처리 중...</h1>
+        <p id="message">잠시만 기다려 주세요.</p>
+    </div>
+    <script>
+        (function() {
+            var KAKAO_JS_KEY = '87f6c996d0f83fd42534d1a8a391e6b0';
+            var params = new URLSearchParams(location.search);
+            var code = params.get('code');
+            var error = params.get('error');
+            var errorDesc = params.get('error_description');
+            var titleEl = document.getElementById('title');
+            var msgEl = document.getElementById('message');
+            var spinnerEl = document.getElementById('spinner');
+
+            function setStatus(title, message, isError) {
+                if (spinnerEl) spinnerEl.style.display = 'none';
+                titleEl.textContent = title;
+                msgEl.innerHTML = message;
+                if (isError) msgEl.classList.add('error');
+            }
+
+            function redirectToIndex() {
+                var base = location.origin + location.pathname;
+                base = base.replace(/kakao-callback\.html$/, '');
+                if (!base.endsWith('/')) base = base + '/';
+                location.replace(base + (base.endsWith('/') ? 'index.html' : '/index.html'));
+            }
+
+            if (error) {
+                setStatus('로그인 취소', '카카오 로그인이 취소되었거나 오류가 발생했습니다. ' + (errorDesc ? decodeURIComponent(errorDesc) : ''), true);
+                setTimeout(redirectToIndex, 2500);
+                return;
+            }
+
+            if (!code) {
+                setStatus('오류', '인가 코드를 받지 못했습니다. <a href="javascript:location.reload()">다시 시도</a> 또는 <a href="./index.html">메인으로</a>', true);
+                return;
+            }
+
+            var redirectUri = location.origin + location.pathname;
+            if (location.hash) redirectUri = redirectUri.replace(/#.*$/, '');
+
+            function finishLogin(user) {
+                try {
+                    var users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
+                    if (!users.some(function(u) { return u.license === user.license; })) {
+                        users.push(user);
+                        localStorage.setItem('pharmacyUsers', JSON.stringify(users));
+                    }
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    setStatus('로그인 완료', '카카오로 로그인되었습니다. 메인으로 이동합니다.');
+                    setTimeout(redirectToIndex, 1200);
+                } catch (e) {
+                    setStatus('저장 오류', '로그인 정보 저장에 실패했습니다. <a href="./index.html">메인으로</a>', true);
+                }
+            }
+
+            function tryTokenAndUser() {
+                fetch('https://kauth.kakao.com/oauth/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
+                    body: new URLSearchParams({
+                        grant_type: 'authorization_code',
+                        client_id: KAKAO_JS_KEY,
+                        redirect_uri: redirectUri,
+                        code: code
+                    })
+                })
+                .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+                .then(function(result) {
+                    if (!result.ok || !result.data.access_token) {
+                        setStatus(
+                            '토큰 발급 실패',
+                            '카카오 개발자 콘솔에서 <strong>리다이렉트 URI</strong>에 <code>' + redirectUri + '</code> 를 등록했는지 확인해 주세요. 토큰 발급은 REST API 키와(선택) 클라이언트 시크릿이 필요할 수 있어 서버에서 처리하는 것을 권장합니다. <a href="./index.html">메인으로</a>',
+                            true
+                        );
+                        return;
+                    }
+                    var accessToken = result.data.access_token;
+                    if (typeof Kakao !== 'undefined') {
+                        Kakao.init(KAKAO_JS_KEY);
+                        Kakao.Auth.setAccessToken(accessToken);
+                    }
+                    return fetch('https://kapi.kakao.com/v2/user/me', {
+                        headers: { 'Authorization': 'Bearer ' + accessToken }
+                    }).then(function(r) { return r.json(); });
+                })
+                .then(function(me) {
+                    if (!me || !me.id) {
+                        setStatus('정보 조회 실패', '사용자 정보를 가져오지 못했습니다. <a href="./index.html">메인으로</a>', true);
+                        return;
+                    }
+                    var kakaoAccount = me.kakao_account || {};
+                    var profile = kakaoAccount.profile || {};
+                    var name = profile.nickname || kakaoAccount.email || '카카오회원';
+                    var email = kakaoAccount.email || '';
+                    var user = {
+                        name: name,
+                        email: email || ('kakao_' + me.id + '@kakao.user'),
+                        license: 'kakao_' + me.id,
+                        provider: 'kakao'
+                    };
+                    finishLogin(user);
+                })
+                .catch(function(err) {
+                    setStatus(
+                        '연결 오류',
+                        '토큰 또는 사용자 정보 요청이 브라우저에서 차단되었을 수 있습니다. 카카오 개발자 콘솔에 리다이렉트 URI를 등록한 뒤, 토큰 발급은 서버(백엔드)에서 진행해 주세요. <a href="./index.html">메인으로</a>',
+                        true
+                    );
+                });
+            }
+
+            if (typeof Kakao !== 'undefined') {
+                if (!Kakao.isInitialized()) Kakao.init(KAKAO_JS_KEY);
+            }
+            tryTokenAndUser();
+        })();
+    </script>
+</body>
+</html>

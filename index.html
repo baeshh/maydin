@@ -25,6 +25,15 @@
             --text-main: #111111;
             --glass: rgba(255,255,255,0.9);
         }
+        /* 데스크톱: 적당한 양측 여백 (눈이 벌어지지 않도록) */
+        @media (min-width: 769px) {
+            :root { --container-width: 100%; }
+            .nav-inner { max-width: 100%; padding: 0 48px; }
+            .container { max-width: 100%; padding: 100px 48px; }
+            .hero-section { padding: 100px 48px 0; }
+            .hero-banner { max-width: 100%; }
+            .footer-inner { max-width: 100%; padding: 0 48px; }
+        }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { font-family: 'Pretendard', sans-serif; color: var(--text-dark); background: #fff; line-height: 1.5; overflow-x: hidden; }

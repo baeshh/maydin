@@ -281,10 +281,12 @@
         .blog-text .date { font-size: 0.85rem; color: var(--text-gray); font-weight: 500; }
 
         /* 6. Footer */
-        footer { background: #111; color: #fff; padding: 60px 0; }
+        footer { background: #111; color: #fff; padding: 80px 0; }
         .footer-inner { max-width: var(--container-width); margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .footer-logo { font-size: 1.8rem; font-weight: 900; margin-bottom: 20px; color: #fff; }
-        .footer-info p { font-size: 0.85rem; color: #aaa; line-height: 1.8; }
+        .footer-logo { font-size: 1.8rem; font-weight: 900; margin-bottom: 32px; color: #fff; }
+        .footer-info p { font-size: 0.9rem; color: #aaa; line-height: 2; margin-bottom: 16px; }
+        .footer-info p:last-child { margin-bottom: 0; }
+        .footer-info .footer-copyright { margin-top: 40px; color: #777; }
         .footer-info strong { color: #ddd; }
         .btn-top { padding: 10px 20px; border: 1px solid #444; border-radius: 50px; color: #fff; font-size: 0.8rem; cursor: pointer; background: transparent; transition: 0.2s; font-family: inherit; }
         .btn-top:hover { background: #fff; color: #111; }
@@ -2454,16 +2456,16 @@
                         <p class="desc">과항진된 면역체계 개선을 위해 설계된 메이딘의 첫 번째 해답. 참당귀 추출물과 핵심 비타민 미네랄의 정밀한 배합으로 당신의 신체 밸런스를 다시 세웁니다.</p>
                         <div class="sig-specs">
                             <div class="spec-item">
-                                <strong>참당귀 추출물</strong>
-                                <span>200mg 함유</span>
-                            </div>
-                            <div class="spec-item">
                                 <strong>비타민 D</strong>
                                 <span>면역 조절 및 뼈 건강</span>
                             </div>
                             <div class="spec-item">
                                 <strong>아연</strong>
                                 <span>정상적인 면역 기능</span>
+                            </div>
+                            <div class="spec-item">
+                                <strong>셀렌</strong>
+                                <span>항산화 및 면역 지원</span>
                             </div>
                         </div>
                         <div class="sig-actions">
@@ -2678,7 +2680,7 @@
                     <p><strong>대표:</strong> 신형상 | <strong>사업자등록번호:</strong> 463-05-03407</p>
                     <p><strong>주소:</strong> 울산광역시 남구 도산로107번길 9, 2층(달동)</p>
                     <p><strong>고객센터:</strong> 010-8222-8164 | contact@meidin.kr</p>
-                    <p style="margin-top: 20px; color: #777;">Copyright © 2026 MEIDIN. All rights reserved.</p>
+                    <p class="footer-copyright">Copyright © 2026 MEIDIN. All rights reserved.</p>
                 </div>
             </div>
             <button class="btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">TOP ↑</button>

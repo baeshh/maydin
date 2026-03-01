@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>메이딘(MEIDIN) | 프리미엄 건강기능식품</title>
     <!-- Kakao Map API (JavaScript 키) -->
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=87f6c996d0f83fd42534d1a8a391e6b0&libraries=services"></script>
@@ -36,7 +36,19 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-        body { font-family: 'Pretendard', sans-serif; color: var(--text-dark); background: #fff; line-height: 1.5; overflow-x: hidden; }
+        html {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+        body {
+            font-family: 'Pretendard', sans-serif;
+            color: var(--text-dark);
+            background: #fff;
+            line-height: 1.5;
+            overflow-x: hidden;
+            max-width: 100%;
+            position: relative;
+        }
         a { text-decoration: none; color: inherit; }
         ul { list-style: none; }
 
@@ -168,6 +180,14 @@
 
         @media (max-width: 768px) {
             .modal { padding: 30px 20px; }
+        }
+
+        /* 모바일 가로 스크롤 방지 */
+        @media (max-width: 900px) {
+            html, body { overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+            main, section, .container, .trust-section, .trust-grid { max-width: 100%; overflow-x: hidden; }
+            .trust-grid { width: 100%; padding: 0 4%; min-width: 0; }
+            .trust-card { min-width: 0; }
         }
 
         /* 공통 컨테이너 & 버튼 */
@@ -2912,7 +2932,7 @@
         // 로그인 모달 열기
         // 메이딘 카카오톡 채널 문의 (채널 URL은 추후 교체)
         function openKakaoChat() {
-            var url = 'https://pf.kakao.com/_MAYDIN'; // TODO: 실제 카카오 채널 ID로 변경
+            var url = 'https://pf.kakao.com/_xdHaHn';
             if (window.confirm('메이딘 카카오톡 채널로 이동할까요?')) {
                 window.open(url, '_blank', 'noopener');
             }

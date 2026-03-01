@@ -188,6 +188,7 @@
             main, section, .container, .trust-section, .trust-grid { max-width: 100%; overflow-x: hidden; }
             .trust-grid { width: 100%; padding: 0 4%; min-width: 0; }
             .trust-card { min-width: 0; }
+            .pharmacy-map-section { overflow-x: clip; }
         }
 
         /* 공통 컨테이너 & 버튼 */
@@ -1097,6 +1098,7 @@
             max-width: 1400px;
             margin: 0 auto;
             background: linear-gradient(to bottom, var(--bg) 0%, rgba(45, 90, 76, 0.02) 100%);
+            overflow-x: clip;
         }
         .pharmacy-map-header {
             text-align: center;
@@ -1127,6 +1129,8 @@
             grid-template-columns: 1fr 1fr;
             gap: 30px;
             margin-top: 40px;
+            width: 100%;
+            min-width: 0;
         }
         .map-wrapper {
             background: var(--glass);
@@ -1136,10 +1140,13 @@
             overflow: hidden;
             box-shadow: 0 20px 40px rgba(0,0,0,0.06);
             height: 600px;
+            min-width: 0;
         }
         #map {
-            width: 100%;
+            width: 100% !important;
             height: 100%;
+            min-height: 0;
+            overflow: hidden;
         }
         .map-controls {
             background: var(--glass);
@@ -1293,10 +1300,30 @@
         @media (max-width: 968px) {
             .map-container {
                 grid-template-columns: 1fr;
+                min-width: 0;
             }
             .map-wrapper {
                 height: 400px;
+                min-width: 0;
+                overflow: hidden;
             }
+            .map-controls { min-width: 0; }
+        }
+
+        /* 제휴약국 지도 섹션 모바일 가로 스크롤 방지 */
+        @media (max-width: 900px) {
+            .pharmacy-map-section {
+                overflow-x: hidden;
+                width: 100%;
+                padding-left: 4%;
+                padding-right: 4%;
+                box-sizing: border-box;
+            }
+            .map-container { width: 100%; overflow: hidden; }
+            .map-wrapper, .map-controls { overflow: hidden; }
+            .search-box { min-width: 0; }
+            .search-input { min-width: 0; }
+            .pharmacy-list { overflow-x: hidden; }
         }
 
         /* 7. Footer */

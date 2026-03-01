@@ -52,7 +52,7 @@
             display: flex; justify-content: space-between; align-items: center;
         }
         .logo { display: flex; align-items: center; cursor: pointer; }
-        .logo img { height: 56px; width: auto; display: block; object-fit: contain; }
+        .logo img { height: 96px; width: auto; display: block; object-fit: contain; }
 
         .nav-menu { display: flex; gap: 40px; font-weight: 700; font-size: 0.95rem; align-items: center; }
         .nav-menu a:hover { color: var(--primary); }
@@ -79,7 +79,7 @@
         @media (max-width: 768px) {
             .nav-menu { gap: 16px; font-size: 0.8rem; }
             .nav-utils { font-size: 0.75rem; }
-            .logo img { height: 44px; }
+            .logo img { height: 72px; }
             .nav-links { gap: 10px; flex-wrap: wrap; }
             .nav-item > a, .nav-item .nav-trigger { font-size: 0.75rem; padding: 6px 2px; }
             .nav-dropdown { min-width: 160px; padding: 8px 0; }
@@ -817,15 +817,6 @@
             background: #FDD835;
             border-color: #FDD835;
         }
-        .btn-google {
-            background: #ffffff;
-            color: #5F6368;
-            border-color: rgba(0,0,0,0.15);
-        }
-        .btn-google:hover {
-            background: #f8f9fa;
-            border-color: rgba(0,0,0,0.2);
-        }
         .social-icon {
             width: 20px;
             height: 20px;
@@ -952,7 +943,7 @@
 
         @media (max-width: 480px) {
             nav { height: auto; min-height: 50px; padding: 8px 10px; }
-            .logo img { height: 38px; }
+            .logo img { height: 60px; }
             .nav-links { gap: 8px; }
             .nav-links a { font-size: 0.7rem; }
             .nav-links .pharmacy-link { padding: 5px 12px; font-size: 0.7rem; }
@@ -2294,7 +2285,7 @@
                     <span class="auth-divider">|</span>
                     <button type="button" onclick="openRegisterModal()">회원가입</button>
                 </div>
-                <a href="#pharmacy" class="pharmacy-link highlight" id="pharmacyNavLink" onclick="handlePharmacyNav(event)">약사전용몰</a>
+                <a href="pharmacy.html" class="pharmacy-link highlight" id="pharmacyNavLink" onclick="handlePharmacyNav(event)">약사전용몰</a>
                 <div class="user-info hidden" id="userInfo">
                     <span class="user-name" id="userName"></span>
                     <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
@@ -2319,10 +2310,6 @@
                         <button type="button" class="btn-social btn-kakao" onclick="handleKakaoLogin()">
                             <span class="social-icon">K</span>
                             <span>카카오로 로그인</span>
-                        </button>
-                        <button type="button" class="btn-social btn-google" onclick="handleGoogleLogin()">
-                            <span class="social-icon">G</span>
-                            <span>구글로 로그인</span>
                         </button>
                     </div>
                     <div class="social-divider">
@@ -2903,13 +2890,14 @@
             if (event.target.id === 'termsModal') closeTermsModal();
         }
 
-        // 약사전용몰 네비게이션 클릭 처리
+        // 약사전용몰 네비게이션 클릭 처리 (새 페이지 pharmacy.html로 이동)
         function handlePharmacyNav(event) {
+            event.preventDefault();
             if (!currentUser) {
-                event.preventDefault();
                 openLoginModal();
+                window._redirectAfterLogin = 'pharmacy.html';
             } else {
-                document.getElementById('pharmacy').scrollIntoView({ behavior: 'smooth' });
+                window.location.href = 'pharmacy.html';
             }
         }
 
@@ -2939,17 +2927,27 @@
             // } catch (error) { ... }
             
             const users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
-            const user = users.find(u => u.license === license && u.password === password);
+            let user = users.find(u => u.license === license && u.password === password);
+            
+            // 테스트용: 등록 회원이 없어도 아무 면허번호/비번으로 로그인 가능 (나중에 API 연동 시 제거)
+            if (!user && license) {
+                user = { license: license, name: '테스트', email: 'test@test.com', password: password };
+            }
             
             if (user) {
                 currentUser = user;
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 updateNavAfterLogin();
                 closeLoginModal();
-                showPharmacySection();
+                if (window._redirectAfterLogin) {
+                    window.location.href = window._redirectAfterLogin;
+                    window._redirectAfterLogin = null;
+                } else {
+                    showPharmacySection();
+                }
                 alert('로그인 성공!');
             } else {
-                alert('면허번호 또는 비밀번호가 올바르지 않습니다.');
+                alert('면허번호를 입력해 주세요.');
             }
         }
 
@@ -3250,44 +3248,6 @@
                 redirectUri: redirectUri,
                 scope: 'profile_nickname,account_email'
             });
-        }
-
-        // 구글 로그인 처리
-        // TODO: 구글 API 연결 - Google OAuth 2.0 연동
-        function handleGoogleLogin() {
-            // 구글 로그인 API 연결 예시:
-            // gapi.load('auth2', function() {
-            //     gapi.auth2.init({
-            //         client_id: 'YOUR_GOOGLE_CLIENT_ID'
-            //     }).then(function() {
-            //         const authInstance = gapi.auth2.getAuthInstance();
-            //         authInstance.signIn().then(async function(googleUser) {
-            //             const profile = googleUser.getBasicProfile();
-            //             const googleUserData = {
-            //                 id: profile.getId(),
-            //                 email: profile.getEmail(),
-            //                 name: profile.getName(),
-            //                 provider: 'google'
-            //             };
-            //             // 백엔드 API로 구글 사용자 정보 전송
-            //             const response = await fetch('/api/auth/google', {
-            //                 method: 'POST',
-            //                 headers: { 'Content-Type': 'application/json' },
-            //                 body: JSON.stringify(googleUserData)
-            //             });
-            //             const data = await response.json();
-            //             if (data.success) {
-            //                 currentUser = data.user;
-            //                 localStorage.setItem('token', data.token);
-            //                 updateNavAfterLogin();
-            //                 closeLoginModal();
-            //                 showPharmacySection();
-            //             }
-            //         });
-            //     });
-            // });
-            
-            alert('구글 로그인 기능은 준비 중입니다. (API 연결 필요)');
         }
 
         // 제품 상세 모달 열기

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - 약사 전용몰 MAYDIN</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        :root {
+            --primary-color: #1A4D2E;
+            --secondary-color: #E8F3EC;
+            --accent-color: #FF5C00;
+            --text-dark: #212529;
+            --text-gray: #495057;
+            --text-light: #868E96;
+            --bg-light: #F8F9FA;
+            --white: #FFFFFF;
+            --border-color: #E9ECEF;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            line-height: 1.5;
+        }
+        a { text-decoration: none; color: inherit; }
+        ul, li { list-style: none; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: var(--white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo img {
+            height: 72px;
+            width: auto;
+        }
+        .header-utils {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+        .header-utils a:hover { color: var(--primary-color); }
+
+        .mypage-layout {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+
+        .sidebar {
+            width: 200px;
+            flex-shrink: 0;
+        }
+        .sidebar h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            color: var(--text-dark);
+        }
+        .sidebar-menu li { margin-bottom: 12px; }
+        .sidebar-menu a {
+            display: block;
+            font-size: 15px;
+            color: var(--text-gray);
+            padding: 8px 0;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .profile-info h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .profile-info h3 span { color: var(--primary-color); }
+        .profile-details {
+            font-size: 14px;
+            color: var(--text-light);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 40px;
+        }
+        .profile-details p span {
+            font-weight: 600;
+            color: var(--text-gray);
+        }
+
+        .benefit-summary { display: flex; gap: 40px; }
+        .benefit-item { text-align: center; }
+        .benefit-item span {
+            display: block;
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        .benefit-item strong {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .order-status-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+        }
+        .status-step {
+            text-align: center;
+            position: relative;
+            flex: 1;
+        }
+        .status-step:not(:last-child)::after {
+            content: '>';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #A3C5B0;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .status-step .count {
+            display: block;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+        .status-step .label {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+        .status-step.active .count { color: var(--primary-color); }
+        .status-step.active .label {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .order-table th {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-gray);
+            font-weight: 600;
+            background-color: #F8F9FA;
+            text-align: center;
+        }
+        .order-table td {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .empty-order {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .info-table th {
+            width: 140px;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-gray);
+            background: #FAFAFA;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .info-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .mypage-layout { flex-direction: column; }
+            .profile-card { flex-direction: column; align-items: flex-start; gap: 24px; }
+            .order-status-board { flex-wrap: wrap; gap: 20px; }
+            .status-step:not(:last-child)::after { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-inner">
+            <a href="pharmacy.html" class="logo">
+                <img src="assets/meidin-logo.png" alt="MAYDIN">
+            </a>
+            <div class="header-utils">
+                <a href="pharmacy.html">약사몰</a>
+                <a href="index.html">메이딘 홈</a>
+                <a href="pharmacy.html" id="logoutLink">로그아웃</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mypage-layout">
+        <aside class="sidebar">
+            <h2>마이페이지</h2>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active">내 정보 홈</a></li>
+                <li><a href="#">주문/배송 조회</a></li>
+                <li><a href="#">취소/교환/반품 내역</a></li>
+                <li><a href="#">쿠폰/적립금</a></li>
+                <li><a href="#">1:1 문의내역</a></li>
+                <li><a href="#">배송지 관리</a></li>
+                <li><a href="#">회원정보 수정</a></li>
+            </ul>
+        </aside>
+
+        <section class="content">
+            <article class="card profile-card">
+                <div class="profile-info">
+                    <h3><span id="userName">-</span> 약사님</h3>
+                    <div class="profile-details">
+                        <p>약국명 : <span id="pharmacyName">-</span></p>
+                        <p>사업자번호 : <span id="bizNo">-</span></p>
+                        <p>면허번호 : <span id="license">-</span></p>
+                        <p>이메일 : <span id="userEmail">-</span></p>
+                        <p>연락처 : <span id="userPhone">-</span></p>
+                    </div>
+                </div>
+                <div class="benefit-summary">
+                    <div class="benefit-item">
+                        <span>보유 적립금</span>
+                        <strong>0 P</strong>
+                    </div>
+                    <div class="benefit-item">
+                        <span>사용가능 쿠폰</span>
+                        <strong>0 장</strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="section-title">회원 정보</div>
+                <table class="info-table" id="infoTable">
+                    <!-- 동적 생성 -->
+                </table>
+            </article>
+
+            <article class="card">
+                <div class="section-title">진행 중인 주문 <span style="font-size: 13px; font-weight: normal; color: var(--text-light);">(최근 1개월)</span></div>
+                <div class="order-status-board">
+                    <div class="status-step">
+                        <span class="count">0</span>
+                        <span class="label">입금/결제대기</span>
+                    </div>
+                    <div class="status-step">
+                        <span class="count">0</span>
+                        <span class="label">결제완료</span>
+                    </div>
+                    <div class="status-step">
+                        <span class="count">0</span>
+                        <span class="label">배송중</span>
+                    </div>
+                    <div class="status-step">
+                        <span class="count">0</span>
+                        <span class="label">배송완료</span>
+                    </div>
+                    <div class="status-step">
+                        <span class="count">0</span>
+                        <span class="label">취소/교환/반품</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="section-title">최근 주문 내역</div>
+                <div class="empty-order">
+                    아직 주문 내역이 없습니다.
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        let currentUser = null;
+
+        function init() {
+            currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            if (!currentUser) {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'pharmacy.html';
+                return;
+            }
+            renderProfile();
+            renderInfoTable();
+            document.getElementById('logoutLink').addEventListener('click', handleLogout);
+        }
+
+        function handleLogout(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            alert('로그아웃 되었습니다.');
+            window.location.href = 'pharmacy.html';
+        }
+
+        function renderProfile() {
+            document.getElementById('userName').textContent = currentUser.name || '-';
+            document.getElementById('pharmacyName').textContent = currentUser.pharmacyName || '-';
+            document.getElementById('bizNo').textContent = currentUser.bizNo || '-';
+            document.getElementById('license').textContent = currentUser.license || '-';
+            document.getElementById('userEmail').textContent = currentUser.email || '-';
+            document.getElementById('userPhone').textContent = currentUser.phone || '-';
+        }
+
+        function renderInfoTable() {
+            var rows = [
+                { label: '성명', value: currentUser.name },
+                { label: '약사면허번호', value: currentUser.license },
+                { label: '이메일', value: currentUser.email },
+                { label: '연락처', value: currentUser.phone },
+                { label: '사업자번호', value: currentUser.bizNo },
+                { label: '약국명', value: currentUser.pharmacyName },
+                { label: '약국 요양기관기호', value: currentUser.pharmacyCode },
+                { label: '약학대학', value: currentUser.pharmacyUniv },
+                { label: '세금계산서 이메일', value: currentUser.taxEmail }
+            ];
+
+            var html = rows.filter(function(r) { return r.value; }).map(function(r) {
+                return '<tr><th>' + r.label + '</th><td>' + (r.value || '-') + '</td></tr>';
+            }).join('');
+
+            if (!html) {
+                html = '<tr><th>성명</th><td>' + (currentUser.name || '-') + '</td></tr>' +
+                       '<tr><th>면허번호</th><td>' + (currentUser.license || '-') + '</td></tr>' +
+                       '<tr><th>이메일</th><td>' + (currentUser.email || '-') + '</td></tr>';
+            }
+            document.getElementById('infoTable').innerHTML = html;
+        }
+
+        init();
+    </script>
+
+</body>
+</html>

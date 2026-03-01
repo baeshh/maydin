@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제품 상세 - 약사 전용몰 MAYDIN</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        :root {
+            --primary-color: #1A4D2E;
+            --primary-hover: #12351f;
+            --secondary-color: #E8F3EC;
+            --accent-color: #FF5C00;
+            --text-dark: #212529;
+            --text-gray: #868E96;
+            --text-light: #ADB5BD;
+            --bg-light: #F8F9FA;
+            --white: #FFFFFF;
+            --border-color: #E9ECEF;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--white);
+            line-height: 1.5;
+        }
+        a { text-decoration: none; color: inherit; }
+        li { list-style: none; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 헤더 */
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo img {
+            height: 52px;
+            width: auto;
+        }
+        .header-utils a {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+        .header-utils a:hover {
+            color: var(--primary-color);
+        }
+
+        /* 제품 상세 상단 */
+        .product-top {
+            display: flex;
+            gap: 60px;
+            margin-bottom: 80px;
+        }
+        .product-image-wrap {
+            flex: 1;
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 420px;
+        }
+        .product-image-wrap img {
+            max-width: 80%;
+            height: auto;
+        }
+        .product-info-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .badge {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            align-self: flex-start;
+        }
+        .product-title {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .review-stars {
+            color: #FFB300;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .review-stars span { color: var(--text-gray); font-weight: normal; margin-left: 4px; }
+
+        .price-section {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+        }
+        .original-price {
+            color: var(--text-light);
+            text-decoration: line-through;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .current-price-wrap {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+        .discount-rate {
+            color: var(--accent-color);
+            font-size: 24px;
+            font-weight: 800;
+        }
+        .current-price {
+            font-size: 26px;
+            font-weight: 800;
+        }
+        .unit-price {
+            color: var(--text-gray);
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .shipping-info {
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .shipping-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        .shipping-label {
+            width: 80px;
+            color: var(--text-gray);
+            font-weight: bold;
+        }
+
+        .option-section { margin-bottom: 30px; }
+        .option-label {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .custom-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--text-light);
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+            appearance: none;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23212529" viewBox="0 0 16 16"><path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>') no-repeat right 16px center;
+            background-color: var(--white);
+            cursor: pointer;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        .btn {
+            padding: 16px 0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-buy {
+            flex: 2;
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+        .btn-buy:hover { background-color: var(--primary-hover); }
+        .btn-cart {
+            flex: 1;
+            background-color: var(--white);
+            border-color: var(--border-color);
+            color: var(--text-dark);
+        }
+        .btn-cart:hover { background-color: var(--bg-light); }
+        .btn-wish {
+            width: 56px;
+            background-color: var(--white);
+            border-color: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-gray);
+            font-size: 20px;
+        }
+
+        .detail-tabs {
+            display: flex;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0;
+            position: sticky;
+            top: 0;
+            background: var(--white);
+            z-index: 10;
+        }
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 18px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-gray);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-item.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-panel {
+            display: none;
+            padding: 40px 0 60px;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+
+        .trust-notice {
+            text-align: center;
+            padding: 60px 20px;
+            margin-bottom: 40px;
+        }
+        .trust-notice h3 {
+            font-size: 18px;
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .trust-notice p {
+            color: var(--text-gray);
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .detail-image-placeholder {
+            width: 100%;
+            min-height: 600px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #0f3319 100%);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.6;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .product-top { flex-direction: column; }
+            .product-image-wrap { min-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-inner">
+            <a href="pharmacy.html" class="logo">
+                <img src="assets/meidin-logo.png" alt="MAYDIN">
+            </a>
+            <div class="header-utils">
+                <a href="pharmacy.html">← 약사몰 목록</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="product-top">
+            <div class="product-image-wrap">
+                <div id="productImageArea" style="color: var(--text-light);">[ 제품 이미지 ]</div>
+            </div>
+
+            <div class="product-info-wrap">
+                <div class="badge" id="productBadge">BEST</div>
+                <h2 class="product-title" id="productTitle">제품명</h2>
+                <div class="review-stars">
+                    ★★★★★ <span id="productRating">4.9</span>
+                </div>
+
+                <div class="price-section">
+                    <div class="original-price" id="originalPrice"></div>
+                    <div class="current-price-wrap">
+                        <span class="discount-rate" id="discountRate"></span>
+                        <span class="current-price" id="currentPrice">0원</span>
+                    </div>
+                    <div class="unit-price" id="unitPrice"></div>
+                </div>
+
+                <div class="shipping-info">
+                    <div class="shipping-row">
+                        <div class="shipping-label">배송 방법</div>
+                        <div>택배</div>
+                    </div>
+                    <div class="shipping-row">
+                        <div class="shipping-label">배송비</div>
+                        <div>무료 <span style="color: var(--text-light); font-size: 12px;">| 도서산간 배송비 추가</span></div>
+                    </div>
+                </div>
+
+                <div class="option-section">
+                    <label class="option-label">제품을 선택해주세요 *</label>
+                    <select class="custom-select" id="productOption">
+                        <option value="" disabled selected>제품을 선택해주세요 (필수)</option>
+                    </select>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-buy" onclick="handleBuy()">구매하기</button>
+                    <button class="btn btn-cart" onclick="handleCart()">장바구니</button>
+                    <button class="btn btn-wish">♡</button>
+                </div>
+            </div>
+        </section>
+
+        <nav class="detail-tabs">
+            <div class="tab-item active" data-tab="detail">상세정보</div>
+            <div class="tab-item" data-tab="review">구매평 (0)</div>
+            <div class="tab-item" data-tab="qa">Q&A (0)</div>
+            <div class="tab-item" data-tab="return">반품/교환</div>
+        </nav>
+
+        <section class="detail-content">
+            <div class="tab-panel active" id="panel-detail">
+                <div class="trust-notice">
+                    <h3><strong>MAYDIN 약사전용몰</strong>은 본 제품의 공식 유통사와<br>직접 계약을 체결한 인증 쇼핑몰입니다.</h3>
+                    <p>본사의 고객지원, 교환, 반품 등이 모두 가능하며<br>유통기한 임박 등 비정상 유통제품이 아닌<br>본사에서 관리된 제품을 발송해드리는 점 안내드립니다.</p>
+                </div>
+                <div class="detail-image-placeholder">
+                    GMP, HACCP, ISO 9001 인증<br>
+                    [ 상세페이지 이미지 영역 ]
+                </div>
+            </div>
+
+            <div class="tab-panel" id="panel-review">
+                <div class="trust-notice">
+                    <h3>구매평</h3>
+                    <p>아직 등록된 구매평이 없습니다.</p>
+                </div>
+                <div style="padding: 60px 20px; text-align: center; color: var(--text-gray);">
+                    첫 구매평을 작성해 주세요.
+                </div>
+            </div>
+
+            <div class="tab-panel" id="panel-qa">
+                <div class="trust-notice">
+                    <h3>Q&A</h3>
+                    <p>제품에 대한 궁금한 점을 남겨주세요.</p>
+                </div>
+                <div style="padding: 60px 20px; text-align: center; color: var(--text-gray);">
+                    아직 등록된 문의가 없습니다.
+                </div>
+            </div>
+
+            <div class="tab-panel" id="panel-return">
+                <div class="trust-notice">
+                    <h3>반품/교환 안내</h3>
+                    <p style="text-align: left; max-width: 600px; margin: 0 auto;">
+                        <strong>반품 가능 기간</strong><br>
+                        수령일로부터 7일 이내 (단, 미개봉 제품에 한함)<br><br>
+                        <strong>반품 불가 사유</strong><br>
+                        • 제품 개봉 및 사용 후<br>
+                        • 고객 부주의로 인한 파손·훼손<br><br>
+                        <strong>문의</strong><br>
+                        고객센터: 010-8222-8164
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const products = {
+            1: {
+                id: 1,
+                name: '센시비 (SENSIBI)',
+                price: 89000,
+                originalPrice: 99000,
+                unit: '/ 30일',
+                tag: 'BEST',
+                rating: 4.9,
+                options: [
+                    { label: '1개월분 (1박스)', value: 1, price: 89000 },
+                    { label: '3개월분 (3박스) - 5% 추가할인', value: 3, price: 253650 },
+                    { label: '6개월분 (6박스) - 10% 추가할인', value: 6, price: 480600 }
+                ]
+            },
+            2: {
+                id: 2,
+                name: '프리미엄 프로바이오틱스',
+                price: 129000,
+                originalPrice: 149000,
+                unit: '/ 30일',
+                tag: '장 건강',
+                rating: 4.8,
+                options: [
+                    { label: '1개월분 (1박스)', value: 1, price: 129000 },
+                    { label: '3개월분 (3박스)', value: 3, price: 387000 }
+                ]
+            },
+            3: {
+                id: 3,
+                name: '오메가-3 프리미엄',
+                price: 149000,
+                originalPrice: 169000,
+                unit: '/ 30일',
+                tag: '순수 어유',
+                rating: 4.9,
+                options: [
+                    { label: '1개월분 (1박스)', value: 1, price: 149000 },
+                    { label: '3개월분 (3박스) - 5% 할인', value: 3, price: 424650 }
+                ]
+            },
+            4: {
+                id: 4,
+                name: '비타민 D3+K2',
+                price: 69000,
+                originalPrice: 79000,
+                unit: '/ 30일',
+                tag: '칼슘 흡수',
+                rating: 4.7,
+                options: [
+                    { label: '1개월분 (1박스)', value: 1, price: 69000 }
+                ]
+            },
+            5: {
+                id: 5,
+                name: 'rTG 오메가-3 600mg',
+                price: 6900,
+                originalPrice: 9900,
+                unit: '/ 30일',
+                tag: '단일 복용 1위',
+                rating: 4.9,
+                options: [
+                    { label: '1개월분', value: 1, price: 6900 },
+                    { label: '3개월분 - 5% 할인', value: 3, price: 19665 },
+                    { label: '6개월분 - 10% 할인', value: 6, price: 37260 }
+                ]
+            }
+        };
+
+        let currentProduct = null;
+
+        function initTabs() {
+            document.querySelectorAll('.tab-item').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    var target = this.getAttribute('data-tab');
+                    document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
+                    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+                    this.classList.add('active');
+                    var panel = document.getElementById('panel-' + target);
+                    if (panel) panel.classList.add('active');
+                });
+            });
+        }
+
+        function init() {
+            initTabs();
+            const params = new URLSearchParams(location.search);
+            const id = parseInt(params.get('id'), 10) || 1;
+            currentProduct = products[id] || products[1];
+
+            document.getElementById('productTitle').textContent = currentProduct.name;
+            document.getElementById('productBadge').textContent = currentProduct.tag;
+            document.getElementById('productRating').textContent = currentProduct.rating;
+
+            const hasDiscount = currentProduct.originalPrice > currentProduct.price;
+            const discountRate = hasDiscount
+                ? Math.round((1 - currentProduct.price / currentProduct.originalPrice) * 100)
+                : 0;
+
+            const origEl = document.getElementById('originalPrice');
+            if (hasDiscount) {
+                origEl.textContent = currentProduct.originalPrice.toLocaleString() + '원';
+                origEl.style.display = 'block';
+            } else {
+                origEl.style.display = 'none';
+            }
+
+            const rateEl = document.getElementById('discountRate');
+            if (discountRate > 0) {
+                rateEl.textContent = discountRate + '%';
+                rateEl.style.display = 'inline';
+            } else {
+                rateEl.style.display = 'none';
+            }
+
+            document.getElementById('currentPrice').textContent = currentProduct.price.toLocaleString() + '원';
+            document.getElementById('unitPrice').innerHTML = '한 달 <span style="color: var(--text-dark);">' + (Math.round(currentProduct.price / 1)).toLocaleString() + '원 부터</span>';
+
+            const optSelect = document.getElementById('productOption');
+            optSelect.innerHTML = '<option value="" disabled selected>제품을 선택해주세요 (필수)</option>' +
+                currentProduct.options.map((o, i) =>
+                    `<option value="${i}" data-price="${o.price}">${o.label} - ${o.price.toLocaleString()}원</option>`
+                ).join('');
+        }
+
+        function handleBuy() {
+            const sel = document.getElementById('productOption');
+            if (!sel.value) {
+                alert('제품을 선택해주세요.');
+                return;
+            }
+            alert('주문 기능은 준비 중입니다.');
+        }
+
+        function handleCart() {
+            const sel = document.getElementById('productOption');
+            if (!sel.value) {
+                alert('제품을 선택해주세요.');
+                return;
+            }
+            const opt = currentProduct.options[parseInt(sel.value, 10)];
+            const item = { ...currentProduct, price: opt.price };
+            let cart = JSON.parse(localStorage.getItem('pharmacyCart') || '[]');
+            cart.push(item);
+            localStorage.setItem('pharmacyCart', JSON.stringify(cart));
+            alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
+        }
+
+        init();
+    </script>
+
+</body>
+</html>

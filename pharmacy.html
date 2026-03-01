@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>약사 전용몰 - MAYDIN</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -288,12 +288,74 @@
         @media (max-width: 1024px) {
             .product-grid { grid-template-columns: repeat(3, 1fr); }
         }
+
+        /* 모바일 반응형 */
         @media (max-width: 768px) {
-            .header-top { flex-wrap: wrap; gap: 15px; }
-            .search-bar { width: 100%; order: 3; }
-            .gnb { flex-wrap: wrap; gap: 15px; }
-            .product-grid { grid-template-columns: repeat(2, 1fr); }
-            .hero-banner { flex-direction: column; text-align: center; padding: 40px 30px; }
+            html, body { overflow-x: hidden; max-width: 100%; }
+            .container { padding: 0 16px; }
+            .header-top {
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 12px 0;
+            }
+            .header-top .logo { flex-shrink: 0; }
+            .logo img { height: 48px; }
+            .search-bar {
+                width: 100%;
+                order: 3;
+                max-width: 100%;
+            }
+            .header-auth {
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: flex-end;
+            }
+            .header-auth .back-home { font-size: 12px; }
+            .user-badge { font-size: 12px; }
+            .btn-mypage { padding: 6px 12px; font-size: 12px; }
+            .btn-logout { padding: 5px 10px; font-size: 12px; }
+            .btn-login { padding: 6px 14px; font-size: 12px; }
+            .gnb-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .gnb {
+                flex-wrap: nowrap;
+                gap: 20px;
+                padding: 12px 0;
+                font-size: 14px;
+                min-width: max-content;
+            }
+            .hero-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 30px 20px;
+                margin: 24px auto;
+            }
+            .hero-content h2 { font-size: 24px; }
+            .hero-content p { font-size: 16px; margin-bottom: 12px; }
+            .hero-image {
+                width: 100%;
+                max-width: 200px;
+                height: 140px;
+                font-size: 12px;
+            }
+            .product-section { margin: 40px 0; }
+            .section-title { font-size: 20px; }
+            .section-desc { font-size: 13px; }
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .product-img { height: 120px; font-size: 11px; }
+            .product-info { padding: 12px; }
+            .product-name { font-size: 13px; }
+            .product-price { font-size: 15px; }
+            .product-actions button { padding: 6px 8px; font-size: 11px; }
+        }
+
+        @media (max-width: 480px) {
+            .header-auth .back-home { display: none; }
+            .user-badge { max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .gnb { font-size: 12px; gap: 10px; }
+            .product-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -315,7 +377,7 @@
                 </span>
             </div>
         </div>
-        <div class="container">
+        <div class="container gnb-wrap">
             <ul class="gnb">
                 <li><a href="#" class="gnb-link active" data-filter="home">약사몰홈</a></li>
                 <li><a href="#" class="gnb-link" data-filter="best">베스트</a></li>

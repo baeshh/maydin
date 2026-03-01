@@ -68,7 +68,6 @@
         .nav-utils a, .nav-utils button { padding: 8px 16px; border-radius: 50px; border: 1px solid var(--border-color); color: var(--text-gray); transition: 0.2s; background: transparent; cursor: pointer; font: inherit; }
         .nav-utils a:hover, .nav-utils button:hover { background: var(--bg-light); color: var(--text-dark); }
         .nav-utils a.highlight, .nav-utils .pharmacy-link { border-color: var(--primary); color: var(--primary); }
-        .nav-utils a.highlight:hover, .nav-utils .pharmacy-link:hover { background: var(--primary); color: #fff; }
         .nav-auth { display: flex; align-items: center; gap: 8px; }
         .nav-auth .auth-divider { color: var(--border-color); user-select: none; }
         .user-info { display: flex; align-items: center; gap: 10px; }
@@ -76,19 +75,98 @@
         .logout-btn { padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; border: 1px solid var(--border-color); background: transparent; cursor: pointer; }
         .logout-btn:hover { border-color: var(--primary); color: var(--primary); }
 
+        /* 햄버거 버튼 (데스크톱에서 숨김) */
+        .nav-hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-hamburger span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--text-dark);
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+        .nav-hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .nav-hamburger.active span:nth-child(2) { opacity: 0; }
+        .nav-hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        /* 모바일 네비게이션 */
+        @media (max-width: 900px) {
+            header { height: auto; min-height: 72px; }
+            .nav-inner { flex-wrap: wrap; padding: 12px 16px; }
+            .logo img { height: 52px; }
+            .nav-hamburger {
+                display: flex;
+                margin-left: auto;
+            }
+            .nav-menu,
+            .nav-utils {
+                display: none;
+                width: 100%;
+            }
+            .nav-menu.mobile-open,
+            .nav-utils.mobile-open {
+                display: flex;
+            }
+            .nav-menu {
+                flex-direction: column;
+                gap: 0;
+                padding: 20px 0;
+                border-top: 1px solid var(--border-color);
+                order: 3;
+                width: 100%;
+            }
+            .nav-menu a,
+            .nav-item .nav-trigger {
+                display: block;
+                padding: 14px 0;
+                font-size: 1rem;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+            }
+            .nav-item .nav-dropdown {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                border: none;
+                padding: 0 0 0 16px;
+                margin-bottom: 8px;
+            }
+            .nav-item .nav-dropdown a {
+                padding: 10px 0;
+                font-size: 0.9rem;
+            }
+            .nav-item:hover .nav-dropdown { transform: none; }
+            .nav-utils {
+                flex-direction: column;
+                gap: 12px;
+                padding: 20px 0;
+                border-top: 1px solid var(--border-color);
+                order: 4;
+                width: 100%;
+            }
+            .nav-utils a,
+            .nav-utils button {
+                display: block;
+                text-align: center;
+                padding: 12px 16px;
+            }
+            .nav-auth { flex-direction: column; }
+            .nav-auth .auth-divider { display: none; }
+        }
+
         @media (max-width: 768px) {
-            .nav-menu { gap: 16px; font-size: 0.8rem; }
-            .nav-utils { font-size: 0.75rem; }
-            .logo img { height: 72px; }
-            .nav-links { gap: 10px; flex-wrap: wrap; }
-            .nav-item > a, .nav-item .nav-trigger { font-size: 0.75rem; padding: 6px 2px; }
-            .nav-dropdown { min-width: 160px; padding: 8px 0; }
-            .nav-dropdown a { padding: 8px 16px; font-size: 0.8rem; }
-            .nav-links a { font-size: 0.75rem; }
-            .nav-links .pharmacy-link { padding: 6px 14px; font-size: 0.75rem; }
-            .nav-auth, .nav-links .login-btn { font-size: 0.75rem; }
-            .nav-links .user-name { font-size: 0.65rem; }
-            .nav-links .logout-btn { padding: 5px 12px; font-size: 0.65rem; }
             .modal { padding: 30px 20px; }
         }
 
@@ -942,13 +1020,7 @@
         }
 
         @media (max-width: 480px) {
-            nav { height: auto; min-height: 50px; padding: 8px 10px; }
-            .logo img { height: 60px; }
-            .nav-links { gap: 8px; }
-            .nav-links a { font-size: 0.7rem; }
-            .nav-links .pharmacy-link { padding: 5px 12px; font-size: 0.7rem; }
-            .nav-auth, .nav-links .login-btn { font-size: 0.7rem; }
-            .nav-links .user-info { flex-direction: column; gap: 5px; }
+            .logo img { height: 46px; }
             .stack-card { padding: 30px 20px; }
             .pharmacy-section { padding: 100px 3% 60px; }
         }
@@ -2260,7 +2332,10 @@
     <header>
         <div class="nav-inner">
             <a href="#" class="logo" onclick="scrollToTop(); return false;"><img src="assets/meidin-logo.png" alt="메이딘"></a>
-            <div class="nav-menu">
+            <button type="button" class="nav-hamburger" id="navHamburger" onclick="toggleMobileNav()" aria-label="메뉴">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-menu" id="navMenu" onclick="if(event.target.closest('a')) closeMobileNav()">
                 <div class="nav-item">
                     <button type="button" class="nav-trigger">회사소개</button>
                     <div class="nav-dropdown">
@@ -2279,7 +2354,7 @@
                     </div>
                 </div>
             </div>
-            <div class="nav-utils">
+            <div class="nav-utils" id="navUtils" onclick="if(event.target.closest('a') || event.target.closest('button')) closeMobileNav()">
                 <div class="nav-auth" id="navAuth">
                     <button type="button" id="loginNavBtn" onclick="openLoginModal()">로그인</button>
                     <span class="auth-divider">|</span>
@@ -3366,6 +3441,26 @@
         // 상단으로 스크롤
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileNav() {
+            var menu = document.getElementById('navMenu');
+            var utils = document.getElementById('navUtils');
+            var ham = document.getElementById('navHamburger');
+            if (!menu || !utils || !ham) return;
+            menu.classList.toggle('mobile-open');
+            utils.classList.toggle('mobile-open');
+            ham.classList.toggle('active');
+        }
+
+        function closeMobileNav() {
+            var menu = document.getElementById('navMenu');
+            var utils = document.getElementById('navUtils');
+            var ham = document.getElementById('navHamburger');
+            if (menu) menu.classList.remove('mobile-open');
+            if (utils) utils.classList.remove('mobile-open');
+            if (ham) ham.classList.remove('active');
+            document.body.style.overflow = '';
         }
 
         // 인증 카드 스크롤 애니메이션

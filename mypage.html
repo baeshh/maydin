@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <script src="assets/api-config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마이페이지 - 약사 전용몰 MAYDIN</title>
     <style>
@@ -325,7 +326,7 @@
 
             <article class="card">
                 <div class="section-title">최근 주문 내역</div>
-                <div class="empty-order">
+                <div id="orderList" class="empty-order">
                     아직 주문 내역이 없습니다.
                 </div>
             </article>
@@ -335,7 +336,7 @@
     <script>
         let currentUser = null;
 
-        function init() {
+        async function init() {
             currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
             if (!currentUser) {
                 alert('로그인이 필요합니다.');
@@ -345,11 +346,29 @@
             renderProfile();
             renderInfoTable();
             document.getElementById('logoutLink').addEventListener('click', handleLogout);
+            var token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    var res = await fetch((window.API_BASE || '') + '/api/orders', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    var data = await res.json();
+                    if (data.success && data.orders && data.orders.length) {
+                        var html = data.orders.map(function(o) {
+                            var items = (o.items || []).map(function(i) { return i.name + ' x' + (i.qty || 1); }).join(', ');
+                            return '<div style="padding:12px;border-bottom:1px solid #eee;"><strong>#' + o.id + '</strong> ' + items + ' - ' + o.total.toLocaleString() + '원 <span style="color:#868e96;font-size:12px;">' + (o.createdAt || '') + '</span></div>';
+                        }).join('');
+                        document.getElementById('orderList').innerHTML = html;
+                        document.getElementById('orderList').classList.remove('empty-order');
+                    }
+                } catch (e) {}
+            }
         }
 
         function handleLogout(e) {
             e.preventDefault();
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
             alert('로그아웃 되었습니다.');
             window.location.href = 'pharmacy.html';
         }

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - MAYDIN</title>
+    <script src="assets/api-config.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        :root { --primary: #135B42; --primary-light: #1a7a55; --bg: #f5f7f6; --card: #fff; --text: #222; --text-muted: #666; --border: #e0e5e3; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+
+        /* 로그인 화면 */
+        .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: var(--card); border-radius: 16px; padding: 48px; max-width: 400px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+        .login-card h1 { font-size: 1.5rem; margin-bottom: 8px; color: var(--primary); }
+        .login-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
+        .form-group input:focus { outline: none; border-color: var(--primary); }
+        .btn { padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; border: none; font-family: inherit; }
+        .btn-primary { background: var(--primary); color: #fff; width: 100%; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .login-error { color: #c00; font-size: 0.85rem; margin-top: 12px; }
+
+        /* 레이아웃 */
+        .admin-layout { display: none; min-height: 100vh; }
+        .admin-layout.active { display: flex; flex-direction: column; }
+        .admin-header { background: var(--primary); color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h1 { font-size: 1.25rem; }
+        .admin-header .user { font-size: 0.9rem; opacity: 0.9; }
+        .admin-header .logout { color: #fff; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+        .admin-header .logout:hover { background: rgba(255,255,255,0.3); }
+
+        .admin-body { display: flex; flex: 1; }
+        .admin-sidebar { width: 220px; background: var(--card); border-right: 1px solid var(--border); padding: 24px 0; }
+        .admin-sidebar a { display: block; padding: 12px 24px; color: var(--text); font-weight: 500; transition: background 0.2s; }
+        .admin-sidebar a:hover, .admin-sidebar a.active { background: rgba(19,91,66,0.08); color: var(--primary); }
+        .admin-main { flex: 1; padding: 32px; overflow-auto; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* 카드 */
+        .card { background: var(--card); border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+        .stat-box { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: #fff; padding: 24px; border-radius: 12px; }
+        .stat-box .value { font-size: 2rem; font-weight: 800; }
+        .stat-box .label { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+
+        /* 테이블 */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; }
+        tr:hover td { background: rgba(19,91,66,0.03); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: #fff; font-family: inherit; }
+        .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm.danger:hover { border-color: #c00; color: #c00; }
+        .status { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-paid { background: #cce5ff; color: #004085; }
+        .status-preparing { background: #d4edda; color: #155724; }
+        .status-shipped { background: #d1ecf1; color: #0c5460; }
+        .status-delivered { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+
+        /* 폼 모달 */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--card); border-radius: 16px; padding: 32px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-content h3 { margin-bottom: 24px; }
+        .modal-footer { margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end; }
+        .modal-footer .btn { width: auto; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+        .empty-msg { color: var(--text-muted); padding: 40px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- 로그인 -->
+    <div class="login-wrap" id="loginWrap">
+        <div class="login-card">
+            <h1>메이딘 관리자</h1>
+            <p>관리자 계정으로 로그인하세요.<br><small style="color:#888">기본: admin@maydin.kr / admin123</small></p>
+            <form id="loginForm" onsubmit="return handleAdminLogin(event)">
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="adminEmail" placeholder="admin@maydin.kr" required>
+                </div>
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="adminPassword" placeholder="비밀번호" required>
+                </div>
+                <div class="login-error" id="loginError"></div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 8px;">로그인</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 어드민 본문 -->
+    <div class="admin-layout" id="adminLayout">
+        <header class="admin-header">
+            <h1>메이딘 관리자</h1>
+            <div>
+                <span class="user" id="adminUserName"></span>
+                <button class="logout" onclick="handleAdminLogout()">로그아웃</button>
+            </div>
+        </header>
+        <div class="admin-body">
+            <nav class="admin-sidebar">
+                <a href="#" class="active" data-tab="dashboard">대시보드</a>
+                <a href="#" data-tab="products">상품 관리</a>
+                <a href="#" data-tab="orders">주문 관리</a>
+                <a href="#" data-tab="posts">블로그/소식</a>
+                <a href="index.html" target="_blank">홈페이지 보기 ↗</a>
+            </nav>
+            <main class="admin-main">
+                <div class="tab-panel active" id="panel-dashboard">
+                    <div class="card">
+                        <div class="card-title">현황 요약</div>
+                        <div class="stats-grid" id="statsGrid">
+                            <div class="stat-box"><div class="value" id="statProducts">0</div><div class="label">등록 상품</div></div>
+                            <div class="stat-box"><div class="value" id="statOrders">0</div><div class="label">주문 건수</div></div>
+                            <div class="stat-box"><div class="value" id="statUsers">0</div><div class="label">가입 회원</div></div>
+                            <div class="stat-box"><div class="value" id="statSales">0</div><div class="label">총 매출(원)</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-products">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div class="card-title" style="margin: 0;">상품 목록</div>
+                            <button class="btn btn-primary" onclick="openProductModal()">+ 상품 추가</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>상품명</th><th>가격</th><th>카테고리</th><th>BEST/NEW</th><th></th></tr></thead>
+                                <tbody id="productList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-orders">
+                    <div class="card">
+                        <div class="card-title">주문 목록</div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>주문번호</th><th>구매자</th><th>금액</th><th>상태</th><th>주문일</th><th></th></tr></thead>
+                                <tbody id="orderList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-posts">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div class="card-title" style="margin: 0;">블로그/소식</div>
+                            <button class="btn btn-primary" onclick="openPostModal()">+ 글 작성</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>제목</th><th>유형</th><th>작성일</th><th></th></tr></thead>
+                                <tbody id="postList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 상품 모달 -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <h3 id="productModalTitle">상품 추가</h3>
+            <form id="productForm" onsubmit="return saveProduct(event)">
+                <input type="hidden" id="productId">
+                <div class="form-group">
+                    <label>상품명 *</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>가격 *</label>
+                        <input type="number" id="productPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>할인가</label>
+                        <input type="number" id="productOriginalPrice" min="0" placeholder="없으면 비움">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>카테고리</label>
+                        <input type="text" id="productCategory" placeholder="예: 면역, 장">
+                    </div>
+                    <div class="form-group">
+                        <label>태그</label>
+                        <input type="text" id="productTag" placeholder="예: 면역 밸런스">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><input type="checkbox" id="productIsBest"> BEST</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="productIsNew"> NEW</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>설명</label>
+                    <input type="text" id="productDesc" placeholder="짧은 설명">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" style="background:#eee" onclick="closeProductModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 글 모달 -->
+    <div class="modal" id="postModal">
+        <div class="modal-content">
+            <h3 id="postModalTitle">글 작성</h3>
+            <form id="postForm" onsubmit="return savePost(event)">
+                <input type="hidden" id="postId">
+                <div class="form-group">
+                    <label>제목 *</label>
+                    <input type="text" id="postTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>유형</label>
+                    <select id="postType">
+                        <option value="news">소식</option>
+                        <option value="blog">블로그</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>내용</label>
+                    <textarea id="postContent" rows="8" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" style="background:#eee" onclick="closePostModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API = window.API_BASE || '';
+        let adminToken = localStorage.getItem('adminToken');
+        let adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
+
+        function headers() {
+            return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken };
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            document.getElementById('loginError').textContent = '';
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            try {
+                const res = await fetch(API + '/api/admin/auth/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    adminToken = data.token;
+                    adminUser = data.admin;
+                    localStorage.setItem('adminToken', adminToken);
+                    localStorage.setItem('adminUser', JSON.stringify(adminUser));
+                    showAdminLayout();
+                } else {
+                    document.getElementById('loginError').textContent = data.message || '로그인 실패';
+                }
+            } catch (err) {
+                document.getElementById('loginError').textContent = '서버 연결 실패. 백엔드가 http://localhost:3001 에서 실행 중인지 확인하세요. (cd server && npm start)';
+            }
+            return false;
+        }
+
+        function handleAdminLogout() {
+            adminToken = null;
+            adminUser = null;
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            document.getElementById('loginWrap').style.display = 'flex';
+            document.getElementById('adminLayout').classList.remove('active');
+        }
+
+        function showAdminLayout() {
+            document.getElementById('loginWrap').style.display = 'none';
+            document.getElementById('adminLayout').classList.add('active');
+            document.getElementById('adminUserName').textContent = adminUser.name + ' (' + adminUser.email + ')';
+            loadStats();
+            loadProducts();
+            loadOrders();
+            loadPosts();
+        }
+
+        document.querySelectorAll('.admin-sidebar a[data-tab]').forEach(a => {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.admin-sidebar a').forEach(x => x.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('panel-' + this.dataset.tab).classList.add('active');
+            });
+        });
+
+        async function loadStats() {
+            try {
+                const res = await fetch(API + '/api/admin/stats', { headers: headers() });
+                const data = await res.json();
+                if (data.success) {
+                    const s = data.stats;
+                    document.getElementById('statProducts').textContent = s.productCount;
+                    document.getElementById('statOrders').textContent = s.orderCount;
+                    document.getElementById('statUsers').textContent = s.userCount;
+                    document.getElementById('statSales').textContent = Number(s.totalSales).toLocaleString();
+                }
+            } catch (e) {}
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(API + '/api/admin/products', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('productList');
+                if (!data.success || !data.products.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">등록된 상품이 없습니다.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.products.map(p => `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.price.toLocaleString()}원</td>
+                        <td>${p.category || '-'}</td>
+                        <td>${p.isBest ? 'BEST ' : ''}${p.isNew ? 'NEW' : ''}</td>
+                        <td>
+                            <button class="btn-sm" onclick="editProduct(${p.id})">수정</button>
+                            <button class="btn-sm danger" onclick="deleteProduct(${p.id}, '${(p.name||'').replace(/'/g,"\\'")}')">삭제</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { document.getElementById('productList').innerHTML = '<tr><td colspan="6" class="empty-msg">로드 실패</td></tr>'; }
+        }
+
+        async function loadOrders() {
+            try {
+                const res = await fetch(API + '/api/admin/orders', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('orderList');
+                if (!data.success || !data.orders.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">주문 내역이 없습니다.</td></tr>';
+                    return;
+                }
+                const statusMap = { pending: '입금대기', paid: '결제완료', preparing: '상품준비중', shipped: '배송중', delivered: '배송완료', cancelled: '취소' };
+                tbody.innerHTML = data.orders.map(o => {
+                    const items = (o.items || []).slice(0, 2).map(i => i.name).join(', ');
+                    const more = (o.items || []).length > 2 ? ' 외 ' + ((o.items || []).length - 2) + '건' : '';
+                    return `<tr>
+                        <td>#${o.id}</td>
+                        <td>${o.userLicense || o.userEmail || '-'}<br><small>${items}${more}</small></td>
+                        <td>${o.total.toLocaleString()}원</td>
+                        <td><select class="status status-${o.status}" onchange="updateOrderStatus(${o.id}, this.value)">${Object.entries(statusMap).map(([k,v]) => '<option value="'+k+'"'+(o.status===k?' selected':'')+'>'+v+'</option>').join('')}</select></td>
+                        <td>${(o.createdAt || '').slice(0,10)}</td>
+                        <td></td>
+                    </tr>`;
+                }).join('');
+            } catch (e) { document.getElementById('orderList').innerHTML = '<tr><td colspan="6" class="empty-msg">로드 실패</td></tr>'; }
+        }
+
+        async function updateOrderStatus(id, status) {
+            try {
+                const res = await fetch(API + '/api/admin/orders/' + id, {
+                    method: 'PATCH', headers: headers(),
+                    body: JSON.stringify({ status })
+                });
+                if ((await res.json()).success) loadOrders();
+            } catch (e) { alert('저장 실패'); }
+        }
+
+        async function loadPosts() {
+            try {
+                const res = await fetch(API + '/api/admin/posts', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('postList');
+                if (!data.success || !data.posts.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">작성된 글이 없습니다.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.posts.map(p => `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.title}</td>
+                        <td>${p.type === 'blog' ? '블로그' : '소식'}</td>
+                        <td>${(p.created_at || '').slice(0,10)}</td>
+                        <td>
+                            <button class="btn-sm" onclick="editPost(${p.id})">수정</button>
+                            <button class="btn-sm danger" onclick="deletePost(${p.id}, '${(p.title||'').replace(/'/g,"\\'")}')">삭제</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { document.getElementById('postList').innerHTML = '<tr><td colspan="5" class="empty-msg">로드 실패</td></tr>'; }
+        }
+
+        function openProductModal(id) {
+            document.getElementById('productModalTitle').textContent = id ? '상품 수정' : '상품 추가';
+            document.getElementById('productId').value = id || '';
+            document.getElementById('productForm').reset();
+            if (id) {
+                fetch(API + '/api/products/' + id).then(r => r.json()).then(d => {
+                    if (d.success && d.product) {
+                        const p = d.product;
+                        document.getElementById('productName').value = p.name;
+                        document.getElementById('productPrice').value = p.price;
+                        document.getElementById('productOriginalPrice').value = p.originalPrice || '';
+                        document.getElementById('productCategory').value = p.category || '';
+                        document.getElementById('productTag').value = p.tag || '';
+                        document.getElementById('productIsBest').checked = p.isBest;
+                        document.getElementById('productIsNew').checked = p.isNew;
+                        document.getElementById('productDesc').value = p.desc || p.descShort || '';
+                    }
+                });
+            }
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function closeProductModal() { document.getElementById('productModal').classList.remove('active'); }
+
+        function editProduct(id) { openProductModal(id); }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('productId').value;
+            const payload = {
+                name: document.getElementById('productName').value,
+                price: parseInt(document.getElementById('productPrice').value, 10),
+                originalPrice: parseInt(document.getElementById('productOriginalPrice').value, 10) || null,
+                category: document.getElementById('productCategory').value || null,
+                tag: document.getElementById('productTag').value || null,
+                isBest: document.getElementById('productIsBest').checked,
+                isNew: document.getElementById('productIsNew').checked,
+                descShort: document.getElementById('productDesc').value || null
+            };
+            try {
+                const url = id ? API + '/api/admin/products/' + id : API + '/api/admin/products';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, { method, headers: headers(), body: JSON.stringify(payload) });
+                if ((await res.json()).success) { closeProductModal(); loadProducts(); loadStats(); }
+            } catch (e) { alert('저장 실패'); }
+            return false;
+        }
+
+        async function deleteProduct(id, name) {
+            if (!confirm('"' + name + '" 상품을 삭제하시겠습니까?')) return;
+            try {
+                const res = await fetch(API + '/api/admin/products/' + id, { method: 'DELETE', headers: headers() });
+                if ((await res.json()).success) { loadProducts(); loadStats(); }
+            } catch (e) { alert('삭제 실패'); }
+        }
+
+        function openPostModal(id) {
+            document.getElementById('postModalTitle').textContent = id ? '글 수정' : '글 작성';
+            document.getElementById('postId').value = id || '';
+            document.getElementById('postForm').reset();
+            if (id) {
+                fetch(API + '/api/admin/posts?type=all', { headers: headers() }).then(r => r.json()).then(d => {
+                    const p = (d.posts || []).find(x => x.id == id);
+                    if (p) {
+                        document.getElementById('postTitle').value = p.title;
+                        document.getElementById('postContent').value = p.content || '';
+                        document.getElementById('postType').value = p.type || 'news';
+                    }
+                });
+            }
+            document.getElementById('postModal').classList.add('active');
+        }
+
+        function closePostModal() { document.getElementById('postModal').classList.remove('active'); }
+
+        function editPost(id) { openPostModal(id); }
+
+        async function savePost(e) {
+            e.preventDefault();
+            const id = document.getElementById('postId').value;
+            const payload = {
+                title: document.getElementById('postTitle').value,
+                content: document.getElementById('postContent').value,
+                type: document.getElementById('postType').value
+            };
+            try {
+                const url = id ? API + '/api/admin/posts/' + id : API + '/api/admin/posts';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, { method, headers: headers(), body: JSON.stringify(payload) });
+                if ((await res.json()).success) { closePostModal(); loadPosts(); }
+            } catch (e) { alert('저장 실패'); }
+            return false;
+        }
+
+        async function deletePost(id, title) {
+            if (!confirm('"' + title + '" 글을 삭제하시겠습니까?')) return;
+            try {
+                const res = await fetch(API + '/api/admin/posts/' + id, { method: 'DELETE', headers: headers() });
+                if ((await res.json()).success) loadPosts();
+            } catch (e) { alert('삭제 실패'); }
+        }
+
+        if (adminToken && adminUser) {
+            fetch(API + '/api/admin/auth/me', { headers: headers() })
+                .then(r => r.json())
+                .then(d => { if (d.success) showAdminLayout(); else handleAdminLogout(); })
+                .catch(() => handleAdminLogout());
+        }
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <script src="assets/api-config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>제품 상세 - 약사 전용몰 MAYDIN</title>
     <style>
@@ -483,11 +484,23 @@
             });
         }
 
-        function init() {
+        async function init() {
             initTabs();
             const params = new URLSearchParams(location.search);
             const id = parseInt(params.get('id'), 10) || 1;
-            currentProduct = products[id] || products[1];
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/products/' + id);
+                var data = await res.json();
+                if (data.success && data.product) {
+                    var p = data.product;
+                    currentProduct = {
+                        id: p.id, name: p.name, price: p.price, originalPrice: p.originalPrice || p.price,
+                        tag: p.tag || '', rating: p.rating || 4.8,
+                        options: (p.options || []).length ? p.options : [{ label: '1개월분', value: 1, price: p.price }]
+                    };
+                }
+            } catch (e) {}
+            if (!currentProduct) currentProduct = products[id] || products[1];
 
             document.getElementById('productTitle').textContent = currentProduct.name;
             document.getElementById('productBadge').textContent = currentProduct.tag;

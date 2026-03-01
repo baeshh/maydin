@@ -1,0 +1,151 @@
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const db = require('../db');
+
+const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+
+function userToResponse(row) {
+  if (!row) return null;
+  const { password, ...rest } = row;
+  return {
+    id: rest.id,
+    license: rest.license,
+    name: rest.name,
+    email: rest.email,
+    phone: rest.phone,
+    pharmacyName: rest.pharmacy_name,
+    bizNo: rest.biz_no,
+    pharmacyCode: rest.pharmacy_code,
+    pharmacyUniv: rest.pharmacy_univ,
+    taxEmail: rest.tax_email
+  };
+}
+
+// POST /api/auth/login
+router.post('/login', (req, res) => {
+  const { license, password } = req.body;
+  if (!license || !password) {
+    return res.status(400).json({ success: false, message: '면허번호와 비밀번호를 입력하세요.' });
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE license = ?').get(license);
+  if (!user) {
+    return res.status(401).json({ success: false, message: '존재하지 않는 면허번호입니다.' });
+  }
+
+  const ok = bcrypt.compareSync(password, user.password);
+  if (!ok) {
+    return res.status(401).json({ success: false, message: '비밀번호가 일치하지 않습니다.' });
+  }
+
+  const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
+  res.json({
+    success: true,
+    user: userToResponse(user),
+    token
+  });
+});
+
+// POST /api/auth/register
+router.post('/register', (req, res) => {
+  const { license, password, name, email, phone, pharmacyName, bizNo, pharmacyCode, pharmacyUniv, taxEmail } = req.body;
+
+  if (!license || !password || !name) {
+    return res.status(400).json({ success: false, message: '면허번호, 비밀번호, 성명은 필수입니다.' });
+  }
+
+  const existing = db.prepare('SELECT id FROM users WHERE license = ?').get(license);
+  if (existing) {
+    return res.status(400).json({ success: false, message: '이미 가입된 면허번호입니다.' });
+  }
+
+  const hash = bcrypt.hashSync(password, 10);
+  const stmt = db.prepare(`
+    INSERT INTO users (license, password, name, email, phone, pharmacy_name, biz_no, pharmacy_code, pharmacy_univ, tax_email)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  try {
+    stmt.run(license, hash, name, email || null, phone || null, pharmacyName || null, bizNo || null, pharmacyCode || null, pharmacyUniv || null, taxEmail || null);
+    const user = db.prepare('SELECT * FROM users WHERE license = ?').get(license);
+    const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, user: userToResponse(user), token });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// POST /api/auth/kakao - 카카오 인가코드로 로그인/회원가입
+router.post('/kakao', async (req, res) => {
+  const { code } = req.body;
+  if (!code) {
+    return res.status(400).json({ success: false, message: 'code가 필요합니다.' });
+  }
+
+  const clientId = process.env.KAKAO_CLIENT_ID;
+  const clientSecret = process.env.KAKAO_CLIENT_SECRET;
+  const redirectUri = process.env.KAKAO_REDIRECT_URI || 'http://localhost:3001/api/auth/kakao/callback';
+
+  if (!clientId) {
+    return res.status(500).json({ success: false, message: '카카오 설정이 되지 않았습니다.' });
+  }
+
+  try {
+    const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        code
+      }).toString()
+    });
+    const tokenData = await tokenRes.json();
+    if (tokenData.error) {
+      return res.status(400).json({ success: false, message: tokenData.error_description || '카카오 토큰 실패' });
+    }
+
+    const meRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    const meData = await meRes.json();
+    const kakaoId = String(meData.id);
+    const nickname = meData.kakao_account?.profile?.nickname || '약사';
+    const email = meData.kakao_account?.email || null;
+
+    let user = db.prepare('SELECT * FROM users WHERE kakao_id = ?').get(kakaoId);
+    if (!user) {
+      const license = `K${kakaoId.slice(-8)}`;
+      const hash = bcrypt.hashSync(kakaoId + JWT_SECRET, 10);
+      db.prepare('INSERT INTO users (license, password, name, email, kakao_id) VALUES (?, ?, ?, ?, ?)').run(license, hash, nickname, email, kakaoId);
+      user = db.prepare('SELECT * FROM users WHERE kakao_id = ?').get(kakaoId);
+    }
+
+    const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, user: userToResponse(user), token });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// GET /api/auth/me - 토큰 검증 및 사용자 정보
+router.get('/me', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false });
+  }
+  try {
+    const token = authHeader.slice(7);
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.userId);
+    if (!user) return res.status(404).json({ success: false });
+    res.json({ success: true, user: userToResponse(user) });
+  } catch (e) {
+    res.status(401).json({ success: false });
+  }
+});
+
+module.exports = router;

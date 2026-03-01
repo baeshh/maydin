@@ -2682,41 +2682,10 @@
         <section class="container" id="blog">
             <div class="section-header">
                 <h2>공식 블로그</h2>
-                <a href="#certifications" class="btn-pill">블로그 이동 ➔</a>
+                <a href="#certifications" class="btn-pill">더보기 ➔</a>
             </div>
-            <div class="blog-grid">
-                <a href="javascript:void(0)" class="blog-card" onclick="openNewsDetail(1)">
-                    <div class="blog-img"><img src="assets/nature-research-section.png" alt="블로그 썸네일"></div>
-                    <div class="blog-text">
-                        <span class="tag">보도자료</span>
-                        <h3>메이딘, 품질경영시스템 ISO 9001 인증 획득</h3>
-                        <span class="date">2026.11.28</span>
-                    </div>
-                </a>
-                <a href="javascript:void(0)" class="blog-card" onclick="openNewsDetail(2)">
-                    <div class="blog-img"><img src="assets/nature-research-section.png" alt="블로그 썸네일"></div>
-                    <div class="blog-text">
-                        <span class="tag">분야정보</span>
-                        <h3>도대체 참당귀 추출물이 뭣인지? 면역력 독립선언 편</h3>
-                        <span class="date">2026.10.15</span>
-                    </div>
-                </a>
-                <a href="javascript:void(0)" class="blog-card" onclick="openNewsDetail(3)">
-                    <div class="blog-img"><img src="assets/nature-research-section.png" alt="블로그 썸네일"></div>
-                    <div class="blog-text">
-                        <span class="tag">공지사항</span>
-                        <h3>메이딘 공식 홈페이지 및 온라인 스토어 오픈 안내</h3>
-                        <span class="date">2026.09.05</span>
-                    </div>
-                </a>
-                <a href="javascript:void(0)" class="blog-card" onclick="openNewsDetail(4)">
-                    <div class="blog-img"><img src="assets/nature-research-section.png" alt="블로그 썸네일"></div>
-                    <div class="blog-text">
-                        <span class="tag">제품소개</span>
-                        <h3>센시비 론칭 1주년 기념 고객 감사 이벤트 진행</h3>
-                        <span class="date">2026.10.10</span>
-                    </div>
-                </a>
+            <div class="blog-grid" id="blogGrid">
+                <!-- API에서 로드 (관리자 페이지에서 작성한 글이 표시됩니다) -->
             </div>
         </section>
     </main>
@@ -2894,13 +2863,14 @@
                     <p><strong>대표:</strong> 신형상 | <strong>사업자등록번호:</strong> 463-05-03407</p>
                     <p><strong>주소:</strong> 울산광역시 남구 도산로107번길 9, 2층(달동)</p>
                     <p><strong>고객센터:</strong> 010-8222-8164 | contact@meidin.kr</p>
-                    <p class="footer-copyright">Copyright © 2026 MAYDIN. All rights reserved.</p>
+                    <p class="footer-copyright">Copyright © 2026 MAYDIN. All rights reserved. <a href="admin.html" style="margin-left:12px;font-size:12px;color:#777;">관리자</a></p>
                 </div>
             </div>
             <button class="btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">TOP ↑</button>
         </div>
     </footer>
 
+    <script src="assets/api-config.js"></script>
     <script>
         // 전역 상태 관리
         let currentUser = null;
@@ -3037,53 +3007,41 @@
             }
         }
 
-        // 로그인 처리
-        // TODO: API 연결 - POST /api/auth/login
+        // 로그인 처리 (API 연동)
         async function handleLogin(event) {
             event.preventDefault();
-            const license = document.getElementById('loginLicense').value;
+            const license = document.getElementById('loginLicense').value.trim();
             const password = document.getElementById('loginPassword').value;
-            
-            // 임시: 로컬 스토리지 확인 (나중에 API로 대체)
-            // API 연결 예시:
-            // try {
-            //     const response = await fetch('/api/auth/login', {
-            //         method: 'POST',
-            //         headers: { 'Content-Type': 'application/json' },
-            //         body: JSON.stringify({ license, password })
-            //     });
-            //     const data = await response.json();
-            //     if (data.success) {
-            //         currentUser = data.user;
-            //         localStorage.setItem('token', data.token);
-            //         updateNavAfterLogin();
-            //         closeLoginModal();
-            //         showPharmacySection();
-            //     }
-            // } catch (error) { ... }
-            
-            const users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
-            let user = users.find(u => u.license === license && u.password === password);
-            
-            // 테스트용: 등록 회원이 없어도 아무 면허번호/비번으로 로그인 가능 (나중에 API 연동 시 제거)
-            if (!user && license) {
-                user = { license: license, name: '테스트', email: 'test@test.com', password: password };
+            if (!license || !password) {
+                alert('면허번호와 비밀번호를 입력해 주세요.');
+                return;
             }
-            
-            if (user) {
-                currentUser = user;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                updateNavAfterLogin();
-                closeLoginModal();
-                if (window._redirectAfterLogin) {
-                    window.location.href = window._redirectAfterLogin;
-                    window._redirectAfterLogin = null;
+            try {
+                const res = await fetch((window.API_BASE || '') + '/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ license, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentUser = data.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    localStorage.setItem('token', data.token);
+                    updateNavAfterLogin();
+                    closeLoginModal();
+                    if (window._redirectAfterLogin) {
+                        window.location.href = window._redirectAfterLogin;
+                        window._redirectAfterLogin = null;
+                    } else {
+                        showPharmacySection();
+                    }
+                    alert('로그인 성공!');
                 } else {
-                    showPharmacySection();
+                    alert(data.message || '로그인에 실패했습니다.');
                 }
-                alert('로그인 성공!');
-            } else {
-                alert('면허번호를 입력해 주세요.');
+            } catch (err) {
+                console.error(err);
+                alert('서버 연결에 실패했습니다. 로컬에서 백엔드를 실행 중인지 확인해 주세요.');
             }
         }
 
@@ -3112,6 +3070,7 @@
                 currentUser = null;
                 cart = [];
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('token');
                 updateNavAfterLogout();
                 hidePharmacySection();
                 alert('로그아웃 되었습니다.');
@@ -3129,8 +3088,7 @@
             document.getElementById('pharmacy').classList.remove('active');
         }
 
-        // 회원가입 처리 (약사 전용: 동의·세금이메일·약국정보·서류 업로드)
-        // TODO: API 연결 시 FormData로 파일 전송
+        // 회원가입 처리 (API 연동)
         async function handleRegister(event) {
             event.preventDefault();
 
@@ -3163,29 +3121,41 @@
             }
 
             var emailOptIn = document.querySelector('input[name="emailOptIn"]:checked');
-            var user = {
+            var payload = {
                 license: document.getElementById('registerLicense').value.trim(),
                 name: document.getElementById('registerName').value.trim(),
                 email: document.getElementById('registerEmail').value.trim(),
                 password: document.getElementById('registerPassword').value,
                 phone: document.getElementById('registerPhone').value.trim(),
                 taxEmail: document.getElementById('registerTaxEmail').value.trim(),
-                emailOptIn: emailOptIn ? emailOptIn.value : 'yes',
                 bizNo: document.getElementById('registerBizNo').value.trim(),
                 pharmacyCode: document.getElementById('registerPharmacyCode').value.trim(),
                 pharmacyName: document.getElementById('registerPharmacyName').value.trim(),
-                pharmacyUniv: document.getElementById('registerPharmacyUniv').value.trim(),
-                joinPath: document.getElementById('registerJoinPath').value.trim(),
-                bizCertFileName: bizCert.files[0].name,
-                licenseCertFileName: licenseCert.files[0].name
+                pharmacyUniv: document.getElementById('registerPharmacyUniv').value.trim()
             };
-
-            var users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
-            users.push(user);
-            localStorage.setItem('pharmacyUsers', JSON.stringify(users));
-
-            alert('회원가입이 완료되었습니다. 로그인해 주세요.');
-            switchTab('login');
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                var data = await res.json();
+                if (data.success) {
+                    currentUser = data.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    localStorage.setItem('token', data.token);
+                    alert('회원가입이 완료되었습니다. 자동으로 로그인됩니다.');
+                    switchTab('login');
+                    closeLoginModal();
+                    updateNavAfterLogin();
+                    showPharmacySection();
+                } else {
+                    alert(data.message || '회원가입에 실패했습니다.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('서버 연결에 실패했습니다. 로컬에서 백엔드를 실행 중인지 확인해 주세요.');
+            }
             document.getElementById('registerForm').reset();
             document.getElementById('bizCertFileName').textContent = '';
             document.getElementById('licenseCertFileName').textContent = '';
@@ -3208,18 +3178,20 @@
             alert('사용 가능한 면허번호입니다.');
         }
 
-        // 제품 목록 표시
-        // TODO: API 연결 - GET /api/products
+        // 제품 목록 표시 (API 연동)
         async function showProducts() {
-            // API 연결 예시:
-            // try {
-            //     const response = await fetch('/api/products', {
-            //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            //     });
-            //     products = await response.json();
-            // } catch (error) { ... }
-            
             const grid = document.getElementById('productsGrid');
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/products');
+                var data = await res.json();
+                if (data.success && data.products) {
+                    products = data.products.map(function(p) {
+                        return { id: p.id, name: p.name, description: p.desc || p.description, price: p.price, image: p.imageUrl || 'PRODUCT ' + p.id };
+                    });
+                }
+            } catch (err) {
+                console.warn('API 연결 실패, 기본 상품 사용:', err);
+            }
             grid.innerHTML = products.map(product => `
                 <div class="product-card clickable" onclick="openProductDetail(${product.id})">
                     <div class="product-image">${product.image}</div>
@@ -3272,59 +3244,41 @@
             document.getElementById('total').textContent = subtotal.toLocaleString() + '원';
         }
 
-        // 주문 처리
-        // TODO: API 연결 - POST /api/orders
-        // TODO: 이메일 발송 - POST /api/email/send-order-confirmation
+        // 주문 처리 (API 연동)
         async function handleOrder() {
             if (cart.length === 0) {
                 alert('장바구니가 비어있습니다.');
                 return;
             }
-            
-            const order = {
-                userId: currentUser.license,
-                userEmail: currentUser.email,
-                items: cart,
-                total: cart.reduce((sum, item) => sum + item.price, 0),
-                date: new Date().toISOString()
-            };
-            
-            // API 연결 예시:
-            // try {
-            //     const response = await fetch('/api/orders', {
-            //         method: 'POST',
-            //         headers: { 
-            //             'Content-Type': 'application/json',
-            //             'Authorization': `Bearer ${localStorage.getItem('token')}`
-            //         },
-            //         body: JSON.stringify(order)
-            //     });
-            //     const data = await response.json();
-            //     if (data.success) {
-            //         // 이메일 발송
-            //         await fetch('/api/email/send-order-confirmation', {
-            //             method: 'POST',
-            //             headers: { 'Content-Type': 'application/json' },
-            //             body: JSON.stringify({ orderId: data.orderId, email: currentUser.email })
-            //         });
-            //         alert('주문이 완료되었습니다! 확인 이메일을 발송했습니다.');
-            //         cart = [];
-            //         updateCart();
-            //     }
-            // } catch (error) { ... }
-            
-            // 임시: 로컬 스토리지 저장
-            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-            orders.push(order);
-            localStorage.setItem('orders', JSON.stringify(orders));
-            
-            alert('주문이 완료되었습니다! (나중에 이메일 발송 기능 추가 예정)');
-            cart = [];
-            updateCart();
+            var total = cart.reduce(function(sum, item) { return sum + (item.price || 0) * (item.qty || 1); }, 0);
+            var items = cart.map(function(item) { return { productId: item.id, name: item.name, price: item.price, qty: item.qty || 1 }; });
+            var headers = { 'Content-Type': 'application/json' };
+            var token = localStorage.getItem('token');
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/orders', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ items: items, total: total, userEmail: currentUser ? currentUser.email : null })
+                });
+                var data = await res.json();
+                if (data.success) {
+                    alert('주문이 완료되었습니다! (주문번호: ' + data.orderId + ')');
+                    cart = [];
+                    updateCart();
+                    document.getElementById('orderSection').classList.remove('active');
+                } else {
+                    alert(data.message || '주문 처리에 실패했습니다.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('서버 연결에 실패했습니다. 로컬에서 백엔드를 실행 중인지 확인해 주세요.');
+            }
         }
 
         // 페이지 로드 시 로그인 상태 확인 및 카드 hover 이벤트 초기화
         window.addEventListener('DOMContentLoaded', () => {
+            loadBlogPosts();
             // 카카오 로그인 SDK 초기화 (제공 키 사용)
             if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
                 Kakao.init('87f6c996d0f83fd42534d1a8a391e6b0');
@@ -3381,8 +3335,11 @@
             else if (!base.endsWith('/')) base = base.substring(0, base.lastIndexOf('/') + 1);
             var redirectUri = base + (base.endsWith('/') ? '' : '/') + 'kakao-callback.html';
             Kakao.Auth.authorize({
-                redirectUri: redirectUri,
-                scope: 'profile_nickname,account_email'
+                redirectUri: redirectUri
+                // scope 생략 시 기본 동의만 요청 (카카오 앱 동의항목 미설정 시 KOE205 방지)
+                // 닉네임/이메일 필요 시: 카카오 디벨로퍼스 > 앱 설정 > 카카오 로그인 > 동의항목에서
+                // profile_nickname, account_email 사용 설정 후 아래 주석 해제
+                // scope: 'profile_nickname,account_email'
             });
         }
 
@@ -3540,10 +3497,35 @@
 
 
         // 소식 상세 보기 (나중에 구현)
-        function openNewsDetail(newsId) {
-            // TODO: 소식 상세 모달 또는 페이지 구현
-            console.log('소식 상세:', newsId);
-            // 예시: alert('소식 상세 페이지는 준비 중입니다.');
+        var blogPostsCache = [];
+        async function loadBlogPosts() {
+            var el = document.getElementById('blogGrid');
+            if (!el) return;
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/posts');
+                var data = await res.json();
+                if (data.success && data.posts && data.posts.length) {
+                    blogPostsCache = data.posts;
+                    el.innerHTML = data.posts.slice(0, 4).map(function(p) {
+                        var d = (p.created_at || '').slice(0, 10).replace(/-/g, '.');
+                        return '<a href="javascript:void(0)" class="blog-card" onclick="openNewsDetail(' + p.id + ')">' +
+                            '<div class="blog-img"><img src="assets/nature-research-section.png" alt="블로그 썸네일"></div>' +
+                            '<div class="blog-text"><span class="tag">' + (p.type === 'blog' ? '블로그' : '소식') + '</span>' +
+                            '<h3>' + (p.title || '') + '</h3><span class="date">' + d + '</span></div></a>';
+                    }).join('');
+                } else {
+                    el.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">등록된 소식이 없습니다.</p>';
+                }
+            } catch (e) {
+                el.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">소식을 불러올 수 없습니다.</p>';
+            }
+        }
+
+        function openNewsDetail(postId) {
+            var post = blogPostsCache.find(function(p) { return p.id == postId; });
+            if (post) {
+                alert(post.title + '\n\n' + (post.content || '내용 없음'));
+            }
         }
 
         // R&D 프로세스 데이터
@@ -3658,8 +3640,8 @@
         let geocoder = null;
         let currentPosition = null;
 
-        // 제휴 약국 데이터 (나중에 API로 대체)
-        const partnerPharmacies = [
+        // 제휴 약국 데이터 (API 연동, 실패 시 기본값 사용)
+        let partnerPharmacies = [
             {
                 id: 1,
                 name: '건강약국',
@@ -3979,8 +3961,18 @@
             return R * c;
         }
 
+        // 제휴 약국 API 로드
+        async function loadPharmacies() {
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/pharmacies');
+                var data = await res.json();
+                if (data.success && data.pharmacies && data.pharmacies.length) partnerPharmacies = data.pharmacies;
+            } catch (e) {}
+        }
+
         // 검색 입력창에서 Enter 키 처리
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadPharmacies();
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
                 searchInput.addEventListener('keypress', (e) => {

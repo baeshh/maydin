@@ -25,55 +25,72 @@ function userToResponse(row) {
 
 // POST /api/auth/login
 router.post('/login', (req, res) => {
-  const { license, password } = req.body;
-  if (!license || !password) {
-    return res.status(400).json({ success: false, message: '면허번호와 비밀번호를 입력하세요.' });
-  }
+  try {
+    const license = (req.body && req.body.license) ? String(req.body.license).trim() : '';
+    const password = (req.body && req.body.password) ? String(req.body.password) : '';
+    if (!license || !password) {
+      return res.status(400).json({ success: false, message: '면허번호와 비밀번호를 입력하세요.' });
+    }
 
-  const user = db.prepare('SELECT * FROM users WHERE license = ?').get(license);
-  if (!user) {
-    return res.status(401).json({ success: false, message: '존재하지 않는 면허번호입니다.' });
-  }
+    const user = db.prepare('SELECT * FROM users WHERE license = ?').get(license);
+    if (!user) {
+      return res.status(401).json({ success: false, message: '존재하지 않는 면허번호입니다.' });
+    }
 
-  const ok = bcrypt.compareSync(password, user.password);
-  if (!ok) {
-    return res.status(401).json({ success: false, message: '비밀번호가 일치하지 않습니다.' });
-  }
+    const ok = bcrypt.compareSync(password, user.password);
+    if (!ok) {
+      return res.status(401).json({ success: false, message: '비밀번호가 일치하지 않습니다.' });
+    }
 
-  const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
-  res.json({
-    success: true,
-    user: userToResponse(user),
-    token
-  });
+    const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
+    return res.json({
+      success: true,
+      user: userToResponse(user),
+      token
+    });
+  } catch (e) {
+    console.error('[auth/login]', e);
+    return res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
 });
 
 // POST /api/auth/register
 router.post('/register', (req, res) => {
-  const { license, password, name, email, phone, pharmacyName, bizNo, pharmacyCode, pharmacyUniv, taxEmail } = req.body;
-
-  if (!license || !password || !name) {
-    return res.status(400).json({ success: false, message: '면허번호, 비밀번호, 성명은 필수입니다.' });
-  }
-
-  const existing = db.prepare('SELECT id FROM users WHERE license = ?').get(license);
-  if (existing) {
-    return res.status(400).json({ success: false, message: '이미 가입된 면허번호입니다.' });
-  }
-
-  const hash = bcrypt.hashSync(password, 10);
-  const stmt = db.prepare(`
-    INSERT INTO users (license, password, name, email, phone, pharmacy_name, biz_no, pharmacy_code, pharmacy_univ, tax_email)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
   try {
-    stmt.run(license, hash, name, email || null, phone || null, pharmacyName || null, bizNo || null, pharmacyCode || null, pharmacyUniv || null, taxEmail || null);
+    const body = req.body || {};
+    const license = body.license ? String(body.license).trim() : '';
+    const password = body.password ? String(body.password) : '';
+    const name = body.name ? String(body.name).trim() : '';
+    const email = body.email ? String(body.email).trim() : null;
+    const phone = body.phone ? String(body.phone).trim() : null;
+    const pharmacyName = body.pharmacyName ? String(body.pharmacyName).trim() : null;
+    const bizNo = body.bizNo ? String(body.bizNo).trim() : null;
+    const pharmacyCode = body.pharmacyCode ? String(body.pharmacyCode).trim() : null;
+    const pharmacyUniv = body.pharmacyUniv ? String(body.pharmacyUniv).trim() : null;
+    const taxEmail = body.taxEmail ? String(body.taxEmail).trim() : null;
+
+    if (!license || !password || !name) {
+      return res.status(400).json({ success: false, message: '면허번호, 비밀번호, 성명은 필수입니다.' });
+    }
+
+    const existing = db.prepare('SELECT id FROM users WHERE license = ?').get(license);
+    if (existing) {
+      return res.status(400).json({ success: false, message: '이미 가입된 면허번호입니다.' });
+    }
+
+    const hash = bcrypt.hashSync(password, 10);
+    const stmt = db.prepare(`
+      INSERT INTO users (license, password, name, email, phone, pharmacy_name, biz_no, pharmacy_code, pharmacy_univ, tax_email)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(license, hash, name, email, phone, pharmacyName, bizNo, pharmacyCode, pharmacyUniv, taxEmail);
+
     const user = db.prepare('SELECT * FROM users WHERE license = ?').get(license);
     const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, user: userToResponse(user), token });
+    return res.json({ success: true, user: userToResponse(user), token });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    console.error('[auth/register]', e);
+    return res.status(500).json({ success: false, message: e.message || '회원가입 처리 중 오류가 발생했습니다.' });
   }
 });
 

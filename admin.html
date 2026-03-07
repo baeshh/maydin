@@ -229,6 +229,19 @@
         </div>
     </div>
 
+    <!-- 주문 상세 (결제 창) 모달 -->
+    <div class="modal" id="orderDetailModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <h3>주문 상세 / 결제 정보</h3>
+            <div id="orderDetailBody">
+                <p class="empty-msg">주문을 선택하세요.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background:#eee" onclick="closeOrderDetail()">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 글 모달 -->
     <div class="modal" id="postModal">
         <div class="modal-content">
@@ -262,6 +275,7 @@
         const API = window.API_BASE || '';
         let adminToken = localStorage.getItem('adminToken');
         let adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
+        let ordersCache = [];
 
         function headers() {
             return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken };
@@ -370,21 +384,45 @@
                     tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">주문 내역이 없습니다.</td></tr>';
                     return;
                 }
+                ordersCache = data.orders;
                 const statusMap = { pending: '입금대기', paid: '결제완료', preparing: '상품준비중', shipped: '배송중', delivered: '배송완료', cancelled: '취소' };
                 tbody.innerHTML = data.orders.map(o => {
                     const items = (o.items || []).slice(0, 2).map(i => i.name).join(', ');
                     const more = (o.items || []).length > 2 ? ' 외 ' + ((o.items || []).length - 2) + '건' : '';
                     return `<tr>
                         <td>#${o.id}</td>
-                        <td>${o.userLicense || o.userEmail || '-'}<br><small>${items}${more}</small></td>
+                        <td>${o.userName || o.userLicense || o.userEmail || '-'}<br><small>${items}${more}</small></td>
                         <td>${o.total.toLocaleString()}원</td>
                         <td><select class="status status-${o.status}" onchange="updateOrderStatus(${o.id}, this.value)">${Object.entries(statusMap).map(([k,v]) => '<option value="'+k+'"'+(o.status===k?' selected':'')+'>'+v+'</option>').join('')}</select></td>
                         <td>${(o.createdAt || '').slice(0,10)}</td>
-                        <td></td>
+                        <td><button class="btn-sm" onclick="openOrderDetail(${o.id})">결제/상세</button></td>
                     </tr>`;
                 }).join('');
             } catch (e) { document.getElementById('orderList').innerHTML = '<tr><td colspan="6" class="empty-msg">로드 실패</td></tr>'; }
         }
+
+        function openOrderDetail(orderId) {
+            const o = ordersCache.find(x => x.id === orderId);
+            if (!o) return;
+            const statusMap = { pending: '입금대기', paid: '결제완료', preparing: '상품준비중', shipped: '배송중', delivered: '배송완료', cancelled: '취소' };
+            const itemsHtml = (o.items || []).map(i => '<tr><td>' + (i.name || '-') + '</td><td>' + (i.qty || 1) + '</td><td>' + (i.price || 0).toLocaleString() + '원</td></tr>').join('');
+            document.getElementById('orderDetailBody').innerHTML =
+                '<div style="margin-bottom:20px;"><strong>주문번호</strong> #' + o.id + ' &nbsp; <span class="status status-' + o.status + '">' + (statusMap[o.status] || o.status) + '</span></div>' +
+                '<div style="background:#f5f7f6;padding:16px;border-radius:8px;margin-bottom:16px;">' +
+                '<div style="font-weight:700;margin-bottom:8px;">고객 정보</div>' +
+                '<div>성명: ' + (o.userName || '-') + '</div>' +
+                '<div>면허번호: ' + (o.userLicense || '-') + '</div>' +
+                '<div>이메일: ' + (o.userEmail || '-') + '</div>' +
+                '<div>연락처: ' + (o.userPhone || '-') + '</div>' +
+                '<div>약국명: ' + (o.pharmacyName || '-') + '</div>' +
+                '</div>' +
+                '<div style="font-weight:700;margin-bottom:8px;">주문 상품</div>' +
+                '<table style="width:100%;margin-bottom:16px;"><thead><tr><th>상품명</th><th>수량</th><th>금액</th></tr></thead><tbody>' + itemsHtml + '</tbody></table>' +
+                '<div style="text-align:right;font-size:18px;font-weight:800;">총 결제금액: ' + (o.total || 0).toLocaleString() + '원</div>' +
+                '<div style="margin-top:8px;color:#666;font-size:13px;">주문일: ' + (o.createdAt || '') + '</div>';
+            document.getElementById('orderDetailModal').classList.add('active');
+        }
+        function closeOrderDetail() { document.getElementById('orderDetailModal').classList.remove('active'); }
 
         async function updateOrderStatus(id, status) {
             try {

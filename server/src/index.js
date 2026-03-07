@@ -8,6 +8,7 @@ const productsRouter = require('./routes/products');
 const ordersRouter = require('./routes/orders');
 const pharmaciesRouter = require('./routes/pharmacies');
 const adminRouter = require('./routes/admin');
+const cartRouter = require('./routes/cart');
 const db = require('./db');
 
 const app = express();
@@ -21,6 +22,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/pharmacies', pharmaciesRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/cart', cartRouter);
 
 app.get('/api/posts', (req, res) => {
   const rows = db.prepare('SELECT id, title, content, type, created_at FROM posts WHERE is_published = 1 ORDER BY created_at DESC').all();

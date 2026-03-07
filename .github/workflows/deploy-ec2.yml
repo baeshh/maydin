@@ -1,0 +1,38 @@
+# EC2 자동 배포 (main 푸시 시)
+# 필수 Secrets: EC2_HOST, SSH_PRIVATE_KEY
+# 서버 구조: 프로젝트 /home/ubuntu/apps/maydin, Nginx 프론트 /var/www/maydin, API 3001
+
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/ubuntu/apps/maydin
+            git fetch origin main
+            git reset --hard origin/main
+            # 프론트 → Nginx 서빙 경로 동기화
+            sudo rsync -av --delete \
+              --exclude='.git' \
+              --exclude='server' \
+              --exclude='deploy' \
+              --exclude='node_modules' \
+              --exclude='*.db' \
+              ./ /var/www/maydin/
+            # 백엔드
+            cd server
+            npm ci --omit=dev
+            pm2 restart maydin-api

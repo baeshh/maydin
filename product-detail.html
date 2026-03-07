@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script src="assets/api-config.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>제품 상세 - 약사 전용몰 MAYDIN</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -280,10 +280,89 @@
             .product-top { flex-direction: column; }
             .product-image-wrap { min-height: 300px; }
         }
+
+        /* 모바일 전용 레이아웃 (약사몰 UI) */
+        @media (max-width: 480px) {
+            body { padding-bottom: 70px; background-color: var(--bg-light); }
+            .desktop-only { display: none !important; }
+            .mobile-wrap { max-width: 480px; margin: 0 auto; background: var(--white); min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+            .mobile-header {
+                position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center;
+                padding: 12px 16px; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px);
+                border-bottom: 1px solid var(--border-color); z-index: 50;
+            }
+            .mobile-header .header-icon { font-size: 20px; font-weight: bold; cursor: pointer; }
+            .mobile-header .mobile-logo { font-size: 18px; font-weight: 900; color: var(--primary-color); }
+            .mobile-header a { color: inherit; }
+            .product-image-mobile {
+                width: 100%; aspect-ratio: 1/1; background: #F1F3F5; display: flex; align-items: center; justify-content: center; color: var(--text-gray);
+            }
+            .product-info-mobile { padding: 20px 16px; }
+            .product-title-mobile { font-size: 20px; font-weight: 800; margin-bottom: 12px; line-height: 1.4; }
+            .price-wrap-mobile { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+            .discount-rate-mobile { color: var(--accent-color); font-size: 24px; font-weight: 800; }
+            .current-price-mobile { font-size: 24px; font-weight: 800; }
+            .original-price-mobile { color: var(--text-gray); text-decoration: line-through; font-size: 14px; }
+            .social-proof-mobile {
+                display: inline-block; margin-top: 16px; padding: 8px 12px; background: var(--secondary-color);
+                border: 1px solid var(--primary-color); border-radius: 20px; font-size: 12px; color: var(--primary-color); font-weight: 600;
+            }
+            .detail-placeholder-mobile {
+                min-height: 400px; background: linear-gradient(to bottom, #fff, #f8f9fa); padding: 20px 16px; border-top: 8px solid var(--bg-light);
+            }
+            .bottom-action-bar {
+                position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
+                height: 64px; background: var(--white); border-top: 1px solid var(--border-color); display: flex; z-index: 100;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            }
+            .bottom-icon-btn { width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border-color); background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-dark); }
+            .bottom-icon-btn span { font-size: 10px; margin-top: 2px; color: var(--text-gray); }
+            .btn-cart-mobile { flex: 1; background: var(--white); border: none; font-size: 15px; font-weight: 700; color: var(--text-dark); cursor: pointer; font-family: inherit; }
+            .btn-buy-mobile { flex: 1.5; background: var(--primary-color); border: none; font-size: 16px; font-weight: 800; color: var(--white); cursor: pointer; font-family: inherit; }
+            .option-section-mobile { margin: 16px 0; }
+            .option-section-mobile select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; }
+        }
+        @media (min-width: 481px) {
+            .mobile-only { display: none !important; }
+        }
     </style>
 </head>
 <body>
 
+    <!-- 모바일 전용 헤더/레이아웃 -->
+    <div class="mobile-only mobile-wrap">
+        <header class="mobile-header">
+            <a href="pharmacy.html" class="header-icon">≡</a>
+            <a href="pharmacy.html" class="mobile-logo">MAYDIN</a>
+            <a href="pharmacy.html" class="header-icon">🛒</a>
+        </header>
+        <div class="product-image-mobile" id="productImageMobile">[ 제품 이미지 ]</div>
+        <div class="product-info-mobile">
+            <h1 class="product-title-mobile" id="productTitleMobile">제품명</h1>
+            <div class="price-wrap-mobile">
+                <span class="discount-rate-mobile" id="discountRateMobile"></span>
+                <span class="current-price-mobile" id="currentPriceMobile">0원</span>
+                <span class="original-price-mobile" id="originalPriceMobile"></span>
+            </div>
+            <div class="social-proof-mobile" id="socialProofMobile">메이딘 약사전용몰 공식 유통</div>
+            <div class="option-section-mobile">
+                <select id="productOptionMobile">
+                    <option value="" disabled selected>제품 선택 (필수)</option>
+                </select>
+            </div>
+        </div>
+        <div class="detail-placeholder-mobile">
+            <p style="color: var(--text-gray); text-align: center;">[ 상세페이지 내용 ]</p>
+        </div>
+        <div class="bottom-action-bar">
+            <button type="button" class="bottom-icon-btn" id="btnWishMobile">♡<span>0</span></button>
+            <button type="button" class="btn-cart-mobile" id="btnCartMobile">장바구니</button>
+            <button type="button" class="btn-buy-mobile" id="btnBuyMobile">구매하기</button>
+        </div>
+    </div>
+
+    <!-- 데스크톱 레이아웃 -->
+    <div class="desktop-only">
     <header>
         <div class="container header-inner">
             <a href="pharmacy.html" class="logo">
@@ -398,6 +477,7 @@
             </div>
         </section>
     </main>
+    </div>
 
     <script>
         const products = {
@@ -503,8 +583,21 @@
             if (!currentProduct) currentProduct = products[id] || products[1];
 
             document.getElementById('productTitle').textContent = currentProduct.name;
-            document.getElementById('productBadge').textContent = currentProduct.tag;
-            document.getElementById('productRating').textContent = currentProduct.rating;
+            var badgeEl = document.getElementById('productBadge');
+            if (badgeEl) {
+                if (currentProduct.tag && currentProduct.tag !== '공구 진행중') { badgeEl.textContent = currentProduct.tag; badgeEl.style.display = ''; }
+                else badgeEl.style.display = 'none';
+            }
+            var ratingRow = document.querySelector('.review-stars');
+            if (ratingRow) ratingRow.style.display = 'none';
+
+            var titleMobile = document.getElementById('productTitleMobile');
+            var priceMobile = document.getElementById('currentPriceMobile');
+            var discountMobile = document.getElementById('discountRateMobile');
+            var originalMobile = document.getElementById('originalPriceMobile');
+            var optMobile = document.getElementById('productOptionMobile');
+            if (titleMobile) titleMobile.textContent = currentProduct.name;
+            if (priceMobile) priceMobile.textContent = currentProduct.price.toLocaleString() + '원';
 
             const hasDiscount = currentProduct.originalPrice > currentProduct.price;
             const discountRate = hasDiscount
@@ -520,44 +613,74 @@
             }
 
             const rateEl = document.getElementById('discountRate');
-            if (discountRate > 0) {
-                rateEl.textContent = discountRate + '%';
-                rateEl.style.display = 'inline';
-            } else {
-                rateEl.style.display = 'none';
+            if (rateEl) {
+                if (discountRate > 0) { rateEl.textContent = discountRate + '%'; rateEl.style.display = 'inline'; }
+                else rateEl.style.display = 'none';
+            }
+            if (discountMobile) {
+                if (discountRate > 0) { discountMobile.textContent = discountRate + '%'; discountMobile.style.display = 'inline'; }
+                else discountMobile.style.display = 'none';
+            }
+            if (originalMobile) {
+                if (hasDiscount) { originalMobile.textContent = currentProduct.originalPrice.toLocaleString() + '원'; originalMobile.style.display = 'inline'; }
+                else originalMobile.style.display = 'none';
             }
 
             document.getElementById('currentPrice').textContent = currentProduct.price.toLocaleString() + '원';
             document.getElementById('unitPrice').innerHTML = '한 달 <span style="color: var(--text-dark);">' + (Math.round(currentProduct.price / 1)).toLocaleString() + '원 부터</span>';
 
             const optSelect = document.getElementById('productOption');
-            optSelect.innerHTML = '<option value="" disabled selected>제품을 선택해주세요 (필수)</option>' +
+            var optHtml = '<option value="" disabled selected>제품을 선택해주세요 (필수)</option>' +
                 currentProduct.options.map((o, i) =>
-                    `<option value="${i}" data-price="${o.price}">${o.label} - ${o.price.toLocaleString()}원</option>`
+                    '<option value="' + i + '" data-price="' + o.price + '">' + o.label + ' - ' + o.price.toLocaleString() + '원</option>'
                 ).join('');
+            optSelect.innerHTML = optHtml;
+            if (optMobile) optMobile.innerHTML = '<option value="" disabled selected>제품 선택 (필수)</option>' +
+                currentProduct.options.map(function(o, i) { return '<option value="' + i + '" data-price="' + o.price + '">' + o.label + ' - ' + o.price.toLocaleString() + '원</option>'; }).join('');
+            bindMobileActions();
+        }
+
+        function bindMobileActions() {
+            var btnCart = document.getElementById('btnCartMobile');
+            var btnBuy = document.getElementById('btnBuyMobile');
+            var optMobile = document.getElementById('productOptionMobile');
+            if (btnCart) btnCart.onclick = function() { handleCart(); };
+            if (btnBuy) btnBuy.onclick = function() { handleBuy(); };
+        }
+
+        function getSelectedOption() {
+            var sel = document.getElementById('productOptionMobile') && document.getElementById('productOptionMobile').value !== ''
+                ? document.getElementById('productOptionMobile')
+                : document.getElementById('productOption');
+            if (!sel || !sel.value) return null;
+            return currentProduct.options[parseInt(sel.value, 10)];
         }
 
         function handleBuy() {
-            const sel = document.getElementById('productOption');
-            if (!sel.value) {
-                alert('제품을 선택해주세요.');
-                return;
-            }
-            alert('주문 기능은 준비 중입니다.');
+            var opt = getSelectedOption();
+            if (!opt) { alert('제품을 선택해주세요.'); return; }
+            window.location.href = 'pharmacy.html?order=' + currentProduct.id + '&opt=' + encodeURIComponent(opt.label) + '&price=' + opt.price;
         }
 
         function handleCart() {
-            const sel = document.getElementById('productOption');
-            if (!sel.value) {
-                alert('제품을 선택해주세요.');
-                return;
+            var opt = getSelectedOption();
+            if (!opt) { alert('제품을 선택해주세요.'); return; }
+            var token = localStorage.getItem('token');
+            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1 };
+            if (token) {
+                fetch((window.API_BASE || '') + '/api/cart', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify(item)
+                }).then(function(r) { return r.json(); }).then(function(d) {
+                    if (d.success) alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
+                    else alert(d.message || '실패');
+                }).catch(function() { alert('서버 연결 실패'); });
+            } else {
+                var cart = JSON.parse(localStorage.getItem('pharmacyCart') || '[]');
+                cart.push({ id: currentProduct.id, name: currentProduct.name, price: opt.price, optionLabel: opt.label });
+                localStorage.setItem('pharmacyCart', JSON.stringify(cart));
+                alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
             }
-            const opt = currentProduct.options[parseInt(sel.value, 10)];
-            const item = { ...currentProduct, price: opt.price };
-            let cart = JSON.parse(localStorage.getItem('pharmacyCart') || '[]');
-            cart.push(item);
-            localStorage.setItem('pharmacyCart', JSON.stringify(cart));
-            alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
         }
 
         init();

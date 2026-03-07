@@ -83,6 +83,21 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_posts_type ON posts(type);
   CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(is_published);
 
+  -- 장바구니 (회원별)
+  CREATE TABLE IF NOT EXISTS cart (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    product_name TEXT,
+    option_label TEXT,
+    price INTEGER NOT NULL,
+    qty INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, product_id, option_label)
+  );
+  CREATE INDEX IF NOT EXISTS idx_cart_user ON cart(user_id);
+
   -- 제휴 약국
   CREATE TABLE IF NOT EXISTS pharmacies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,6 +157,17 @@ const adminCount = db.prepare('SELECT COUNT(*) as cnt FROM admin_users').get();
 if (adminCount.cnt === 0) {
   const hash = bcrypt.hashSync('admin123', 10);
   db.prepare('INSERT INTO admin_users (email, password, name) VALUES (?, ?, ?)').run('admin@maydin.kr', hash, '관리자');
+}
+
+// 테스트 약사 계정 (로그인: 면허번호 TEST001 / 비밀번호 test1234)
+const testUser = db.prepare('SELECT id FROM users WHERE license = ?').get('TEST001');
+if (!testUser) {
+  const hash = bcrypt.hashSync('test1234', 10);
+  db.prepare(`
+    INSERT INTO users (license, password, name, email, phone, pharmacy_name, biz_no)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run('TEST001', hash, '테스트 약사', 'test@maydin.kr', '010-0000-0000', '메이딘 테스트약국', '123-45-67890');
+  console.log('테스트 약사 계정 생성: 면허번호 TEST001 / 비밀번호 test1234');
 }
 
 const postCount = db.prepare('SELECT COUNT(*) as cnt FROM posts').get();

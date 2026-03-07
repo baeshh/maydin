@@ -97,11 +97,17 @@ router.delete('/products/:id', adminAuthMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
-// ---- 주문 관리 ----
+// ---- 주문 관리 (고객 정보 조인) ----
 router.get('/orders', adminAuthMiddleware, (req, res) => {
-  const rows = db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all();
+  const rows = db.prepare(`
+    SELECT o.*, u.name as user_name, u.phone as user_phone, u.pharmacy_name
+    FROM orders o
+    LEFT JOIN users u ON u.id = o.user_id
+    ORDER BY o.created_at DESC
+  `).all();
   const list = rows.map(o => ({
     id: o.id, userId: o.user_id, userLicense: o.user_license, userEmail: o.user_email,
+    userName: o.user_name, userPhone: o.user_phone, pharmacyName: o.pharmacy_name,
     items: JSON.parse(o.items || '[]'), total: o.total, status: o.status, createdAt: o.created_at
   }));
   res.json({ success: true, orders: list });

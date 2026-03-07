@@ -435,6 +435,16 @@
                     });
                 }
             } catch (e) { console.warn('API 연결 실패, 기본 상품 사용:', e); }
+            var token = localStorage.getItem('token');
+            if (currentUser && token) {
+                try {
+                    var cartRes = await fetch((window.API_BASE || '') + '/api/cart', { headers: { 'Authorization': 'Bearer ' + token } });
+                    var cartData = await cartRes.json();
+                    if (cartData.success && cartData.items && cartData.items.length) {
+                        cart = cartData.items.map(function(i) { return { id: i.productId, name: i.productName, price: i.price, qty: i.qty }; });
+                    }
+                } catch (e) {}
+            }
             renderUserArea();
             applyFilter(currentFilter);
             initGnb();
@@ -523,15 +533,24 @@
 
         function addToCart(productId) {
             if (!currentUser) {
-                if (confirm('로그인이 필요합니다. 메인 페이지에서 로그인할까요?')) {
-                    window.location.href = 'index.html';
-                }
+                if (confirm('로그인이 필요합니다. 메인 페이지에서 로그인할까요?')) window.location.href = 'index.html';
                 return;
             }
-            const p = products.find(x => x.id === productId);
-            if (p) {
+            var p = products.find(function(x) { return x.id === productId; });
+            if (!p) return;
+            var token = localStorage.getItem('token');
+            if (token) {
+                fetch((window.API_BASE || '') + '/api/cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ productId: p.id, productName: p.name, optionLabel: p.unit || '', price: p.price, qty: 1 })
+                }).then(function(r) { return r.json(); }).then(function(d) {
+                    if (d.success) alert(p.name + '이(가) 장바구니에 추가되었습니다.');
+                    else alert(d.message || '실패');
+                }).catch(function() { alert('서버 연결 실패'); });
+            } else {
                 cart.push(p);
-                alert(`${p.name}이(가) 장바구니에 추가되었습니다.`);
+                alert(p.name + '이(가) 장바구니에 추가되었습니다.');
             }
         }
 

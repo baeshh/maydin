@@ -24,12 +24,20 @@ jobs:
             exit 1
           fi
           echo "Secrets OK (EC2_HOST and SSH_PRIVATE_KEY are set)"
+      - name: Prepare SSH key
+        run: |
+          # PEM 키를 파일로 저장 (줄바꿈 유지). Secrets에 붙여넣을 때 줄바꿈이 빠졌다면
+          # 'Replace newlines' 옵션으로 저장했을 수 있음 → 실제 줄바꿈으로 복원
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | sed 's/\\n/\n/g' > key.pem
+          chmod 600 key.pem
+          # 키 형식 검사 (실패 시 Secrets에 PEM 전체를 줄바꿈 포함해 다시 넣으세요)
+          head -1 key.pem | grep -q "BEGIN.*PRIVATE KEY" || (echo "::error::SSH key format invalid. Paste full .pem including -----BEGIN.../-----END... with real newlines." && exit 1)
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_path: key.pem
           script: |
             set -e
             cd /home/ubuntu/apps/maydin

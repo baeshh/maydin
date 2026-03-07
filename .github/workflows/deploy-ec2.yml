@@ -52,7 +52,8 @@ jobs:
               --exclude='node_modules' \
               --exclude='*.db' \
               ./ /var/www/maydin/
-            # 백엔드
+            # 백엔드 (DB 초기화: 테이블·테스트 계정 TEST001 없으면 생성)
             cd server
             npm ci --omit=dev
+            npm run init-db
             pm2 restart maydin-api

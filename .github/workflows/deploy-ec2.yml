@@ -13,6 +13,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.EC2_HOST }}" ]; then
+            echo "::error::EC2_HOST secret is not set. Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "::error::SSH_PRIVATE_KEY secret is not set. Add your .pem key content."
+            exit 1
+          fi
+          echo "Secrets OK (EC2_HOST and SSH_PRIVATE_KEY are set)"
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:

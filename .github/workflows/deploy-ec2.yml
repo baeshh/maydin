@@ -31,7 +31,8 @@ jobs:
           # 앞뒤 빈 줄 제거 (첫 줄 검사 실패 방지)
           sed -i '/./,$!d' key.pem
           grep -q "BEGIN.*PRIVATE KEY" key.pem || grep -q "PRIVATE KEY" key.pem || (echo "::error::SSH key invalid. Add full .pem in Secrets (from -----BEGIN... to -----END...)." && exit 1)
-          chmod 600 key.pem
+          # 644: ssh-action이 Docker 컨테이너 내 다른 사용자로 실행돼 600이면 permission denied 발생
+          chmod 644 key.pem
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:

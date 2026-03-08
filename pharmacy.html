@@ -441,11 +441,14 @@
             if (currentUser && token) {
                 try {
                     var cartRes = await fetch((window.API_BASE || '') + '/api/cart', { headers: { 'Authorization': 'Bearer ' + token } });
-                    var cartData = await cartRes.json();
-                    if (cartData.success && cartData.items && cartData.items.length) {
+                    var cartText = await cartRes.text();
+                    var cartData = null;
+                    try { cartData = cartText ? JSON.parse(cartText) : null; } catch (_) { }
+                    if (cartData && cartData.success && cartData.items && cartData.items.length) {
                         cart = cartData.items.map(function(i) { return { id: i.productId, name: i.productName, price: i.price, qty: i.qty }; });
                     }
-                } catch (e) {}
+                    if (!cartData && !cartRes.ok) console.warn('장바구니 로드 실패', cartRes.status, cartText && cartText.slice(0, 150));
+                } catch (e) { console.warn('장바구니 로드 오류', e); }
             }
             renderUserArea();
             applyFilter(currentFilter);
@@ -561,8 +564,8 @@
                         alert(p.name + '이(가) 장바구니에 추가되었습니다.');
                     } else alert((x.data && x.data.message) || '실패');
                 }).catch(function(e) {
-                    console.error('장바구니 연결 실패', e);
-                    alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.');
+                    console.error('장바구니 연결 실패', e && e.message, 'URL:', url, e);
+                    alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요. (F12 → Network에서 실패한 요청 확인)');
                 });
             } else {
                 cart.push(p);
@@ -596,8 +599,8 @@
                 if (x.ok && x.data && x.data.success) window.location.href = 'checkout.html';
                 else alert((x.data && x.data.message) || '장바구니 추가 실패');
             }).catch(function(e) {
-                console.error('장바구니 연결 실패', e);
-                alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.');
+                console.error('장바구니/주문 연결 실패', e && e.message, 'URL:', url, e);
+                alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요. (F12 → Network에서 실패한 요청 확인)');
             });
         }
 

@@ -118,6 +118,20 @@ sudo nginx -t && sudo systemctl reload nginx
 - 저장소 **Actions** 탭에서 "Deploy to EC2" 실패 로그 확인
 - "API health check failed" 나오면 → 위 2), 3) 순서로 서버 점검
 
+### 5) 다른 건 되는데 장바구니/주문만 안 될 때
+
+- **F12 → Network** 탭 연 뒤, 장바구니 담기 또는 주문하기 클릭
+  - 실패한 요청(`/api/cart` 또는 `/api/orders`) 클릭 → **Status**(상태 코드), **Response**(응답 내용) 확인
+  - Status **0** 또는 **(failed)** → 요청이 서버까지 안 감 (방화벽, Nginx 중단, 타임아웃 등)
+  - **502/504** → Nginx는 도달했으나 Node 응답 없음 → `pm2 logs maydin-api` 로 서버 에러 확인
+  - **413** → 요청 본문이 너무 큼 → Nginx `client_max_body_size` 확인 (repo 설정은 2M)
+- **Nginx가 POST 본문을 넘기지 않는 경우**가 있을 수 있음. 아래처럼 적용 후 재시도:
+  ```bash
+  sudo cp /home/ubuntu/apps/maydin/deploy/nginx-maydin.conf /etc/nginx/sites-available/maydin
+  sudo nginx -t && sudo systemctl reload nginx
+  ```
+- 브라우저 **Console**에 `장바구니 연결 실패` / `주문 연결 실패` 로그가 찍히면, 옆에 나온 **URL**과 **에러 메시지**를 확인
+
 ---
 
 ## 9. 예정 작업

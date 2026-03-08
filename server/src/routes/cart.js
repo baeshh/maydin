@@ -16,43 +16,58 @@ function getUserId(req) {
 
 // GET /api/cart - 내 장바구니
 router.get('/', (req, res) => {
-  const userId = getUserId(req);
-  if (!userId) {
-    return res.status(401).json({ success: false, message: '로그인이 필요합니다.' });
+  try {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: '로그인이 필요합니다.' });
+    }
+    const rows = db.prepare('SELECT * FROM cart WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+    const items = rows.map(r => ({
+      id: r.id,
+      productId: r.product_id,
+      productName: r.product_name,
+      optionLabel: r.option_label,
+      price: r.price,
+      qty: r.qty
+    }));
+    return res.json({ success: true, items });
+  } catch (e) {
+    console.error('GET /api/cart', e);
+    return res.status(500).json({ success: false, message: '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' });
   }
-  const rows = db.prepare('SELECT * FROM cart WHERE user_id = ? ORDER BY created_at DESC').all(userId);
-  const items = rows.map(r => ({
-    id: r.id,
-    productId: r.product_id,
-    productName: r.product_name,
-    optionLabel: r.option_label,
-    price: r.price,
-    qty: r.qty
-  }));
-  res.json({ success: true, items });
 });
 
 // POST /api/cart - 장바구니 담기
 router.post('/', (req, res) => {
-  const userId = getUserId(req);
-  if (!userId) {
-    return res.status(401).json({ success: false, message: '로그인이 필요합니다.' });
+  try {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: '로그인이 필요합니다.' });
+    }
+    const body = req.body || {};
+    const productId = body.productId;
+    const productName = body.productName;
+    const optionLabel = body.optionLabel;
+    const price = body.price;
+    const qty = body.qty;
+    if (productId == null || price == null) {
+      return res.status(400).json({ success: false, message: '상품 정보가 필요합니다.' });
+    }
+    const opt = optionLabel != null ? String(optionLabel) : '';
+    const existing = db.prepare('SELECT id, qty FROM cart WHERE user_id = ? AND product_id = ? AND (option_label = ? OR (option_label IS NULL AND ? = ""))')
+      .get(userId, productId, opt, opt);
+    if (existing) {
+      db.prepare('UPDATE cart SET qty = qty + ? WHERE id = ?').run(qty || 1, existing.id);
+    } else {
+      db.prepare('INSERT INTO cart (user_id, product_id, product_name, option_label, price, qty) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(userId, productId, productName || null, opt, price, qty || 1);
+    }
+    const rows = db.prepare('SELECT * FROM cart WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+    return res.json({ success: true, items: rows.map(r => ({ id: r.id, productId: r.product_id, productName: r.product_name, optionLabel: r.option_label, price: r.price, qty: r.qty })) });
+  } catch (e) {
+    console.error('POST /api/cart', e);
+    return res.status(500).json({ success: false, message: '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' });
   }
-  const { productId, productName, optionLabel, price, qty } = req.body;
-  if (!productId || price == null) {
-    return res.status(400).json({ success: false, message: '상품 정보가 필요합니다.' });
-  }
-  const opt = optionLabel || '';
-  const existing = db.prepare('SELECT id, qty FROM cart WHERE user_id = ? AND product_id = ? AND (option_label = ? OR (option_label IS NULL AND ? = ""))')
-    .get(userId, productId, opt, opt);
-  if (existing) {
-    db.prepare('UPDATE cart SET qty = qty + ? WHERE id = ?').run(qty || 1, existing.id);
-  } else {
-    db.prepare('INSERT INTO cart (user_id, product_id, product_name, option_label, price, qty) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(userId, productId, productName || null, opt, price, qty || 1);
-  }
-  const rows = db.prepare('SELECT * FROM cart WHERE user_id = ? ORDER BY created_at DESC').all(userId);
-  res.json({ success: true, items: rows.map(r => ({ id: r.id, productId: r.product_id, productName: r.product_name, optionLabel: r.option_label, price: r.price, qty: r.qty })) });
 });
 
 // DELETE /api/cart/:id - 항목 삭제

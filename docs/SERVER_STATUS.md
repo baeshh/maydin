@@ -113,6 +113,28 @@ sudo cp /home/ubuntu/apps/maydin/deploy/nginx-maydin.conf /etc/nginx/sites-avail
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
+**⚠️ Nginx 설정 적용 후 "연결할 수 없음 / ERR_CONNECTION_REFUSED" 나올 때**
+
+1. **EC2에 SSH 접속** 후 아래 순서로 확인:
+   ```bash
+   sudo systemctl status nginx   # inactive면 nginx가 꺼진 것
+   sudo nginx -t                 # 설정 문법 검사 (에러 나오면 설정 문제)
+   sudo tail -30 /var/log/nginx/error.log   # 에러 원인 확인
+   ```
+2. **이전에 HTTPS(Certbot)를 쓰고 있었다면**  
+   repo 설정으로 덮어쓰면 **listen 443 (SSL) 블록이 없어져서** `https://maydin.co.kr` 접속이 거부될 수 있습니다.  
+   - **복구(SSL 다시 붙이기):**
+     ```bash
+     sudo certbot --nginx -d maydin.co.kr -d www.maydin.co.kr
+     ```
+   - Certbot이 자동으로 443 블록을 다시 넣어 줍니다.
+3. **Nginx가 꺼져 있으면:**
+   ```bash
+   sudo systemctl start nginx
+   sudo systemctl enable nginx
+   ```
+4. **설정 오류면** repo 설정 적용 전 상태로 되돌린 뒤, `location /api/` 부분만 수동으로 추가하는 방식으로 맞추는 것이 안전합니다.
+
 ### 4) 배포( GitHub Actions ) 실패 시
 
 - 저장소 **Actions** 탭에서 "Deploy to EC2" 실패 로그 확인

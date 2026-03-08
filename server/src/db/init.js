@@ -182,6 +182,7 @@ db.exec(`
 // 기존 DB에 컬럼 추가 (이미 있으면 무시)
 const userCols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
 const ordersCols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name);
+const cartCols = db.prepare('PRAGMA table_info(cart)').all().map(c => c.name);
 if (!userCols.includes('address')) db.exec('ALTER TABLE users ADD COLUMN address TEXT');
 if (!userCols.includes('status')) db.exec('ALTER TABLE users ADD COLUMN status TEXT DEFAULT \'pending\'');
 if (!userCols.includes('open_date')) db.exec('ALTER TABLE users ADD COLUMN open_date TEXT');
@@ -194,7 +195,11 @@ if (!ordersCols.includes('payment_method')) db.exec("ALTER TABLE orders ADD COLU
 if (!ordersCols.includes('tracking_company')) db.exec('ALTER TABLE orders ADD COLUMN tracking_company TEXT');
 if (!ordersCols.includes('tracking_number')) db.exec('ALTER TABLE orders ADD COLUMN tracking_number TEXT');
 if (!ordersCols.includes('paid_at')) db.exec('ALTER TABLE orders ADD COLUMN paid_at DATETIME');
+if (!cartCols.includes('product_name')) db.exec('ALTER TABLE cart ADD COLUMN product_name TEXT');
+if (!cartCols.includes('option_label')) db.exec('ALTER TABLE cart ADD COLUMN option_label TEXT');
+if (!cartCols.includes('qty')) db.exec('ALTER TABLE cart ADD COLUMN qty INTEGER DEFAULT 1');
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)'); } catch (_) {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_cart_user ON cart(user_id)'); } catch (_) {}
 
 // 시드 데이터
 const productCount = db.prepare('SELECT COUNT(*) as cnt FROM products').get();

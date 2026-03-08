@@ -54,6 +54,63 @@ router.post('/login', (req, res) => {
   }
 });
 
+// POST /api/auth/validate-business — 국세청 사업자등록 진위확인 (OD Cloud)
+router.post('/validate-business', async (req, res) => {
+  const serviceKey = process.env.ODCLOUD_SERVICE_KEY;
+  if (!serviceKey) {
+    return res.status(503).json({ success: false, message: '사업자 정보 조회 서비스가 설정되지 않았습니다.' });
+  }
+
+  const body = req.body || {};
+  const bNo = String(body.b_no || body.bizNo || '').replace(/\D/g, '');
+  const startDt = String(body.start_dt || body.openDate || '').replace(/\D/g, '').slice(0, 8);
+  const pNm = (body.p_nm || body.representativeName || '').trim();
+  const bNm = (body.b_nm || body.businessName || '').trim() || undefined;
+
+  if (bNo.length !== 10) {
+    return res.status(400).json({ success: false, message: '사업자등록번호 10자리를 입력하세요.' });
+  }
+  if (startDt.length !== 8) {
+    return res.status(400).json({ success: false, message: '개업일자를 YYYYMMDD 형식으로 입력하세요.' });
+  }
+  if (!pNm) {
+    return res.status(400).json({ success: false, message: '대표자성명을 입력하세요.' });
+  }
+
+  try {
+    const businesses = [{ b_no: bNo, start_dt: startDt, p_nm: pNm }];
+    if (bNm) businesses[0].b_nm = bNm;
+
+    const url = `https://api.odcloud.kr/api/nts-businessman/v1/validate?serviceKey=${encodeURIComponent(serviceKey)}&returnType=JSON`;
+    const apiRes = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ businesses })
+    });
+    const data = await apiRes.json();
+
+    if (data.status_code && data.status_code !== 'OK') {
+      return res.json({
+        success: false,
+        valid: false,
+        message: data.status_code === 'REQUEST_DATA_MALFORMED' ? '필수 정보가 올바르지 않습니다.' : (data.message || '조회에 실패했습니다.')
+      });
+    }
+
+    const item = (data.data && data.data[0]) || {};
+    const valid = item.valid === '01';
+    return res.json({
+      success: true,
+      valid,
+      message: valid ? '사업자 정보가 확인되었습니다.' : (item.valid_msg || '확인할 수 없습니다. 사업자번호·개업일자·대표자성명을 확인해 주세요.'),
+      status: item.status || null
+    });
+  } catch (e) {
+    console.error('[auth/validate-business]', e);
+    return res.status(500).json({ success: false, message: '사업자 정보 조회 중 오류가 발생했습니다.' });
+  }
+});
+
 // POST /api/auth/register
 router.post('/register', (req, res) => {
   try {

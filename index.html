@@ -2512,10 +2512,16 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>사업자번호 *</label>
-                        <input type="text" id="registerBizNo" placeholder="숫자만 입력 (국세청 등록 정보 기준)" required>
+                        <input type="text" id="registerBizNo" placeholder="숫자만 10자리 (예: 1234567890)" required maxlength="12">
                     </div>
-                    <button type="button" class="btn-secondary" onclick="checkBizNoDuplicate()">중복확인</button>
+                    <div class="form-group">
+                        <label>개업일자 *</label>
+                        <input type="text" id="registerOpenDate" placeholder="YYYYMMDD (예: 20200101)" required maxlength="8" pattern="[0-9]*" inputmode="numeric">
+                    </div>
+                    <button type="button" class="btn-secondary" id="btnValidateBiz" onclick="validateBusiness()">사업자 정보 인증</button>
                 </div>
+                <p class="form-hint" id="bizValidateResult" style="display:none; margin-top:4px; font-size:0.9rem;"></p>
+                <p class="form-hint" style="margin-top:2px; font-size:0.85rem; color:#666;">사업자 정보 인증 시 아래 입력한 대표자성명(이름), 상호(약국명)이 사용됩니다.</p>
                 <div class="file-upload-row form-group">
                     <div style="flex:1;">
                         <label>사업자등록증 사본 *</label>
@@ -3165,11 +3171,59 @@
             document.getElementById('licenseCertFileName').textContent = '';
         }
 
-        function checkBizNoDuplicate() {
-            var bizNo = document.getElementById('registerBizNo').value.trim();
-            if (!bizNo) { alert('사업자번호를 입력한 뒤 중복확인해 주세요.'); return; }
-            // TODO: API로 중복 검사
-            alert('사업자번호 중복확인은 서비스 연동 후 제공됩니다.');
+        async function validateBusiness() {
+            var bizNo = document.getElementById('registerBizNo').value.replace(/\D/g, '');
+            var openDate = document.getElementById('registerOpenDate').value.replace(/\D/g, '').slice(0, 8);
+            var representativeName = document.getElementById('registerName').value.trim();
+            var businessName = document.getElementById('registerPharmacyName').value.trim();
+            var resultEl = document.getElementById('bizValidateResult');
+            var btn = document.getElementById('btnValidateBiz');
+
+            if (bizNo.length !== 10) {
+                alert('사업자등록번호 10자리를 입력해 주세요.');
+                return;
+            }
+            if (openDate.length !== 8) {
+                alert('개업일자를 YYYYMMDD 형식(8자리)으로 입력해 주세요.');
+                return;
+            }
+            if (!representativeName) {
+                alert('대표자성명을 입력해 주세요. (아래 이름 란에 입력 후 인증해 주세요.)');
+                return;
+            }
+
+            resultEl.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = '확인 중...';
+
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/auth/validate-business', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        b_no: bizNo,
+                        start_dt: openDate,
+                        p_nm: representativeName,
+                        b_nm: businessName || undefined
+                    })
+                });
+                var data = await res.json();
+
+                resultEl.style.display = 'block';
+                if (data.valid) {
+                    resultEl.textContent = '✓ ' + (data.message || '사업자 정보가 확인되었습니다.');
+                    resultEl.style.color = 'var(--accent, #2d5a4c)';
+                } else {
+                    resultEl.textContent = '✗ ' + (data.message || '확인할 수 없습니다.');
+                    resultEl.style.color = '#c00';
+                }
+            } catch (e) {
+                resultEl.style.display = 'block';
+                resultEl.textContent = '✗ 조회 중 오류가 발생했습니다.';
+                resultEl.style.color = '#c00';
+            }
+            btn.disabled = false;
+            btn.textContent = '사업자 정보 인증';
         }
         function checkLicenseDuplicate() {
             var license = document.getElementById('registerLicense').value.trim();

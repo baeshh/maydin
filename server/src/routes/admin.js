@@ -50,42 +50,60 @@ router.get('/products', adminAuthMiddleware, (req, res) => {
     unit: r.unit, tag: r.tag, category: r.category, descShort: r.desc_short,
     isBest: !!r.is_best, isNew: !!r.is_new, rating: r.rating, imageUrl: r.image_url,
     specs: r.specs ? JSON.parse(r.specs) : null, benefits: r.benefits ? JSON.parse(r.benefits) : null,
-    options: r.options ? JSON.parse(r.options) : null, createdAt: r.created_at
+    options: r.options ? JSON.parse(r.options) : null, marginPercent: r.margin_percent != null ? r.margin_percent : null,
+    createdAt: r.created_at
   }));
   res.json({ success: true, products: list });
 });
 
+router.get('/products/:id', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const r = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+  if (!r) return res.status(404).json({ success: false, message: '상품을 찾을 수 없습니다.' });
+  const product = {
+    id: r.id, name: r.name, description: r.description, price: r.price, originalPrice: r.original_price,
+    unit: r.unit, tag: r.tag, category: r.category, descShort: r.desc_short,
+    isBest: !!r.is_best, isNew: !!r.is_new, rating: r.rating, imageUrl: r.image_url,
+    specs: r.specs ? JSON.parse(r.specs) : null, benefits: r.benefits ? JSON.parse(r.benefits) : null,
+    options: r.options ? JSON.parse(r.options) : null, marginPercent: r.margin_percent != null ? r.margin_percent : null,
+    createdAt: r.created_at
+  };
+  res.json({ success: true, product });
+});
+
 router.post('/products', adminAuthMiddleware, (req, res) => {
-  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options } = req.body;
+  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options, marginPercent } = req.body;
   if (!name || price == null) {
     return res.status(400).json({ success: false, message: '상품명과 가격은 필수입니다.' });
   }
+  const margin = marginPercent != null && marginPercent !== '' ? parseFloat(marginPercent) : null;
   const stmt = db.prepare(`
-    INSERT INTO products (name, description, price, original_price, unit, tag, category, desc_short, is_best, is_new, rating, options)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, description, price, original_price, unit, tag, category, desc_short, is_best, is_new, rating, options, margin_percent)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const opts = options ? JSON.stringify(Array.isArray(options) ? options : []) : '[]';
-  stmt.run(name || null, description || null, price, originalPrice || null, unit || '/ 30일', tag || null, category || null, descShort || null, isBest ? 1 : 0, isNew ? 1 : 0, rating || null, opts);
+  stmt.run(name || null, description || null, price, originalPrice || null, unit || '/ 30일', tag || null, category || null, descShort || null, isBest ? 1 : 0, isNew ? 1 : 0, rating || null, opts, margin);
   const row = db.prepare('SELECT * FROM products WHERE id = ?').get(db.prepare('SELECT last_insert_rowid() as id').get().id);
   res.json({ success: true, product: { id: row.id, name: row.name, price: row.price } });
 });
 
 router.put('/products/:id', adminAuthMiddleware, (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options } = req.body;
+  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options, marginPercent } = req.body;
   const existing = db.prepare('SELECT id FROM products WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ success: false, message: '상품을 찾을 수 없습니다.' });
 
+  const margin = marginPercent != null && marginPercent !== '' ? parseFloat(marginPercent) : null;
   const stmt = db.prepare(`
-    UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?
+    UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?
     ${options !== undefined ? ', options=?' : ''} WHERE id=?
   `);
   const opts = options !== undefined ? JSON.stringify(Array.isArray(options) ? options : []) : null;
   if (opts !== null) {
-    stmt.run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, opts, id);
+    stmt.run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, opts, id);
   } else {
-    db.prepare('UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=? WHERE id=?')
-      .run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, id);
+    db.prepare('UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=? WHERE id=?')
+      .run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, id);
   }
   res.json({ success: true });
 });
@@ -357,10 +375,164 @@ router.get('/stats', adminAuthMiddleware, (req, res) => {
   const orderCount = db.prepare('SELECT COUNT(*) as c FROM orders').get().c;
   const userCount = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
   const totalSales = db.prepare('SELECT COALESCE(SUM(total), 0) as s FROM orders WHERE status NOT IN ("cancelled")').get().s;
+
+  // 이번 달 / 지난달 (SQLite)
+  const thisMonthStart = db.prepare("SELECT date('now', 'start of month', 'localtime') as s").get().s;
+  const nextMonthStart = db.prepare("SELECT date('now', 'start of month', '+1 month', 'localtime') as s").get().s;
+  const lastMonthStart = db.prepare("SELECT date('now', 'start of month', '-1 month', 'localtime') as s").get().s;
+
+  const thisMonthSalesRow = db.prepare(`
+    SELECT COALESCE(SUM(total), 0) as s FROM orders
+    WHERE status NOT IN ('cancelled') AND date(created_at) >= date(?) AND date(created_at) < date(?)
+  `).get(thisMonthStart, nextMonthStart);
+  const lastMonthSalesRow = db.prepare(`
+    SELECT COALESCE(SUM(total), 0) as s FROM orders
+    WHERE status NOT IN ('cancelled') AND date(created_at) >= date(?) AND date(created_at) < date(?)
+  `).get(lastMonthStart, thisMonthStart);
+  const thisMonthOrdersRow = db.prepare(`
+    SELECT COUNT(*) as c FROM orders
+    WHERE status NOT IN ('cancelled') AND date(created_at) >= date(?) AND date(created_at) < date(?)
+  `).get(thisMonthStart, nextMonthStart);
+  const lastMonthOrdersRow = db.prepare(`
+    SELECT COUNT(*) as c FROM orders
+    WHERE status NOT IN ('cancelled') AND date(created_at) >= date(?) AND date(created_at) < date(?)
+  `).get(lastMonthStart, thisMonthStart);
+
+  const thisMonthSales = thisMonthSalesRow ? Number(thisMonthSalesRow.s) : 0;
+  const lastMonthSales = lastMonthSalesRow ? Number(lastMonthSalesRow.s) : 0;
+  const thisMonthOrderCount = thisMonthOrdersRow ? thisMonthOrdersRow.c : 0;
+  const lastMonthOrderCount = lastMonthOrdersRow ? lastMonthOrdersRow.c : 0;
+
+  const salesTrend = lastMonthSales > 0 ? ((thisMonthSales - lastMonthSales) / lastMonthSales) * 100 : (thisMonthSales > 0 ? 100 : 0);
+  const orderTrend = lastMonthOrderCount > 0 ? ((thisMonthOrderCount - lastMonthOrderCount) / lastMonthOrderCount) * 100 : (thisMonthOrderCount > 0 ? 100 : 0);
+
+  // 상품별 마진율 (미설정 시 30.6% 기본)
+  const DEFAULT_MARGIN = 30.6;
+  const productRows = db.prepare('SELECT id, name, margin_percent FROM products').all();
+  const productMarginMap = {};
+  productRows.forEach(p => {
+    productMarginMap[p.id] = p.margin_percent != null ? p.margin_percent : DEFAULT_MARGIN;
+  });
+  const productNameMap = {};
+  productRows.forEach(p => { productNameMap[p.id] = p.name; });
+
+  function sumProfitAndSales(orders) {
+    let totalProfit = 0;
+    const byProduct = {};
+    orders.forEach(row => {
+      try {
+        const items = JSON.parse(row.items || '[]');
+        items.forEach(it => {
+          const pid = it.productId != null ? it.productId : it.product_id;
+          const name = it.name || it.productName || productNameMap[pid] || '미상';
+          const price = Number(it.price) || 0;
+          const qty = Number(it.qty) || 1;
+          const margin = (pid != null && productMarginMap[pid] != null) ? productMarginMap[pid] : DEFAULT_MARGIN;
+          const profit = (price * qty) * (margin / 100);
+          totalProfit += profit;
+          if (!byProduct[pid]) byProduct[pid] = { name, sales: 0, profit: 0, marginPercent: margin };
+          byProduct[pid].sales += price * qty;
+          byProduct[pid].profit += profit;
+        });
+      } catch (_) {}
+    });
+    return { totalProfit, byProduct };
+  }
+
+  const thisMonthOrders = db.prepare(`
+    SELECT items FROM orders
+    WHERE status NOT IN ('cancelled') AND date(created_at) >= date(?) AND date(created_at) < date(?)
+  `).all(thisMonthStart, nextMonthStart);
+  const lastMonthOrders = db.prepare(`
+    SELECT items FROM orders
+    WHERE status NOT IN ('cancelled') AND date(created_at) >= date(?) AND date(created_at) < date(?)
+  `).all(lastMonthStart, thisMonthStart);
+
+  const thisMonthAgg = sumProfitAndSales(thisMonthOrders);
+  const lastMonthAgg = sumProfitAndSales(lastMonthOrders);
+  const thisMonthNetProfit = Math.round(thisMonthAgg.totalProfit);
+  const lastMonthNetProfit = Math.round(lastMonthAgg.totalProfit);
+  const netProfitTrend = lastMonthNetProfit > 0 ? ((thisMonthNetProfit - lastMonthNetProfit) / lastMonthNetProfit) * 100 : (thisMonthNetProfit > 0 ? 100 : 0);
+
+  const effectiveMarginThis = thisMonthSales > 0 ? (thisMonthNetProfit / thisMonthSales) * 100 : 0;
+  const effectiveMarginLast = lastMonthSales > 0 ? (lastMonthNetProfit / lastMonthSales) * 100 : 0;
+  const marginPercent = Math.round(effectiveMarginThis * 10) / 10;
+  const marginTrend = effectiveMarginLast > 0 ? Math.round((effectiveMarginThis - effectiveMarginLast) * 10) / 10 : 0;
+
+  const bestProducts = Object.values(thisMonthAgg.byProduct)
+    .map(p => ({ name: p.name, sales: p.sales, marginPercent: Math.round((p.sales > 0 ? (p.profit / p.sales) * 100 : p.marginPercent) * 10) / 10 }))
+    .sort((a, b) => b.sales - a.sales)
+    .slice(0, 10);
+
   res.json({
     success: true,
-    stats: { productCount, orderCount, userCount, totalSales }
+    stats: {
+      productCount,
+      orderCount,
+      userCount,
+      totalSales,
+      thisMonthSales,
+      lastMonthSales,
+      salesTrend: Math.round(salesTrend * 10) / 10,
+      thisMonthNetProfit,
+      lastMonthNetProfit,
+      netProfitTrend: Math.round(netProfitTrend * 10) / 10,
+      marginPercent,
+      marginTrend,
+      thisMonthOrderCount,
+      lastMonthOrderCount,
+      orderTrend: Math.round(orderTrend * 10) / 10,
+      bestProducts
+    }
   });
+});
+
+// ---- 차트용 기간별 매출/순수익 (Chart.js 등 직접 연동용) ----
+// GET /api/admin/stats/chart?period=1|3|12  (1=1개월, 3=3개월, 12=1년)
+router.get('/stats/chart', adminAuthMiddleware, (req, res) => {
+  const period = parseInt(req.query.period, 10) || 1;
+  const months = period === 12 ? 12 : period === 3 ? 3 : 1;
+  const productRows = db.prepare('SELECT id, margin_percent FROM products').all();
+  const DEFAULT_MARGIN = 30.6;
+  const marginMap = {};
+  productRows.forEach(p => {
+    marginMap[p.id] = p.margin_percent != null ? p.margin_percent : DEFAULT_MARGIN;
+  });
+
+  const labels = [];
+  const salesArr = [];
+  const netProfitArr = [];
+  const now = new Date();
+
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const start = d.toISOString().slice(0, 10);
+    const end = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
+    labels.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+    const rows = db.prepare(`
+      SELECT items FROM orders
+      WHERE status NOT IN ('cancelled') AND date(created_at) >= date(?) AND date(created_at) <= date(?)
+    `).all(start, end);
+    let monthSales = 0;
+    let monthProfit = 0;
+    rows.forEach(row => {
+      try {
+        const items = JSON.parse(row.items || '[]');
+        items.forEach(it => {
+          const pid = it.productId != null ? it.productId : it.product_id;
+          const price = Number(it.price) || 0;
+          const qty = Number(it.qty) || 1;
+          const margin = (pid != null && marginMap[pid] != null) ? marginMap[pid] : DEFAULT_MARGIN;
+          monthSales += price * qty;
+          monthProfit += (price * qty) * (margin / 100);
+        });
+      } catch (_) {}
+    });
+    salesArr.push(monthSales);
+    netProfitArr.push(Math.round(monthProfit));
+  }
+
+  res.json({ success: true, chart: { labels, sales: salesArr, netProfit: netProfitArr } });
 });
 
 module.exports = router;

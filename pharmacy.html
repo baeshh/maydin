@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script src="assets/api-config.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>약사 전용몰 - MAYDIN</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -360,11 +360,60 @@
             .gnb { font-size: 12px; gap: 10px; }
             .product-grid { grid-template-columns: 1fr; }
         }
+
+        /* 모바일 전용 래퍼·헤더 (디자인 시안) */
+        .mobile-only { display: none; }
+        @media (max-width: 768px) {
+            .mobile-only { display: block !important; }
+            .mobile-header.mobile-only { display: flex !important; }
+            .desktop-header { display: none !important; }
+            body { padding-bottom: 0; overflow-x: hidden; }
+            .mobile-wrap { max-width: 480px; margin: 0 auto; background: var(--white); min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+            .mobile-header {
+                position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center;
+                padding: 12px 16px; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px);
+                border-bottom: 1px solid var(--border-color); z-index: 50;
+            }
+            .mobile-header .header-icon { font-size: 20px; font-weight: bold; cursor: pointer; }
+            .mobile-header .mobile-logo { font-size: 18px; font-weight: 900; color: var(--primary-color); }
+            .mobile-header a { color: inherit; text-decoration: none; }
+            .mobile-header .cart-wrap { position: relative; }
+            .mobile-header .cart-count { position: absolute; top: -4px; right: -4px; background: var(--accent-color); color: var(--white); font-size: 10px; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+            .pharmacy-mobile-main { padding: 0 0 24px; }
+            .pharmacy-mobile-main .hero-banner { margin: 16px; padding: 24px 20px; border-radius: 16px; }
+            .pharmacy-mobile-main .hero-content h2 { font-size: 20px; }
+            .pharmacy-mobile-main .hero-content p { font-size: 15px; }
+            .pharmacy-mobile-main .hero-image { width: 100%; max-width: 160px; height: 120px; margin: 0 auto; font-size: 12px; }
+            .pharmacy-mobile-main .product-section { margin: 24px 16px; }
+            .pharmacy-mobile-main .section-title { font-size: 18px; }
+            .pharmacy-mobile-main .section-desc { font-size: 13px; margin-bottom: 16px; }
+            .pharmacy-mobile-main .product-grid { grid-template-columns: 1fr; gap: 16px; }
+            .pharmacy-mobile-main .product-card { border-radius: 12px; overflow: hidden; }
+            .pharmacy-mobile-main .product-img { height: auto; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; color: var(--text-gray); font-size: 12px; background: #F1F3F5; }
+            .pharmacy-mobile-main .product-info { padding: 14px 16px; }
+            .pharmacy-mobile-main .product-name { font-size: 15px; line-height: 1.4; white-space: normal; }
+            .pharmacy-mobile-main .product-price { font-size: 17px; }
+            .pharmacy-mobile-main .product-actions { margin-top: 10px; }
+            .pharmacy-mobile-main .product-actions button { padding: 10px 12px; font-size: 13px; }
+        }
+        @media (min-width: 769px) {
+            .mobile-only { display: none !important; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
+    <div class="mobile-wrap">
+    <!-- 모바일 전용 헤더 (스티키, ≡ / MAYDIN / 🛒) -->
+    <header class="mobile-header mobile-only">
+        <a href="index.html" class="header-icon" aria-label="메뉴">≡</a>
+        <a href="pharmacy.html" class="mobile-logo">MAYDIN</a>
+        <a href="checkout.html" class="header-icon cart-wrap" aria-label="장바구니">
+            🛒<span class="cart-count" id="mobileCartCount" style="display:none;">0</span>
+        </a>
+    </header>
+
+    <header class="desktop-header">
         <div class="container header-top">
             <a href="index.html" class="logo">
                 <img src="assets/meidin-logo.png" alt="MAYDIN">
@@ -391,7 +440,7 @@
         </div>
     </header>
 
-    <main class="container">
+    <main class="container pharmacy-mobile-main">
         <section class="hero-banner" onclick="goToDetail(1)" style="cursor: pointer;">
             <div class="hero-content">
                 <h2>센시비 (SENSIBI)</h2>
@@ -515,8 +564,12 @@
                     <a href="mypage.html" class="btn-mypage">내 정보</a>
                     <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
                 `;
+                var mc = document.getElementById('mobileCartCount');
+                if (mc) { mc.textContent = cart.length; mc.style.display = cart.length ? 'flex' : 'none'; }
             } else {
                 el.innerHTML = `<a href="index.html" class="btn-login">로그인</a>`;
+                var mc = document.getElementById('mobileCartCount');
+                if (mc) mc.style.display = 'none';
             }
         }
 
@@ -641,6 +694,8 @@
 
         init();
     </script>
+
+    </div><!-- .mobile-wrap -->
 
 </body>
 </html>

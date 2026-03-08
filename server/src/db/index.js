@@ -56,6 +56,11 @@ function ensureRuntimeSchema() {
 
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_cart_user ON cart(user_id)'); } catch (_) {}
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id)'); } catch (_) {}
+
+  const productCols = getColumns('products');
+  if (productCols.length && !productCols.includes('margin_percent')) {
+    db.exec('ALTER TABLE products ADD COLUMN margin_percent REAL');
+  }
 }
 
 ensureRuntimeSchema();

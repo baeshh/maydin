@@ -298,7 +298,11 @@
                 width: 100%; aspect-ratio: 1/1; background: #F1F3F5; display: flex; align-items: center; justify-content: center; color: var(--text-gray);
             }
             .product-info-mobile { padding: 20px 16px; }
+            .badge-wrap-mobile { margin-bottom: 8px; }
+            .badge-mobile { display: inline-block; background: var(--primary-color); color: var(--white); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
             .product-title-mobile { font-size: 20px; font-weight: 800; margin-bottom: 12px; line-height: 1.4; }
+            .review-stars-mobile { font-size: 13px; color: #FFB300; margin-bottom: 16px; }
+            .review-stars-mobile span { color: var(--text-gray); margin-left: 4px; }
             .price-wrap-mobile { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
             .discount-rate-mobile { color: var(--accent-color); font-size: 24px; font-weight: 800; }
             .current-price-mobile { font-size: 24px; font-weight: 800; }
@@ -329,16 +333,22 @@
 </head>
 <body>
 
-    <!-- 모바일 전용 헤더/레이아웃 -->
+    <!-- 모바일 전용 헤더/레이아웃 (디자인 시안) -->
     <div class="mobile-only mobile-wrap">
         <header class="mobile-header">
-            <a href="pharmacy.html" class="header-icon">≡</a>
+            <a href="pharmacy.html" class="header-icon" aria-label="목록">≡</a>
             <a href="pharmacy.html" class="mobile-logo">MAYDIN</a>
-            <a href="pharmacy.html" class="header-icon">🛒</a>
+            <a href="checkout.html" class="header-icon" aria-label="장바구니">🛒</a>
         </header>
         <div class="product-image-mobile" id="productImageMobile">[ 제품 이미지 ]</div>
         <div class="product-info-mobile">
+            <div class="badge-wrap-mobile" id="badgeWrapMobile" style="display: none;">
+                <span class="badge-mobile" id="badgeMobile">BEST</span>
+            </div>
             <h1 class="product-title-mobile" id="productTitleMobile">제품명</h1>
+            <div class="review-stars-mobile">
+                ★★★★★ <span id="reviewCountMobile">리뷰 0건</span>
+            </div>
             <div class="price-wrap-mobile">
                 <span class="discount-rate-mobile" id="discountRateMobile"></span>
                 <span class="current-price-mobile" id="currentPriceMobile">0원</span>
@@ -598,6 +608,18 @@
             var optMobile = document.getElementById('productOptionMobile');
             if (titleMobile) titleMobile.textContent = currentProduct.name;
             if (priceMobile) priceMobile.textContent = currentProduct.price.toLocaleString() + '원';
+
+            var badgeWrap = document.getElementById('badgeWrapMobile');
+            var badgeEl = document.getElementById('badgeMobile');
+            if (badgeWrap && badgeEl) {
+                var tag = (currentProduct.tag || '').trim();
+                if (tag && tag !== '공구 진행 중') {
+                    badgeEl.textContent = tag;
+                    badgeWrap.style.display = 'block';
+                } else {
+                    badgeWrap.style.display = 'none';
+                }
+            }
 
             const hasDiscount = currentProduct.originalPrice > currentProduct.price;
             const discountRate = hasDiscount

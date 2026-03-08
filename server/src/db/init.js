@@ -183,6 +183,8 @@ db.exec(`
 const userCols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
 const ordersCols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name);
 const cartCols = db.prepare('PRAGMA table_info(cart)').all().map(c => c.name);
+const productCols = db.prepare('PRAGMA table_info(products)').all().map(c => c.name);
+if (!productCols.includes('margin_percent')) db.exec('ALTER TABLE products ADD COLUMN margin_percent REAL');
 if (!userCols.includes('address')) db.exec('ALTER TABLE users ADD COLUMN address TEXT');
 if (!userCols.includes('status')) db.exec('ALTER TABLE users ADD COLUMN status TEXT DEFAULT \'pending\'');
 if (!userCols.includes('open_date')) db.exec('ALTER TABLE users ADD COLUMN open_date TEXT');

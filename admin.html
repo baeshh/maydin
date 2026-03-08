@@ -230,6 +230,8 @@
                 <li><a href="#" data-tab="refunds">취소/반품</a></li>
                 <li><a href="#" data-tab="coupons">쿠폰</a></li>
                 <li><a href="#" data-tab="inquiries">1:1 문의</a></li>
+                <li><a href="#" data-tab="reviews">구매평</a></li>
+                <li><a href="#" data-tab="product-qna">상품 Q&A</a></li>
                 <li><a href="#" data-tab="posts">블로그/소식</a></li>
                 <li><a href="#" data-tab="dashboard">정산/통계</a></li>
                 <li><a href="index.html" target="_blank">홈페이지 보기 ↗</a></li>
@@ -372,6 +374,30 @@
                             <table>
                                 <thead><tr><th>ID</th><th>회원</th><th>제목</th><th>상태</th><th>등록일</th><th></th></tr></thead>
                                 <tbody id="inquiryList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-reviews">
+                    <div class="card">
+                        <div class="card-title">상품 구매평 목록</div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>상품</th><th>회원</th><th>평점</th><th>내용</th><th>등록일</th><th></th></tr></thead>
+                                <tbody id="reviewListAdmin"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-product-qna">
+                    <div class="card">
+                        <div class="card-title">상품 Q&A 목록</div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>상품</th><th>회원</th><th>제목</th><th>상태</th><th>등록일</th><th></th></tr></thead>
+                                <tbody id="productQnaList"></tbody>
                             </table>
                         </div>
                     </div>
@@ -577,6 +603,16 @@
         </div>
     </div>
 
+    <div class="modal" id="productQnaModal">
+        <div class="modal-content">
+            <h3>상품 Q&A 답변</h3>
+            <input type="hidden" id="productQnaModalId">
+            <div id="productQnaModalBody"></div>
+            <div class="form-group"><label>관리자 답변</label><textarea id="productQnaAdminReply" rows="4" style="width:100%;padding:8px;"></textarea></div>
+            <div class="modal-footer"><button type="button" class="btn" style="background:#eee" onclick="closeProductQnaModal()">취소</button><button type="button" class="btn btn-primary" onclick="submitProductQnaReply()">답변 저장</button></div>
+        </div>
+    </div>
+
     <!-- 글 모달 -->
     <div class="modal" id="postModal">
         <div class="modal-content">
@@ -611,9 +647,20 @@
         let adminToken = localStorage.getItem('adminToken');
         let adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
         let ordersCache = [];
+        let reviewsCache = [];
+        let productQnaCache = [];
 
         function headers() {
             return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken };
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         async function handleAdminLogin(e) {
@@ -677,6 +724,8 @@
                 if (tab === 'refunds') loadRefunds();
                 if (tab === 'coupons') loadCoupons();
                 if (tab === 'inquiries') loadInquiries();
+                if (tab === 'reviews') loadReviewAdmin();
+                if (tab === 'product-qna') loadProductQnaAdmin();
                 if (tab === 'dashboard') loadStats();
                 if (document.getElementById('adminLayout').classList.contains('sidebar-open')) toggleSidebar();
             });
@@ -1046,6 +1095,78 @@
             try {
                 const res = await fetch(API + '/api/admin/inquiries/' + id, { method: 'PATCH', headers: headers(), body: JSON.stringify({ adminReply }) });
                 if ((await res.json()).success) { closeInquiryModal(); loadInquiries(); }
+            } catch (e) { alert('저장 실패'); }
+        }
+
+        async function loadReviewAdmin() {
+            try {
+                const res = await fetch(API + '/api/admin/reviews', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('reviewListAdmin');
+                if (!data.success || !data.reviews.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">구매평이 없습니다.</td></tr>'; return; }
+                reviewsCache = data.reviews;
+                tbody.innerHTML = data.reviews.map(r => {
+                    const text = escapeHtml(((r.title ? '[' + r.title + '] ' : '') + (r.content || '')).slice(0, 80));
+                    return '<tr><td>' + r.id + '</td><td>' + escapeHtml(r.productName || '-') + '</td><td>' + escapeHtml(r.userName || '-') + '<br><small>' + escapeHtml(r.userLicense || '-') + '</small></td><td>' + (r.rating || 0) + '/5</td><td style="max-width:280px;font-size:0.9rem;">' + text + '</td><td>' + (r.createdAt || '').slice(0, 10) + '</td><td><button class="btn-sm ' + (r.isDeleted ? '' : 'danger') + '" onclick="toggleReviewVisibility(' + r.id + ', ' + (r.isDeleted ? 'false' : 'true') + ')">' + (r.isDeleted ? '복원' : '숨김') + '</button></td></tr>';
+                }).join('');
+            } catch (e) { document.getElementById('reviewListAdmin').innerHTML = '<tr><td colspan="7" class="empty-msg">로드 실패</td></tr>'; }
+        }
+
+        async function toggleReviewVisibility(id, isDeleted) {
+            try {
+                const res = await fetch(API + '/api/admin/reviews/' + id, {
+                    method: 'PATCH',
+                    headers: headers(),
+                    body: JSON.stringify({ isDeleted: isDeleted })
+                });
+                const data = await res.json();
+                if (data.success) loadReviewAdmin();
+                else alert(data.message || '저장 실패');
+            } catch (e) { alert('저장 실패'); }
+        }
+
+        async function loadProductQnaAdmin() {
+            try {
+                const res = await fetch(API + '/api/admin/product-qna', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('productQnaList');
+                if (!data.success || !data.qna.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">상품 Q&A가 없습니다.</td></tr>'; return; }
+                productQnaCache = data.qna;
+                tbody.innerHTML = data.qna.map(q => '<tr><td>' + q.id + '</td><td>' + escapeHtml(q.productName || '-') + '</td><td>' + escapeHtml(q.userName || '-') + '<br><small>' + escapeHtml(q.userLicense || '-') + '</small></td><td style="max-width:280px;font-size:0.9rem;">' + escapeHtml((q.isSecret ? '[비밀글] ' : '') + (q.subject || '')) + '</td><td>' + (q.status === 'answered' ? '답변완료' : '답변대기') + '</td><td>' + (q.createdAt || '').slice(0, 10) + '</td><td><button class="btn-sm" onclick="openProductQnaModal(' + q.id + ')">답변</button></td></tr>').join('');
+            } catch (e) { document.getElementById('productQnaList').innerHTML = '<tr><td colspan="7" class="empty-msg">로드 실패</td></tr>'; }
+        }
+
+        function openProductQnaModal(id) {
+            const q = productQnaCache.find(x => x.id === id);
+            if (!q) return;
+            document.getElementById('productQnaModalId').value = id;
+            const imagesHtml = (q.images || []).map(url => '<img src="' + escapeHtml(url) + '" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #ddd;margin-right:8px;">').join('');
+            document.getElementById('productQnaModalBody').innerHTML =
+                '<div style="background:#f5f7f6;padding:16px;border-radius:8px;margin-bottom:12px;">' +
+                '<div><strong>상품</strong>: ' + escapeHtml(q.productName || '-') + '</div>' +
+                '<div><strong>작성자</strong>: ' + escapeHtml(q.userName || '-') + ' (' + escapeHtml(q.userLicense || '-') + ')</div>' +
+                '<div><strong>제목</strong>: ' + escapeHtml((q.isSecret ? '[비밀글] ' : '') + (q.subject || '')) + '</div>' +
+                '<div style="margin-top:10px;white-space:pre-wrap;">' + escapeHtml(q.content || '') + '</div>' +
+                (imagesHtml ? '<div style="margin-top:12px;">' + imagesHtml + '</div>' : '') +
+                '</div>';
+            document.getElementById('productQnaAdminReply').value = q.adminAnswer || '';
+            document.getElementById('productQnaModal').classList.add('active');
+        }
+
+        function closeProductQnaModal() { document.getElementById('productQnaModal').classList.remove('active'); }
+
+        async function submitProductQnaReply() {
+            const id = document.getElementById('productQnaModalId').value;
+            const adminAnswer = document.getElementById('productQnaAdminReply').value.trim();
+            try {
+                const res = await fetch(API + '/api/admin/product-qna/' + id, {
+                    method: 'PATCH',
+                    headers: headers(),
+                    body: JSON.stringify({ adminAnswer, status: adminAnswer ? 'answered' : 'pending' })
+                });
+                const data = await res.json();
+                if (data.success) { closeProductQnaModal(); loadProductQnaAdmin(); }
+                else alert(data.message || '저장 실패');
             } catch (e) { alert('저장 실패'); }
         }
 

@@ -18,6 +18,26 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
+function parseJsonArray(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function refreshProductRating(productId) {
+  const row = db.prepare(`
+    SELECT ROUND(AVG(rating), 1) AS avg_rating
+    FROM product_reviews
+    WHERE product_id = ? AND is_deleted = 0
+  `).get(productId);
+  db.prepare('UPDATE products SET rating = ? WHERE id = ?').run(row && row.avg_rating != null ? row.avg_rating : null, productId);
+}
+
 // POST /api/admin/upload - 상품 이미지 업로드 (관리자 인증). 항상 JSON 응답.
 router.post('/upload', adminAuthMiddleware, (req, res, next) => {
   upload.single('file')(req, res, (err) => {
@@ -399,6 +419,91 @@ router.patch('/inquiries/:id', adminAuthMiddleware, (req, res) => {
   const r = db.prepare('UPDATE inquiries SET admin_reply = ?, status = ?, replied_at = CURRENT_TIMESTAMP WHERE id = ?')
     .run((adminReply || '').trim(), adminReply ? 'answered' : 'pending', id);
   if (r.changes === 0) return res.status(404).json({ success: false });
+  res.json({ success: true });
+});
+
+// ---- 상품 구매평 관리 ----
+router.get('/reviews', adminAuthMiddleware, (req, res) => {
+  const rows = db.prepare(`
+    SELECT pr.*, p.name AS product_name, u.name AS user_name, u.license AS user_license, u.email AS user_email
+    FROM product_reviews pr
+    LEFT JOIN products p ON p.id = pr.product_id
+    LEFT JOIN users u ON u.id = pr.user_id
+    ORDER BY pr.created_at DESC
+  `).all();
+  const reviews = rows.map((r) => ({
+    id: r.id,
+    productId: r.product_id,
+    productName: r.product_name || '-',
+    userId: r.user_id,
+    userName: r.user_name || '-',
+    userLicense: r.user_license || '-',
+    userEmail: r.user_email || '-',
+    orderId: r.order_id,
+    rating: Number(r.rating || 0),
+    title: r.title || '',
+    content: r.content || '',
+    images: parseJsonArray(r.images),
+    isDeleted: !!r.is_deleted,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at
+  }));
+  res.json({ success: true, reviews });
+});
+
+router.patch('/reviews/:id', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const existing = db.prepare('SELECT id, product_id FROM product_reviews WHERE id = ?').get(id);
+  if (!existing) return res.status(404).json({ success: false, message: '구매평을 찾을 수 없습니다.' });
+  const isDeleted = req.body && req.body.isDeleted ? 1 : 0;
+  db.prepare('UPDATE product_reviews SET is_deleted = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(isDeleted, id);
+  refreshProductRating(existing.product_id);
+  res.json({ success: true });
+});
+
+// ---- 상품 Q&A 관리 ----
+router.get('/product-qna', adminAuthMiddleware, (req, res) => {
+  const rows = db.prepare(`
+    SELECT q.*, p.name AS product_name, u.name AS user_name, u.license AS user_license, u.email AS user_email
+    FROM product_qna q
+    LEFT JOIN products p ON p.id = q.product_id
+    LEFT JOIN users u ON u.id = q.user_id
+    ORDER BY q.created_at DESC
+  `).all();
+  const qna = rows.map((q) => ({
+    id: q.id,
+    productId: q.product_id,
+    productName: q.product_name || '-',
+    userId: q.user_id,
+    userName: q.user_name || '-',
+    userLicense: q.user_license || '-',
+    userEmail: q.user_email || '-',
+    subject: q.subject || '',
+    content: q.content || '',
+    images: parseJsonArray(q.images),
+    isSecret: !!q.is_secret,
+    status: q.status || 'pending',
+    adminAnswer: q.admin_answer || '',
+    answeredAt: q.answered_at || null,
+    createdAt: q.created_at
+  }));
+  res.json({ success: true, qna });
+});
+
+router.patch('/product-qna/:id', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const existing = db.prepare('SELECT id FROM product_qna WHERE id = ?').get(id);
+  if (!existing) return res.status(404).json({ success: false, message: 'Q&A를 찾을 수 없습니다.' });
+  const adminAnswer = (req.body && req.body.adminAnswer ? String(req.body.adminAnswer) : '').trim();
+  const status = req.body && req.body.status ? String(req.body.status) : (adminAnswer ? 'answered' : 'pending');
+  if (!['pending', 'answered'].includes(status)) {
+    return res.status(400).json({ success: false, message: '유효한 상태가 아닙니다.' });
+  }
+  db.prepare(`
+    UPDATE product_qna
+    SET admin_answer = ?, status = ?, answered_at = ?, answered_by = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(adminAnswer || null, status, adminAnswer ? new Date().toISOString() : null, adminAnswer ? req.admin.id : null, id);
   res.json({ success: true });
 });
 

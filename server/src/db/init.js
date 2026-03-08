@@ -171,12 +171,57 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 
+  -- 상품 구매평
+  CREATE TABLE IF NOT EXISTS product_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    order_id INTEGER NOT NULL,
+    order_item_key TEXT NOT NULL,
+    option_label TEXT,
+    rating INTEGER NOT NULL DEFAULT 5,
+    title TEXT,
+    content TEXT NOT NULL,
+    images TEXT,
+    is_deleted INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    UNIQUE(order_id, order_item_key)
+  );
+
+  -- 상품 Q&A
+  CREATE TABLE IF NOT EXISTS product_qna (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    images TEXT,
+    is_secret INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'pending',
+    admin_answer TEXT,
+    answered_at DATETIME,
+    answered_by INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (answered_by) REFERENCES admin_users(id)
+  );
+
   CREATE INDEX IF NOT EXISTS idx_users_license ON users(license);
   CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
   CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
   CREATE INDEX IF NOT EXISTS idx_refunds_user ON refunds(user_id);
   CREATE INDEX IF NOT EXISTS idx_inquiries_user ON inquiries(user_id);
   CREATE INDEX IF NOT EXISTS idx_delivery_addresses_user ON delivery_addresses(user_id);
+  CREATE INDEX IF NOT EXISTS idx_product_reviews_product ON product_reviews(product_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_product_reviews_user ON product_reviews(user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_product_qna_product ON product_qna(product_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_product_qna_user ON product_qna(user_id, created_at DESC);
 `);
 
 // 기존 DB에 컬럼 추가 (이미 있으면 무시)
@@ -184,6 +229,8 @@ const userCols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
 const ordersCols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name);
 const cartCols = db.prepare('PRAGMA table_info(cart)').all().map(c => c.name);
 const productCols = db.prepare('PRAGMA table_info(products)').all().map(c => c.name);
+const reviewCols = db.prepare('PRAGMA table_info(product_reviews)').all().map(c => c.name);
+const qnaCols = db.prepare('PRAGMA table_info(product_qna)').all().map(c => c.name);
 if (!productCols.includes('margin_percent')) db.exec('ALTER TABLE products ADD COLUMN margin_percent REAL');
 if (!productCols.includes('images')) db.exec('ALTER TABLE products ADD COLUMN images TEXT');
 if (!productCols.includes('detail_images')) db.exec('ALTER TABLE products ADD COLUMN detail_images TEXT');
@@ -206,8 +253,24 @@ if (!cartCols.includes('price')) db.exec('ALTER TABLE cart ADD COLUMN price INTE
 if (!cartCols.includes('qty')) db.exec('ALTER TABLE cart ADD COLUMN qty INTEGER DEFAULT 1');
 if (!cartCols.includes('created_at')) db.exec('ALTER TABLE cart ADD COLUMN created_at DATETIME');
 if (!cartCols.includes('image_url')) db.exec('ALTER TABLE cart ADD COLUMN image_url TEXT');
+if (reviewCols.length && !reviewCols.includes('option_label')) db.exec('ALTER TABLE product_reviews ADD COLUMN option_label TEXT');
+if (reviewCols.length && !reviewCols.includes('title')) db.exec('ALTER TABLE product_reviews ADD COLUMN title TEXT');
+if (reviewCols.length && !reviewCols.includes('images')) db.exec('ALTER TABLE product_reviews ADD COLUMN images TEXT');
+if (reviewCols.length && !reviewCols.includes('is_deleted')) db.exec('ALTER TABLE product_reviews ADD COLUMN is_deleted INTEGER DEFAULT 0');
+if (reviewCols.length && !reviewCols.includes('updated_at')) db.exec('ALTER TABLE product_reviews ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+if (qnaCols.length && !qnaCols.includes('images')) db.exec('ALTER TABLE product_qna ADD COLUMN images TEXT');
+if (qnaCols.length && !qnaCols.includes('is_secret')) db.exec('ALTER TABLE product_qna ADD COLUMN is_secret INTEGER DEFAULT 0');
+if (qnaCols.length && !qnaCols.includes('status')) db.exec("ALTER TABLE product_qna ADD COLUMN status TEXT DEFAULT 'pending'");
+if (qnaCols.length && !qnaCols.includes('admin_answer')) db.exec('ALTER TABLE product_qna ADD COLUMN admin_answer TEXT');
+if (qnaCols.length && !qnaCols.includes('answered_at')) db.exec('ALTER TABLE product_qna ADD COLUMN answered_at DATETIME');
+if (qnaCols.length && !qnaCols.includes('answered_by')) db.exec('ALTER TABLE product_qna ADD COLUMN answered_by INTEGER');
+if (qnaCols.length && !qnaCols.includes('updated_at')) db.exec('ALTER TABLE product_qna ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP');
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)'); } catch (_) {}
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_cart_user ON cart(user_id)'); } catch (_) {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_product_reviews_product ON product_reviews(product_id, created_at DESC)'); } catch (_) {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_product_reviews_user ON product_reviews(user_id, created_at DESC)'); } catch (_) {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_product_qna_product ON product_qna(product_id, created_at DESC)'); } catch (_) {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_product_qna_user ON product_qna(user_id, created_at DESC)'); } catch (_) {}
 
 // 시드 데이터
 const productCount = db.prepare('SELECT COUNT(*) as cnt FROM products').get();

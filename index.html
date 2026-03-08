@@ -2642,17 +2642,17 @@
                     <a href="#about" class="btn-pill">브랜드 스토리 ➔</a>
                 </div>
                 <div class="signature-product">
-                    <div class="sig-visual">
+                    <div class="sig-visual" id="signatureVisual">
                         <div class="badge-wrap">
-                            <span class="badge">BEST SELLER</span>
-                            <span class="badge outline">면역 체계 개선</span>
+                            <span class="badge" id="signatureBadgePrimary">BEST SELLER</span>
+                            <span class="badge outline" id="signatureBadgeSecondary">면역 체계 개선</span>
                         </div>
-                        <img src="assets/sensibee-rendering.png" alt="센시비 제품 이미지">
+                        <img id="signatureImage" src="assets/sensibee-rendering.png" alt="센시비 제품 이미지">
                     </div>
                     <div class="sig-info">
                         <span class="sub-label">MAYDIN THE FIRST MASTERPIECE</span>
-                        <h3>센시비 (SENSIBI)</h3>
-                        <p class="desc">과항진된 면역체계 개선을 위해 설계된 메이딘의 첫 번째 해답.<br>참당귀 추출물과 핵심 비타민 미네랄의 정밀한 배합으로 당신의 신체 밸런스를 다시 세웁니다.</p>
+                        <h3 id="signatureTitle">센시비 (SENSIBI)</h3>
+                        <p class="desc" id="signatureDesc">과항진된 면역체계 개선을 위해 설계된 메이딘의 첫 번째 해답.<br>참당귀 추출물과 핵심 비타민 미네랄의 정밀한 배합으로 당신의 신체 밸런스를 다시 세웁니다.</p>
                         <div class="sig-specs">
                             <div class="spec-item">
                                 <strong>비타민 D</strong>
@@ -2675,7 +2675,7 @@
                             </div>
                         </div>
                         <div class="sig-actions">
-                            <a href="javascript:void(0)" class="sig-btn-primary" onclick="openProductDetail(1)">제품 상세 보기</a>
+                            <a href="javascript:void(0)" class="sig-btn-primary" id="signatureDetailBtn" onclick="openProductDetail(1)">제품 상세 보기</a>
                         </div>
                     </div>
                 </div>
@@ -2922,6 +2922,90 @@
                 image: 'PRODUCT 4'
             }
         ];
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function toImageUrl(url) {
+            if (!url) return '';
+            var u = String(url).trim();
+            if (/^https?:\/\//i.test(u)) return u;
+            if (u.indexOf('/uploads/') === 0) u = '/api' + u;
+            var base = (window.API_BASE || '').replace(/\/$/, '');
+            return base + (u.indexOf('/') === 0 ? u : '/' + u);
+        }
+
+        function getProductMainImage(product) {
+            if (!product) return '';
+            if (product.images && product.images.length) return toImageUrl(product.images[0]);
+            if (product.imageUrl) return toImageUrl(product.imageUrl);
+            if (product.image && /^https?:\/\//i.test(String(product.image))) return product.image;
+            return '';
+        }
+
+        function renderProductVisual(product, className, fallbackText) {
+            var imageSrc = getProductMainImage(product);
+            if (imageSrc) {
+                return '<img src="' + imageSrc + '" alt="' + escapeHtml(product.name || '') + '" class="' + className + '">';
+            }
+            return fallbackText || '';
+        }
+
+        async function loadProductsData() {
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/products');
+                var data = await res.json();
+                if (data.success && data.products) {
+                    products = data.products.map(function(p) {
+                        return {
+                            id: p.id,
+                            name: p.name,
+                            description: p.desc || p.description || '',
+                            fullDescription: p.description || p.desc || '',
+                            price: p.price,
+                            image: p.imageUrl || '',
+                            imageUrl: p.imageUrl || '',
+                            images: p.images || [],
+                            tag: p.tag || '',
+                            isBest: !!p.isBest,
+                            specs: p.specs || null,
+                            benefits: p.benefits || null
+                        };
+                    });
+                }
+            } catch (err) {
+                console.warn('API 연결 실패, 기본 상품 사용:', err);
+            }
+            syncSignatureProduct();
+        }
+
+        function syncSignatureProduct() {
+            var product = products.find(function(p) { return p && (p.isBest || p.id === 1); }) || products[0];
+            if (!product) return;
+            var imageEl = document.getElementById('signatureImage');
+            var titleEl = document.getElementById('signatureTitle');
+            var descEl = document.getElementById('signatureDesc');
+            var primaryBadgeEl = document.getElementById('signatureBadgePrimary');
+            var secondaryBadgeEl = document.getElementById('signatureBadgeSecondary');
+            var detailBtn = document.getElementById('signatureDetailBtn');
+            var imageSrc = getProductMainImage(product);
+
+            if (imageEl && imageSrc) {
+                imageEl.src = imageSrc;
+                imageEl.alt = (product.name || '제품 이미지');
+            }
+            if (titleEl) titleEl.textContent = product.name || '';
+            if (descEl) descEl.innerHTML = escapeHtml(product.description || '').replace(/\n/g, '<br>') || '상품 설명이 준비 중입니다.';
+            if (primaryBadgeEl) primaryBadgeEl.textContent = product.isBest ? 'BEST SELLER' : 'PRODUCT';
+            if (secondaryBadgeEl) secondaryBadgeEl.textContent = product.tag || '메이딘 대표 제품';
+            if (detailBtn) detailBtn.setAttribute('onclick', 'openProductDetail(' + product.id + ')');
+        }
 
         // 탭 전환
         function switchTab(tab) {
@@ -3243,23 +3327,13 @@
         // 제품 목록 표시 (API 연동)
         async function showProducts() {
             const grid = document.getElementById('productsGrid');
-            try {
-                var res = await fetch((window.API_BASE || '') + '/api/products');
-                var data = await res.json();
-                if (data.success && data.products) {
-                    products = data.products.map(function(p) {
-                        return { id: p.id, name: p.name, description: p.desc || p.description, price: p.price, image: p.imageUrl || 'PRODUCT ' + p.id };
-                    });
-                }
-            } catch (err) {
-                console.warn('API 연결 실패, 기본 상품 사용:', err);
-            }
+            await loadProductsData();
             grid.innerHTML = products.map(product => `
                 <div class="product-card clickable" onclick="openProductDetail(${product.id})">
-                    <div class="product-image">${product.image}</div>
+                    <div class="product-image">${renderProductVisual(product, 'product-detail-img', '[' + escapeHtml(product.name || '') + ' 이미지]')}</div>
                     <div class="product-info">
-                        <h3>${product.name}</h3>
-                        <p>${product.description}</p>
+                        <h3>${escapeHtml(product.name)}</h3>
+                        <p>${escapeHtml(product.description)}</p>
                         <div class="product-price">${product.price.toLocaleString()}원</div>
                         <div class="product-actions">
                             <button class="btn-secondary" onclick="event.stopPropagation(); addToCart(${product.id})">장바구니</button>
@@ -3341,6 +3415,7 @@
         // 페이지 로드 시 로그인 상태 확인 및 카드 hover 이벤트 초기화
         window.addEventListener('DOMContentLoaded', () => {
             loadBlogPosts();
+            loadProductsData();
             // 카카오 로그인 SDK 초기화 (제공 키 사용)
             if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
                 Kakao.init('87f6c996d0f83fd42534d1a8a391e6b0');
@@ -3424,16 +3499,14 @@
                 <li style="margin-bottom: 10px; opacity: 0.8;">${benefit}</li>
             `).join('') : '';
 
-            const imageHtml = product.id === 1
-                ? `<div class="product-detail-image"><img src="assets/sensibee-rendering.png" alt="${product.name}" class="product-detail-img"></div>`
-                : `<div class="product-detail-image">${product.image}</div>`;
+            const imageHtml = `<div class="product-detail-image">${renderProductVisual(product, 'product-detail-img', escapeHtml(product.image || '상품 이미지'))}</div>`;
 
             detailBody.innerHTML = `
                 ${imageHtml}
                 <div class="product-detail-info">
-                    <h3>${product.name}</h3>
+                    <h3>${escapeHtml(product.name)}</h3>
                     <div class="product-detail-description">
-                        ${product.fullDescription || product.description}
+                        ${escapeHtml(product.fullDescription || product.description).replace(/\n/g, '<br>')}
                     </div>
                 </div>
                 ${product.specs ? `

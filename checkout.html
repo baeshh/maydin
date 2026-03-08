@@ -183,9 +183,12 @@
                 return;
             }
             const items = cartItems.map(i => ({
+                productId: i.productId,
                 name: (i.productName || '') + (i.optionLabel ? ' ' + i.optionLabel : ''),
+                optionLabel: i.optionLabel || '',
                 price: i.price,
-                qty: i.qty || 1
+                qty: i.qty || 1,
+                imageUrl: i.imageUrl || null
             }));
             const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
             this.disabled = true;

@@ -263,17 +263,173 @@
         .detail-image-placeholder {
             width: 100%;
             min-height: 600px;
-            background: linear-gradient(180deg, var(--primary-color) 0%, #0f3319 100%);
+            background: var(--white);
+            color: var(--text-dark);
+            padding: 0 0 24px;
+            font-size: 16px;
+            font-weight: 400;
+            text-align: left;
+            line-height: 1.8;
+            border-radius: 0;
+        }
+        .community-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .community-header h3 {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+        .community-header p {
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+        .outline-btn,
+        .solid-btn {
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .outline-btn {
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-dark);
+        }
+        .solid-btn {
+            border: 1px solid var(--primary-color);
+            background: var(--primary-color);
             color: var(--white);
+        }
+        .write-box {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            background: #fbfcfb;
+            margin-bottom: 18px;
+        }
+        .form-group-inline {
+            margin-bottom: 14px;
+        }
+        .form-group-inline label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .form-group-inline input,
+        .form-group-inline select,
+        .form-group-inline textarea {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--white);
+        }
+        .checkbox-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            margin-bottom: 14px;
+        }
+        .write-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .help-text {
+            color: var(--text-gray);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .community-list {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
-            text-align: center;
-            line-height: 1.6;
+            gap: 14px;
+        }
+        .community-card {
+            border: 1px solid var(--border-color);
             border-radius: 12px;
+            padding: 18px;
+            background: var(--white);
+        }
+        .community-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            color: var(--text-gray);
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .community-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .community-body {
+            white-space: pre-wrap;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+        .community-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .community-images img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-light);
+        }
+        .answer-box {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 10px;
+            background: var(--secondary-color);
+        }
+        .answer-box strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+        .file-list {
+            margin-top: 8px;
+            color: var(--text-gray);
+            font-size: 13px;
+        }
+        .empty-block {
+            padding: 36px 20px;
+            text-align: center;
+            color: var(--text-gray);
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            background: #fcfcfc;
+        }
+        .star-text {
+            color: #f2a900;
+            font-weight: 700;
+        }
+        .secret-badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            color: var(--text-gray);
+            font-size: 12px;
+            font-weight: 700;
         }
 
         @media (max-width: 768px) {
@@ -312,7 +468,7 @@
                 border: 1px solid var(--primary-color); border-radius: 20px; font-size: 12px; color: var(--primary-color); font-weight: 600;
             }
             .detail-placeholder-mobile {
-                min-height: 400px; background: linear-gradient(to bottom, #fff, #f8f9fa); padding: 20px 16px; border-top: 8px solid var(--bg-light);
+                min-height: 400px; background: var(--white); padding: 20px 16px; border-top: 8px solid var(--bg-light);
             }
             .bottom-action-bar {
                 position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
@@ -452,23 +608,80 @@
             </div>
 
             <div class="tab-panel" id="panel-review">
-                <div class="trust-notice">
-                    <h3>구매평</h3>
-                    <p>아직 등록된 구매평이 없습니다.</p>
+                <div class="community-header">
+                    <div>
+                        <h3>구매평</h3>
+                        <p>배송완료된 주문 건에 한해 구매평을 남길 수 있습니다.</p>
+                    </div>
+                    <button type="button" class="outline-btn" onclick="toggleReviewForm()">구매평 작성</button>
                 </div>
-                <div style="padding: 60px 20px; text-align: center; color: var(--text-gray);">
-                    첫 구매평을 작성해 주세요.
+                <div id="reviewFormWrap" class="write-box" style="display:none;">
+                    <div class="form-group-inline">
+                        <label for="reviewOrderItemSelect">배송완료 주문 선택</label>
+                        <select id="reviewOrderItemSelect"></select>
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="reviewRatingInput">별점</label>
+                        <select id="reviewRatingInput">
+                            <option value="5">5점</option>
+                            <option value="4">4점</option>
+                            <option value="3">3점</option>
+                            <option value="2">2점</option>
+                            <option value="1">1점</option>
+                        </select>
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="reviewTitleInput">제목</label>
+                        <input type="text" id="reviewTitleInput" placeholder="구매평 제목 (선택)">
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="reviewContentInput">내용</label>
+                        <textarea id="reviewContentInput" rows="5" placeholder="상품 사용 후기를 작성해 주세요."></textarea>
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="reviewImagesInput">이미지 첨부</label>
+                        <input type="file" id="reviewImagesInput" accept="image/*" multiple onchange="renderSelectedFiles('reviewImagesInput', 'reviewImagePreview')">
+                        <div id="reviewImagePreview" class="file-list"></div>
+                    </div>
+                    <div class="write-actions">
+                        <button type="button" class="outline-btn" onclick="closeReviewForm()">취소</button>
+                        <button type="button" class="solid-btn" onclick="submitReview()">등록</button>
+                    </div>
                 </div>
+                <div id="reviewSummaryText" class="help-text"></div>
+                <div id="reviewEligibilityHint" class="help-text"></div>
+                <div id="reviewList" class="community-list"></div>
             </div>
 
             <div class="tab-panel" id="panel-qa">
-                <div class="trust-notice">
-                    <h3>Q&A</h3>
-                    <p>제품에 대한 궁금한 점을 남겨주세요.</p>
+                <div class="community-header">
+                    <div>
+                        <h3>Q&A</h3>
+                        <p>상품 관련 문의를 남겨주세요. 비밀글로도 작성할 수 있습니다.</p>
+                    </div>
+                    <button type="button" class="outline-btn" onclick="toggleQnaForm()">문의 작성</button>
                 </div>
-                <div style="padding: 60px 20px; text-align: center; color: var(--text-gray);">
-                    아직 등록된 문의가 없습니다.
+                <div id="qnaFormWrap" class="write-box" style="display:none;">
+                    <div class="form-group-inline">
+                        <label for="qnaSubjectInput">제목</label>
+                        <input type="text" id="qnaSubjectInput" placeholder="문의 제목">
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="qnaContentInput">내용</label>
+                        <textarea id="qnaContentInput" rows="5" placeholder="문의 내용을 입력해 주세요."></textarea>
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="qnaImagesInput">이미지 첨부</label>
+                        <input type="file" id="qnaImagesInput" accept="image/*" multiple onchange="renderSelectedFiles('qnaImagesInput', 'qnaImagePreview')">
+                        <div id="qnaImagePreview" class="file-list"></div>
+                    </div>
+                    <label class="checkbox-row"><input type="checkbox" id="qnaSecretInput"> 비밀글로 작성</label>
+                    <div class="write-actions">
+                        <button type="button" class="outline-btn" onclick="closeQnaForm()">취소</button>
+                        <button type="button" class="solid-btn" onclick="submitQna()">등록</button>
+                    </div>
                 </div>
+                <div id="qnaList" class="community-list"></div>
             </div>
 
             <div class="tab-panel" id="panel-return">
@@ -560,6 +773,326 @@
         };
 
         let currentProduct = null;
+        let reviewEligibleItems = [];
+        let reviewSummary = { count: 0, avgRating: 0 };
+        let qnaCount = 0;
+
+        function getAuthToken() {
+            return localStorage.getItem('token') || '';
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function toFullUrl(url) {
+            if (!url || typeof url !== 'string') return '';
+            var u = url.trim();
+            if (/^https?:\/\//i.test(u)) return u;
+            if (u.indexOf('/uploads/') === 0) u = '/api' + u;
+            var base = (window.API_BASE || '').replace(/\/$/, '');
+            return base + (u.indexOf('/') === 0 ? u : '/' + u);
+        }
+
+        function formatDate(value) {
+            return value ? String(value).slice(0, 10) : '';
+        }
+
+        function setTabCount(tabName, count) {
+            var tab = document.querySelector('.tab-item[data-tab="' + tabName + '"]');
+            if (!tab) return;
+            tab.textContent = (tabName === 'review' ? '구매평' : 'Q&A') + ' (' + count + ')';
+        }
+
+        function renderSelectedFiles(inputId, previewId) {
+            var input = document.getElementById(inputId);
+            var preview = document.getElementById(previewId);
+            if (!input || !preview) return;
+            var files = Array.prototype.slice.call(input.files || []);
+            preview.textContent = files.length ? files.map(function(file) { return file.name; }).join(', ') : '';
+        }
+
+        async function parseJsonResponse(res) {
+            var text = await res.text();
+            var data = null;
+            try { data = text ? JSON.parse(text) : null; } catch (_) { data = null; }
+            return { ok: res.ok, status: res.status, data: data, text: text };
+        }
+
+        async function uploadSelectedFiles(inputId) {
+            var token = getAuthToken();
+            var input = document.getElementById(inputId);
+            var files = Array.prototype.slice.call((input && input.files) || []);
+            var urls = [];
+            for (var i = 0; i < files.length; i++) {
+                var fd = new FormData();
+                fd.append('file', files[i]);
+                var res = await fetch((window.API_BASE || '') + '/api/products/upload-image', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: fd
+                });
+                var parsed = await parseJsonResponse(res);
+                if (!parsed.ok || !parsed.data || !parsed.data.success || !parsed.data.url) {
+                    throw new Error((parsed.data && parsed.data.message) || '이미지 업로드에 실패했습니다.');
+                }
+                urls.push(parsed.data.url);
+            }
+            return urls;
+        }
+
+        function renderReviewList(reviews) {
+            var listEl = document.getElementById('reviewList');
+            if (!listEl) return;
+            if (!reviews || !reviews.length) {
+                listEl.innerHTML = '<div class="empty-block">아직 등록된 구매평이 없습니다. 첫 구매평을 남겨보세요.</div>';
+                return;
+            }
+            listEl.innerHTML = reviews.map(function(review) {
+                var stars = '<span class="star-text">' + '★★★★★'.slice(0, review.rating) + '</span>' + '☆☆☆☆☆'.slice(0, 5 - review.rating);
+                var title = review.title ? '<div class="community-title">' + escapeHtml(review.title) + '</div>' : '';
+                var images = (review.images || []).map(function(url) {
+                    return '<img src="' + toFullUrl(url) + '" alt="" onclick="window.open(this.src, \'_blank\')">';
+                }).join('');
+                return '<div class="community-card">' +
+                    '<div class="community-meta"><span>' + escapeHtml(review.userName || '익명') + '</span><span>' + formatDate(review.createdAt) + '</span><span>' + stars + '</span>' + (review.optionLabel ? '<span>' + escapeHtml(review.optionLabel) + '</span>' : '') + '</div>' +
+                    title +
+                    '<div class="community-body">' + escapeHtml(review.content || '') + '</div>' +
+                    (images ? '<div class="community-images">' + images + '</div>' : '') +
+                '</div>';
+            }).join('');
+        }
+
+        function renderQnaList(qnaItems) {
+            var listEl = document.getElementById('qnaList');
+            if (!listEl) return;
+            if (!qnaItems || !qnaItems.length) {
+                listEl.innerHTML = '<div class="empty-block">등록된 Q&A가 없습니다. 궁금한 점을 남겨주세요.</div>';
+                return;
+            }
+            listEl.innerHTML = qnaItems.map(function(item) {
+                var secretBadge = item.isSecret ? '<span class="secret-badge">비밀글</span>' : '';
+                var images = (item.images || []).map(function(url) {
+                    return '<img src="' + toFullUrl(url) + '" alt="" onclick="window.open(this.src, \'_blank\')">';
+                }).join('');
+                var answer = item.adminAnswer ? '<div class="answer-box"><strong>관리자 답변</strong><div class="community-body">' + escapeHtml(item.adminAnswer) + '</div></div>' : '';
+                return '<div class="community-card">' +
+                    '<div class="community-meta"><span>' + escapeHtml(item.userName || '익명') + '</span><span>' + formatDate(item.createdAt) + '</span><span>' + (item.status === 'answered' ? '답변완료' : '답변대기') + '</span></div>' +
+                    '<div class="community-title">' + escapeHtml(item.subject || '') + secretBadge + '</div>' +
+                    '<div class="community-body">' + escapeHtml(item.content || '') + '</div>' +
+                    (images ? '<div class="community-images">' + images + '</div>' : '') +
+                    answer +
+                '</div>';
+            }).join('');
+        }
+
+        async function loadReviews() {
+            if (!currentProduct) return;
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/products/' + currentProduct.id + '/reviews');
+                var parsed = await parseJsonResponse(res);
+                var reviews = (parsed.data && parsed.data.reviews) || [];
+                reviewSummary = (parsed.data && parsed.data.summary) || { count: 0, avgRating: 0 };
+                setTabCount('review', reviewSummary.count || 0);
+                var summaryText = document.getElementById('reviewSummaryText');
+                if (summaryText) {
+                    summaryText.textContent = (reviewSummary.count || 0)
+                        ? '평균 ' + Number(reviewSummary.avgRating || 0).toFixed(1) + '점 · 총 ' + reviewSummary.count + '개의 구매평'
+                        : '아직 등록된 구매평이 없습니다.';
+                }
+                var ratingRow = document.querySelector('.review-stars');
+                var ratingValue = document.getElementById('productRating');
+                if (ratingRow && ratingValue) {
+                    if (reviewSummary.count > 0) {
+                        ratingRow.style.display = '';
+                        ratingValue.textContent = Number(reviewSummary.avgRating || 0).toFixed(1) + ' · 구매평 ' + reviewSummary.count + '건';
+                    } else {
+                        ratingRow.style.display = 'none';
+                    }
+                }
+                renderReviewList(reviews);
+            } catch (_) {
+                renderReviewList([]);
+            }
+        }
+
+        async function loadReviewEligibility() {
+            reviewEligibleItems = [];
+            var hintEl = document.getElementById('reviewEligibilityHint');
+            if (hintEl) hintEl.textContent = '';
+            if (!currentProduct) return;
+            var token = getAuthToken();
+            if (!token) {
+                if (hintEl) hintEl.textContent = '로그인 후 배송완료된 주문에 한해 구매평을 작성할 수 있습니다.';
+                return;
+            }
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/products/' + currentProduct.id + '/review-eligibility', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                var parsed = await parseJsonResponse(res);
+                reviewEligibleItems = parsed.ok && parsed.data && parsed.data.eligibleItems ? parsed.data.eligibleItems : [];
+                if (hintEl) {
+                    hintEl.textContent = reviewEligibleItems.length
+                        ? '작성 가능한 배송완료 주문이 ' + reviewEligibleItems.length + '건 있습니다.'
+                        : '작성 가능한 배송완료 주문이 없습니다.';
+                }
+                var select = document.getElementById('reviewOrderItemSelect');
+                if (select) {
+                    select.innerHTML = reviewEligibleItems.length
+                        ? reviewEligibleItems.map(function(item) {
+                            var label = '#' + item.orderId + ' / ' + formatDate(item.orderedAt) + (item.optionLabel ? ' / ' + item.optionLabel : '');
+                            return '<option value="' + escapeHtml(item.orderId + '|' + item.orderItemKey) + '">' + escapeHtml(label) + '</option>';
+                        }).join('')
+                        : '<option value="">작성 가능한 주문 없음</option>';
+                }
+            } catch (_) {
+                if (hintEl) hintEl.textContent = '리뷰 작성 가능 주문을 불러오지 못했습니다.';
+            }
+        }
+
+        async function loadQna() {
+            if (!currentProduct) return;
+            try {
+                var token = getAuthToken();
+                var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                var res = await fetch((window.API_BASE || '') + '/api/products/' + currentProduct.id + '/qna', { headers: headers });
+                var parsed = await parseJsonResponse(res);
+                var list = (parsed.data && parsed.data.qna) || [];
+                qnaCount = parsed.data && parsed.data.count ? parsed.data.count : list.length;
+                setTabCount('qa', qnaCount || 0);
+                renderQnaList(list);
+            } catch (_) {
+                renderQnaList([]);
+            }
+        }
+
+        async function loadCommunityData() {
+            await loadReviews();
+            await loadQna();
+            await loadReviewEligibility();
+        }
+
+        function closeReviewForm() {
+            document.getElementById('reviewFormWrap').style.display = 'none';
+            document.getElementById('reviewTitleInput').value = '';
+            document.getElementById('reviewContentInput').value = '';
+            document.getElementById('reviewImagesInput').value = '';
+            document.getElementById('reviewImagePreview').textContent = '';
+        }
+
+        async function toggleReviewForm() {
+            var wrap = document.getElementById('reviewFormWrap');
+            if (!wrap) return;
+            if (wrap.style.display === 'block') {
+                closeReviewForm();
+                return;
+            }
+            if (!getAuthToken()) {
+                if (confirm('로그인이 필요합니다. 메인 페이지로 이동할까요?')) window.location.href = 'index.html';
+                return;
+            }
+            await loadReviewEligibility();
+            if (!reviewEligibleItems.length) {
+                alert('배송완료된 주문 건이 있어야 구매평을 작성할 수 있습니다.');
+                return;
+            }
+            wrap.style.display = 'block';
+        }
+
+        function closeQnaForm() {
+            document.getElementById('qnaFormWrap').style.display = 'none';
+            document.getElementById('qnaSubjectInput').value = '';
+            document.getElementById('qnaContentInput').value = '';
+            document.getElementById('qnaSecretInput').checked = false;
+            document.getElementById('qnaImagesInput').value = '';
+            document.getElementById('qnaImagePreview').textContent = '';
+        }
+
+        function toggleQnaForm() {
+            var wrap = document.getElementById('qnaFormWrap');
+            if (!wrap) return;
+            if (wrap.style.display === 'block') {
+                closeQnaForm();
+                return;
+            }
+            if (!getAuthToken()) {
+                if (confirm('로그인이 필요합니다. 메인 페이지로 이동할까요?')) window.location.href = 'index.html';
+                return;
+            }
+            wrap.style.display = 'block';
+        }
+
+        async function submitReview() {
+            var token = getAuthToken();
+            if (!token) { alert('로그인이 필요합니다.'); return; }
+            var orderValue = document.getElementById('reviewOrderItemSelect').value;
+            var content = document.getElementById('reviewContentInput').value.trim();
+            if (!orderValue) { alert('배송완료 주문을 선택해주세요.'); return; }
+            if (!content) { alert('구매평 내용을 입력해주세요.'); return; }
+            try {
+                var uploadedUrls = await uploadSelectedFiles('reviewImagesInput');
+                var parts = orderValue.split('|');
+                var res = await fetch((window.API_BASE || '') + '/api/products/' + currentProduct.id + '/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({
+                        orderId: parseInt(parts[0], 10),
+                        orderItemKey: parts[1],
+                        rating: parseInt(document.getElementById('reviewRatingInput').value, 10) || 5,
+                        title: document.getElementById('reviewTitleInput').value.trim(),
+                        content: content,
+                        images: uploadedUrls
+                    })
+                });
+                var parsed = await parseJsonResponse(res);
+                if (!parsed.ok || !parsed.data || !parsed.data.success) {
+                    throw new Error((parsed.data && parsed.data.message) || '구매평 등록에 실패했습니다.');
+                }
+                alert('구매평이 등록되었습니다.');
+                closeReviewForm();
+                await loadReviews();
+                await loadReviewEligibility();
+            } catch (e) {
+                alert(e && e.message ? e.message : '구매평 등록에 실패했습니다.');
+            }
+        }
+
+        async function submitQna() {
+            var token = getAuthToken();
+            if (!token) { alert('로그인이 필요합니다.'); return; }
+            var subject = document.getElementById('qnaSubjectInput').value.trim();
+            var content = document.getElementById('qnaContentInput').value.trim();
+            if (!subject) { alert('문의 제목을 입력해주세요.'); return; }
+            if (!content) { alert('문의 내용을 입력해주세요.'); return; }
+            try {
+                var uploadedUrls = await uploadSelectedFiles('qnaImagesInput');
+                var res = await fetch((window.API_BASE || '') + '/api/products/' + currentProduct.id + '/qna', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({
+                        subject: subject,
+                        content: content,
+                        isSecret: document.getElementById('qnaSecretInput').checked,
+                        images: uploadedUrls
+                    })
+                });
+                var parsed = await parseJsonResponse(res);
+                if (!parsed.ok || !parsed.data || !parsed.data.success) {
+                    throw new Error((parsed.data && parsed.data.message) || 'Q&A 등록에 실패했습니다.');
+                }
+                alert('Q&A가 등록되었습니다.');
+                closeQnaForm();
+                await loadQna();
+            } catch (e) {
+                alert(e && e.message ? e.message : 'Q&A 등록에 실패했습니다.');
+            }
+        }
 
         function initTabs() {
             document.querySelectorAll('.tab-item').forEach(function(tab) {
@@ -664,15 +1197,6 @@
             optSelect.innerHTML = optHtml;
             if (optMobile) optMobile.innerHTML = '<option value="" disabled selected>제품 선택 (필수)</option>' +
                 currentProduct.options.map(function(o, i) { return '<option value="' + i + '" data-price="' + o.price + '">' + o.label + ' - ' + o.price.toLocaleString() + '원</option>'; }).join('');
-            function toFullUrl(url) {
-                if (!url || typeof url !== 'string') return '';
-                var u = url.trim();
-                if (/^https?:\/\//i.test(u)) return u;
-                if (u.indexOf('/uploads/') === 0) u = '/api' + u;
-                var base = (window.API_BASE || '').replace(/\/$/, '');
-                return base + (u.indexOf('/') === 0 ? u : '/' + u);
-            }
-            var base = (window.API_BASE || '').replace(/\/$/, '');
             var mainImg = (currentProduct.images && currentProduct.images[0]) || currentProduct.imageUrl;
             var mainImgSrc = toFullUrl(mainImg);
             var mainImgHtml = mainImgSrc ? '<img src="' + mainImgSrc + '" alt="' + (currentProduct.name || '') + '" style="max-width:100%;height:auto;" onerror="var p=this.parentNode;if(p){this.style.display=\'none\';var s=p.querySelector(\'.img-fallback\');if(s)s.style.display=\'block\';}"><span class="img-fallback" style="display:none;color:var(--text-light);">[ 제품 이미지 ]</span>' : '<span style="color:var(--text-light);">[ 제품 이미지 ]</span>';
@@ -687,6 +1211,7 @@
             if (detailPanel) detailPanel.innerHTML = detailContent;
             var detailMobile = document.getElementById('productDetailContentMobile');
             if (detailMobile) detailMobile.innerHTML = detailContent;
+            await loadCommunityData();
             bindMobileActions();
         }
 

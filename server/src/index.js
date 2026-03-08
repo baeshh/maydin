@@ -47,6 +47,9 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, message: 'MAYDIN API' });
 });
 
+// 404도 JSON으로 (HTML 응답 방지)
+app.use((req, res) => res.status(404).json({ success: false, message: 'Not found' }));
+
 // 에러 시에도 HTML 대신 JSON 반환 (프론트에서 "연결 실패"로 오해 방지)
 app.use((err, req, res, next) => {
   console.error(err);

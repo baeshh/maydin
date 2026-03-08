@@ -1115,7 +1115,10 @@
             const fd = new FormData();
             fd.append('file', file);
             const res = await fetch(API + '/api/admin/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken }, body: fd });
-            const data = await res.json();
+            const text = await res.text();
+            let data = null;
+            try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+            if (!data) throw new Error('서버 응답 오류 (HTML 등). ' + (res.status === 413 ? '파일이 너무 큽니다(5MB 이하).' : '') + ' 상태: ' + res.status);
             if (!data.success || !data.url) throw new Error(data.message || '업로드 실패');
             return data.url;
         }

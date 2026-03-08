@@ -18,10 +18,16 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-// POST /api/admin/upload - 상품 이미지 업로드 (관리자 인증)
-router.post('/upload', adminAuthMiddleware, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: '파일이 없습니다.' });
-  res.json({ success: true, url: '/uploads/' + req.file.filename });
+// POST /api/admin/upload - 상품 이미지 업로드 (관리자 인증). 항상 JSON 응답.
+router.post('/upload', adminAuthMiddleware, (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      const msg = err.code === 'LIMIT_FILE_SIZE' ? '파일 크기는 5MB 이하여야 합니다.' : (err.message || '업로드 실패');
+      return res.status(400).json({ success: false, message: msg });
+    }
+    if (!req.file) return res.status(400).json({ success: false, message: '파일이 없습니다.' });
+    res.json({ success: true, url: '/uploads/' + req.file.filename });
+  });
 });
 
 // POST /api/admin/auth/login

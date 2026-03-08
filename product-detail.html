@@ -664,15 +664,23 @@
             optSelect.innerHTML = optHtml;
             if (optMobile) optMobile.innerHTML = '<option value="" disabled selected>제품 선택 (필수)</option>' +
                 currentProduct.options.map(function(o, i) { return '<option value="' + i + '" data-price="' + o.price + '">' + o.label + ' - ' + o.price.toLocaleString() + '원</option>'; }).join('');
-            var base = (window.API_BASE || '');
+            function toFullUrl(url) {
+                if (!url || typeof url !== 'string') return '';
+                var u = url.trim();
+                if (/^https?:\/\//i.test(u)) return u;
+                var base = (window.API_BASE || '').replace(/\/$/, '');
+                return base + (u.indexOf('/') === 0 ? u : '/' + u);
+            }
+            var base = (window.API_BASE || '').replace(/\/$/, '');
             var mainImg = (currentProduct.images && currentProduct.images[0]) || currentProduct.imageUrl;
-            var mainImgHtml = mainImg ? '<img src="' + base + mainImg + '" alt="' + (currentProduct.name || '') + '" style="max-width:100%;height:auto;">' : '<span style="color:var(--text-light);">[ 제품 이미지 ]</span>';
+            var mainImgSrc = toFullUrl(mainImg);
+            var mainImgHtml = mainImgSrc ? '<img src="' + mainImgSrc + '" alt="' + (currentProduct.name || '') + '" style="max-width:100%;height:auto;" onerror="var p=this.parentNode;if(p){this.style.display=\'none\';var s=p.querySelector(\'.img-fallback\');if(s)s.style.display=\'block\';}"><span class="img-fallback" style="display:none;color:var(--text-light);">[ 제품 이미지 ]</span>' : '<span style="color:var(--text-light);">[ 제품 이미지 ]</span>';
             var areaEl = document.getElementById('productImageArea');
             if (areaEl) areaEl.innerHTML = mainImgHtml;
             var mobileImgEl = document.getElementById('productImageMobile');
-            if (mobileImgEl) mobileImgEl.innerHTML = mainImg ? '<img src="' + base + mainImg + '" alt="" style="width:100%;height:100%;object-fit:cover;">' : '[ 제품 이미지 ]';
+            if (mobileImgEl) mobileImgEl.innerHTML = mainImgSrc ? '<img src="' + mainImgSrc + '" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="var p=this.parentNode;if(p)p.innerHTML=\'<span style="color:var(--text-gray);">[ 제품 이미지 ]</span>\';">' : '[ 제품 이미지 ]';
             var descHtml = currentProduct.description ? '<div style="white-space:pre-wrap;margin-bottom:20px;line-height:1.7;">' + (currentProduct.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' : '';
-            var detailImgsHtml = (currentProduct.detailImages || []).map(function(u) { return '<img src="' + base + u + '" alt="" style="width:100%;max-width:100%;height:auto;display:block;margin-bottom:12px;">'; }).join('');
+            var detailImgsHtml = (currentProduct.detailImages || []).map(function(u) { var src = toFullUrl(u); return src ? '<img src="' + src + '" alt="" style="width:100%;max-width:100%;height:auto;display:block;margin-bottom:12px;" onerror="this.style.opacity=\'0.3\';">' : ''; }).filter(Boolean).join('');
             var detailContent = descHtml + (detailImgsHtml || '<p style="color:var(--text-gray);">[ 상세페이지 이미지 영역 ]</p>');
             var detailPanel = document.getElementById('productDetailContent');
             if (detailPanel) detailPanel.innerHTML = detailContent;

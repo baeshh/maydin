@@ -5,6 +5,9 @@ const router = express.Router();
 
 function rowToProduct(row) {
   if (!row) return null;
+  const images = row.images ? (typeof row.images === 'string' ? JSON.parse(row.images) : row.images) : [];
+  const detailImages = row.detail_images ? (typeof row.detail_images === 'string' ? JSON.parse(row.detail_images) : row.detail_images) : [];
+  const imageUrl = row.image_url || (images && images[0]) || null;
   return {
     id: row.id,
     name: row.name,
@@ -18,9 +21,9 @@ function rowToProduct(row) {
     isBest: !!row.is_best,
     isNew: !!row.is_new,
     rating: row.rating,
-    imageUrl: row.image_url,
-    images: row.images ? (typeof row.images === 'string' ? JSON.parse(row.images) : row.images) : [],
-    detailImages: row.detail_images ? (typeof row.detail_images === 'string' ? JSON.parse(row.detail_images) : row.detail_images) : [],
+    imageUrl: imageUrl,
+    images: images,
+    detailImages: detailImages,
     specs: row.specs ? JSON.parse(row.specs) : null,
     benefits: row.benefits ? JSON.parse(row.benefits) : null,
     options: row.options ? JSON.parse(row.options) : null

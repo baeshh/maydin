@@ -14,6 +14,17 @@ sudo nginx -t && sudo systemctl reload nginx
 
 이후 `http://3.26.7.116` 으로 접속하면 프론트 + API가 함께 동작합니다.
 
+**HTTPS(Certbot) 사용 중인데 이미지 업로드 시 413 나면:**  
+`/etc/nginx/sites-available/maydin` 에서 `listen 443 ssl;` 이 있는 `server { }` 블록 **안쪽 맨 위**에 한 줄 추가 후 reload:
+
+```nginx
+client_max_body_size 20M;
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
 ---
 
 ## 2. GitHub Actions 자동 배포 설정

@@ -106,12 +106,13 @@ router.post('/products', adminAuthMiddleware, (req, res) => {
   const margin = marginPercent != null && marginPercent !== '' ? parseFloat(marginPercent) : null;
   const imgs = Array.isArray(images) ? images : (images ? JSON.parse(images) : []);
   const detailImgs = Array.isArray(detailImages) ? detailImages : (detailImages ? JSON.parse(detailImages) : []);
+  const firstImageUrl = (imgs && imgs[0]) ? imgs[0] : null;
   const stmt = db.prepare(`
-    INSERT INTO products (name, description, price, original_price, unit, tag, category, desc_short, is_best, is_new, rating, options, margin_percent, images, detail_images)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, description, price, original_price, unit, tag, category, desc_short, is_best, is_new, rating, options, margin_percent, images, detail_images, image_url)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const opts = options ? JSON.stringify(Array.isArray(options) ? options : []) : '[]';
-  stmt.run(name || null, description || null, price, originalPrice || null, unit || '/ 30일', tag || null, category || null, descShort || null, isBest ? 1 : 0, isNew ? 1 : 0, rating || null, opts, margin, JSON.stringify(imgs), JSON.stringify(detailImgs));
+  stmt.run(name || null, description || null, price, originalPrice || null, unit || '/ 30일', tag || null, category || null, descShort || null, isBest ? 1 : 0, isNew ? 1 : 0, rating || null, opts, margin, JSON.stringify(imgs), JSON.stringify(detailImgs), firstImageUrl);
   const row = db.prepare('SELECT * FROM products WHERE id = ?').get(db.prepare('SELECT last_insert_rowid() as id').get().id);
   res.json({ success: true, product: { id: row.id, name: row.name, price: row.price } });
 });
@@ -125,16 +126,17 @@ router.put('/products/:id', adminAuthMiddleware, (req, res) => {
   const margin = marginPercent != null && marginPercent !== '' ? parseFloat(marginPercent) : null;
   const imgs = Array.isArray(images) ? images : (images ? JSON.parse(images) : []);
   const detailImgs = Array.isArray(detailImages) ? detailImages : (detailImages ? JSON.parse(detailImages) : []);
+  const firstImageUrl = (imgs && imgs[0]) ? imgs[0] : null;
   const stmt = db.prepare(`
-    UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?, images=?, detail_images=?
+    UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?, images=?, detail_images=?, image_url=?
     ${options !== undefined ? ', options=?' : ''} WHERE id=?
   `);
   const opts = options !== undefined ? JSON.stringify(Array.isArray(options) ? options : []) : null;
   if (opts !== null) {
-    stmt.run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, JSON.stringify(imgs), JSON.stringify(detailImgs), opts, id);
+    stmt.run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, JSON.stringify(imgs), JSON.stringify(detailImgs), firstImageUrl, opts, id);
   } else {
-    db.prepare('UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?, images=?, detail_images=? WHERE id=?')
-      .run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, JSON.stringify(imgs), JSON.stringify(detailImgs), id);
+    db.prepare('UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?, images=?, detail_images=?, image_url=? WHERE id=?')
+      .run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, JSON.stringify(imgs), JSON.stringify(detailImgs), firstImageUrl, id);
   }
   res.json({ success: true });
 });

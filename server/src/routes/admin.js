@@ -1,11 +1,28 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const db = require('../db');
 const { adminAuthMiddleware } = require('../middleware/adminAuth');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+
+const uploadDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => cb(null, Date.now() + '-' + Math.random().toString(36).slice(2) + (path.extname(file.originalname) || '.jpg'))
+});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+
+// POST /api/admin/upload - 상품 이미지 업로드 (관리자 인증)
+router.post('/upload', adminAuthMiddleware, upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: '파일이 없습니다.' });
+  res.json({ success: true, url: '/uploads/' + req.file.filename });
+});
 
 // POST /api/admin/auth/login
 router.post('/auth/login', (req, res) => {
@@ -49,6 +66,8 @@ router.get('/products', adminAuthMiddleware, (req, res) => {
     id: r.id, name: r.name, description: r.description, price: r.price, originalPrice: r.original_price,
     unit: r.unit, tag: r.tag, category: r.category, descShort: r.desc_short,
     isBest: !!r.is_best, isNew: !!r.is_new, rating: r.rating, imageUrl: r.image_url,
+    images: r.images ? (typeof r.images === 'string' ? JSON.parse(r.images) : r.images) : [],
+    detailImages: r.detail_images ? (typeof r.detail_images === 'string' ? JSON.parse(r.detail_images) : r.detail_images) : [],
     specs: r.specs ? JSON.parse(r.specs) : null, benefits: r.benefits ? JSON.parse(r.benefits) : null,
     options: r.options ? JSON.parse(r.options) : null, marginPercent: r.margin_percent != null ? r.margin_percent : null,
     createdAt: r.created_at
@@ -64,6 +83,8 @@ router.get('/products/:id', adminAuthMiddleware, (req, res) => {
     id: r.id, name: r.name, description: r.description, price: r.price, originalPrice: r.original_price,
     unit: r.unit, tag: r.tag, category: r.category, descShort: r.desc_short,
     isBest: !!r.is_best, isNew: !!r.is_new, rating: r.rating, imageUrl: r.image_url,
+    images: r.images ? (typeof r.images === 'string' ? JSON.parse(r.images) : r.images) : [],
+    detailImages: r.detail_images ? (typeof r.detail_images === 'string' ? JSON.parse(r.detail_images) : r.detail_images) : [],
     specs: r.specs ? JSON.parse(r.specs) : null, benefits: r.benefits ? JSON.parse(r.benefits) : null,
     options: r.options ? JSON.parse(r.options) : null, marginPercent: r.margin_percent != null ? r.margin_percent : null,
     createdAt: r.created_at
@@ -72,38 +93,42 @@ router.get('/products/:id', adminAuthMiddleware, (req, res) => {
 });
 
 router.post('/products', adminAuthMiddleware, (req, res) => {
-  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options, marginPercent } = req.body;
+  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options, marginPercent, images, detailImages } = req.body;
   if (!name || price == null) {
     return res.status(400).json({ success: false, message: '상품명과 가격은 필수입니다.' });
   }
   const margin = marginPercent != null && marginPercent !== '' ? parseFloat(marginPercent) : null;
+  const imgs = Array.isArray(images) ? images : (images ? JSON.parse(images) : []);
+  const detailImgs = Array.isArray(detailImages) ? detailImages : (detailImages ? JSON.parse(detailImages) : []);
   const stmt = db.prepare(`
-    INSERT INTO products (name, description, price, original_price, unit, tag, category, desc_short, is_best, is_new, rating, options, margin_percent)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, description, price, original_price, unit, tag, category, desc_short, is_best, is_new, rating, options, margin_percent, images, detail_images)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const opts = options ? JSON.stringify(Array.isArray(options) ? options : []) : '[]';
-  stmt.run(name || null, description || null, price, originalPrice || null, unit || '/ 30일', tag || null, category || null, descShort || null, isBest ? 1 : 0, isNew ? 1 : 0, rating || null, opts, margin);
+  stmt.run(name || null, description || null, price, originalPrice || null, unit || '/ 30일', tag || null, category || null, descShort || null, isBest ? 1 : 0, isNew ? 1 : 0, rating || null, opts, margin, JSON.stringify(imgs), JSON.stringify(detailImgs));
   const row = db.prepare('SELECT * FROM products WHERE id = ?').get(db.prepare('SELECT last_insert_rowid() as id').get().id);
   res.json({ success: true, product: { id: row.id, name: row.name, price: row.price } });
 });
 
 router.put('/products/:id', adminAuthMiddleware, (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options, marginPercent } = req.body;
+  const { name, description, price, originalPrice, unit, tag, category, descShort, isBest, isNew, rating, options, marginPercent, images, detailImages } = req.body;
   const existing = db.prepare('SELECT id FROM products WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ success: false, message: '상품을 찾을 수 없습니다.' });
 
   const margin = marginPercent != null && marginPercent !== '' ? parseFloat(marginPercent) : null;
+  const imgs = Array.isArray(images) ? images : (images ? JSON.parse(images) : []);
+  const detailImgs = Array.isArray(detailImages) ? detailImages : (detailImages ? JSON.parse(detailImages) : []);
   const stmt = db.prepare(`
-    UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?
+    UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?, images=?, detail_images=?
     ${options !== undefined ? ', options=?' : ''} WHERE id=?
   `);
   const opts = options !== undefined ? JSON.stringify(Array.isArray(options) ? options : []) : null;
   if (opts !== null) {
-    stmt.run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, opts, id);
+    stmt.run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, JSON.stringify(imgs), JSON.stringify(detailImgs), opts, id);
   } else {
-    db.prepare('UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=? WHERE id=?')
-      .run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, id);
+    db.prepare('UPDATE products SET name=?, description=?, price=?, original_price=?, unit=?, tag=?, category=?, desc_short=?, is_best=?, is_new=?, rating=?, margin_percent=?, images=?, detail_images=? WHERE id=?')
+      .run(name, description, price, originalPrice, unit, tag, category, descShort, isBest ? 1 : 0, isNew ? 1 : 0, rating, margin, JSON.stringify(imgs), JSON.stringify(detailImgs), id);
   }
   res.json({ success: true });
 });

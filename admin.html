@@ -127,6 +127,10 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
         .empty-msg { color: var(--text-muted); padding: 40px; text-align: center; }
+        .image-preview-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .image-preview-list .preview-item { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); }
+        .image-preview-list .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .image-preview-list .preview-item .remove-btn { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border: none; background: rgba(0,0,0,0.6); color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; line-height: 1; }
         @media (max-width: 1200px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } .content-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .summary-grid { grid-template-columns: 1fr; } .sidebar { width: 200px; } }
 
@@ -434,8 +438,22 @@
                     <input type="number" id="productMarginPercent" min="0" max="100" step="0.1" placeholder="비우면 기본 30.6% (대시보드 순수익·베스트에 사용)">
                 </div>
                 <div class="form-group">
-                    <label>설명</label>
+                    <label>짧은 설명</label>
                     <input type="text" id="productDesc" placeholder="짧은 설명">
+                </div>
+                <div class="form-group">
+                    <label>상세 페이지 설명</label>
+                    <textarea id="productDescription" rows="4" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-family:inherit;" placeholder="상품 상세 페이지에 표시할 설명"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>메인 제품 이미지 (1~5장)</label>
+                    <input type="file" id="productImagesInput" accept="image/*" multiple style="margin-bottom:8px;">
+                    <div id="productImagesPreview" class="image-preview-list"></div>
+                </div>
+                <div class="form-group">
+                    <label>상세 페이지 이미지</label>
+                    <input type="file" id="productDetailImagesInput" accept="image/*" multiple style="margin-bottom:8px;">
+                    <div id="productDetailImagesPreview" class="image-preview-list"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn" style="background:#eee" onclick="closeProductModal()">취소</button>
@@ -1075,10 +1093,43 @@
             } catch (e) { document.getElementById('postList').innerHTML = '<tr><td colspan="5" class="empty-msg">로드 실패</td></tr>'; }
         }
 
+        let productImagesUrls = [];
+        let productDetailImagesUrls = [];
+
+        function renderImagePreviews(containerId, urls, onRemove) {
+            const el = document.getElementById(containerId);
+            const base = (window.API_BASE || '');
+            el.innerHTML = urls.map((url, i) => '<div class="preview-item"><img src="' + base + url + '" alt=""><button type="button" class="remove-btn" onclick="' + onRemove + '(' + i + ')">×</button></div>').join('');
+        }
+
+        function removeProductImage(i) {
+            productImagesUrls.splice(i, 1);
+            renderImagePreviews('productImagesPreview', productImagesUrls, 'removeProductImage');
+        }
+        function removeProductDetailImage(i) {
+            productDetailImagesUrls.splice(i, 1);
+            renderImagePreviews('productDetailImagesPreview', productDetailImagesUrls, 'removeProductDetailImage');
+        }
+
+        async function uploadProductImage(file) {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch(API + '/api/admin/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken }, body: fd });
+            const data = await res.json();
+            if (!data.success || !data.url) throw new Error(data.message || '업로드 실패');
+            return data.url;
+        }
+
         function openProductModal(id) {
             document.getElementById('productModalTitle').textContent = id ? '상품 수정' : '상품 추가';
             document.getElementById('productId').value = id || '';
             document.getElementById('productForm').reset();
+            productImagesUrls = [];
+            productDetailImagesUrls = [];
+            renderImagePreviews('productImagesPreview', [], 'removeProductImage');
+            renderImagePreviews('productDetailImagesPreview', [], 'removeProductDetailImage');
+            document.getElementById('productImagesInput').value = '';
+            document.getElementById('productDetailImagesInput').value = '';
             if (id) {
                 fetch(API + '/api/admin/products/' + id, { headers: headers() }).then(r => r.json()).then(d => {
                     if (d.success && d.product) {
@@ -1091,12 +1142,42 @@
                         document.getElementById('productIsBest').checked = p.isBest;
                         document.getElementById('productIsNew').checked = p.isNew;
                         document.getElementById('productDesc').value = p.desc || p.descShort || '';
+                        document.getElementById('productDescription').value = p.description || '';
                         document.getElementById('productMarginPercent').value = (p.marginPercent != null && p.marginPercent !== '') ? p.marginPercent : '';
+                        productImagesUrls = Array.isArray(p.images) ? p.images : [];
+                        productDetailImagesUrls = Array.isArray(p.detailImages) ? p.detailImages : [];
+                        renderImagePreviews('productImagesPreview', productImagesUrls, 'removeProductImage');
+                        renderImagePreviews('productDetailImagesPreview', productDetailImagesUrls, 'removeProductDetailImage');
                     }
                 });
             }
             document.getElementById('productModal').classList.add('active');
         }
+
+        document.getElementById('productImagesInput').addEventListener('change', async function() {
+            const files = this.files;
+            if (!files || !files.length) return;
+            for (let i = 0; i < files.length && productImagesUrls.length < 5; i++) {
+                try {
+                    const url = await uploadProductImage(files[i]);
+                    productImagesUrls.push(url);
+                } catch (e) { alert('이미지 업로드 실패: ' + e.message); }
+            }
+            renderImagePreviews('productImagesPreview', productImagesUrls, 'removeProductImage');
+            this.value = '';
+        });
+        document.getElementById('productDetailImagesInput').addEventListener('change', async function() {
+            const files = this.files;
+            if (!files || !files.length) return;
+            for (let i = 0; i < files.length; i++) {
+                try {
+                    const url = await uploadProductImage(files[i]);
+                    productDetailImagesUrls.push(url);
+                } catch (e) { alert('이미지 업로드 실패: ' + e.message); }
+            }
+            renderImagePreviews('productDetailImagesPreview', productDetailImagesUrls, 'removeProductDetailImage');
+            this.value = '';
+        });
 
         function closeProductModal() { document.getElementById('productModal').classList.remove('active'); }
 
@@ -1108,6 +1189,7 @@
             const marginVal = document.getElementById('productMarginPercent').value.trim();
             const payload = {
                 name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value || null,
                 price: parseInt(document.getElementById('productPrice').value, 10),
                 originalPrice: parseInt(document.getElementById('productOriginalPrice').value, 10) || null,
                 category: document.getElementById('productCategory').value || null,
@@ -1115,7 +1197,9 @@
                 isBest: document.getElementById('productIsBest').checked,
                 isNew: document.getElementById('productIsNew').checked,
                 descShort: document.getElementById('productDesc').value || null,
-                marginPercent: marginVal === '' ? null : parseFloat(marginVal)
+                marginPercent: marginVal === '' ? null : parseFloat(marginVal),
+                images: productImagesUrls.slice(0, 5),
+                detailImages: productDetailImagesUrls
             };
             try {
                 const url = id ? API + '/api/admin/products/' + id : API + '/api/admin/products';

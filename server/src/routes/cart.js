@@ -21,13 +21,14 @@ function toCartItem(row) {
     productName: row.product_name || '',
     optionLabel: row.option_label || '',
     price: Number(row.price || 0),
-    qty: Number(row.qty || 1) > 0 ? Number(row.qty || 1) : 1
+    qty: Number(row.qty || 1) > 0 ? Number(row.qty || 1) : 1,
+    imageUrl: row.image_url || null
   };
 }
 
 function loadCartItems(userId) {
   const rows = db.prepare(`
-    SELECT id, product_id, product_name, option_label, price, qty
+    SELECT id, product_id, product_name, option_label, price, qty, image_url
     FROM cart
     WHERE user_id = ?
     ORDER BY id DESC
@@ -72,6 +73,7 @@ router.post('/', (req, res) => {
     const optionLabel = body.optionLabel != null ? String(body.optionLabel).trim() : '';
     const price = normalizeInt(body.price, null);
     const qty = Math.max(1, normalizeInt(body.qty, 1));
+    const imageUrl = body.imageUrl ? String(body.imageUrl).trim() : null;
 
     if (productId == null || price == null || price < 0) {
       return res.status(400).json({ success: false, message: '상품 정보가 필요합니다.' });
@@ -87,14 +89,14 @@ router.post('/', (req, res) => {
     if (existing) {
       db.prepare(`
         UPDATE cart
-        SET product_name = ?, price = ?, qty = ?, option_label = ?
+        SET product_name = ?, price = ?, qty = ?, option_label = ?, image_url = ?
         WHERE id = ?
-      `).run(productName || null, price, Number(existing.qty || 0) + qty, optionLabel || null, existing.id);
+      `).run(productName || null, price, Number(existing.qty || 0) + qty, optionLabel || null, imageUrl, existing.id);
     } else {
       db.prepare(`
-        INSERT INTO cart (user_id, product_id, product_name, option_label, price, qty)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(userId, productId, productName || null, optionLabel || null, price, qty);
+        INSERT INTO cart (user_id, product_id, product_name, option_label, price, qty, image_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(userId, productId, productName || null, optionLabel || null, price, qty, imageUrl);
     }
 
     return res.json({ success: true, items: loadCartItems(userId) });

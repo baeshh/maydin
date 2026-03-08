@@ -2,6 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 const authRouter = require('./routes/auth');
 const productsRouter = require('./routes/products');
@@ -32,6 +36,7 @@ app.use('/api/refunds', refundsRouter);
 app.use('/api/coupons', couponsRouter);
 app.use('/api/inquiries', inquiriesRouter);
 app.use('/api/addresses', addressesRouter);
+app.use('/uploads', express.static(uploadsDir));
 
 app.get('/api/posts', (req, res) => {
   const rows = db.prepare('SELECT id, title, content, type, created_at FROM posts WHERE is_published = 1 ORDER BY created_at DESC').all();

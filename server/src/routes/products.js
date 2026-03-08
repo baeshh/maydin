@@ -19,6 +19,8 @@ function rowToProduct(row) {
     isNew: !!row.is_new,
     rating: row.rating,
     imageUrl: row.image_url,
+    images: row.images ? (typeof row.images === 'string' ? JSON.parse(row.images) : row.images) : [],
+    detailImages: row.detail_images ? (typeof row.detail_images === 'string' ? JSON.parse(row.detail_images) : row.detail_images) : [],
     specs: row.specs ? JSON.parse(row.specs) : null,
     benefits: row.benefits ? JSON.parse(row.benefits) : null,
     options: row.options ? JSON.parse(row.options) : null

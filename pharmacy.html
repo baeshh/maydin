@@ -487,7 +487,7 @@
                 var data = await res.json();
                 if (data.success && data.products && data.products.length) {
                     products = data.products.map(function(p) {
-                        return { id: p.id, name: p.name, price: p.price, unit: p.unit || '/ 30일', tag: p.tag || '', desc: p.desc || '', isBest: !!p.isBest, isNew: !!p.isNew, category: p.category || '' };
+                        return { id: p.id, name: p.name, price: p.price, unit: p.unit || '/ 30일', tag: p.tag || '', desc: p.desc || '', isBest: !!p.isBest, isNew: !!p.isNew, category: p.category || '', images: p.images || [], imageUrl: p.imageUrl || null };
                     });
                 }
             } catch (e) { console.warn('API 연결 실패, 기본 상품 사용:', e); }
@@ -583,21 +583,13 @@
         }
 
         function renderProducts(list) {
+            const base = (window.API_BASE || '');
             const grid = document.getElementById('productGrid');
-            grid.innerHTML = list.map(p => `
-                <article class="product-card" onclick="goToDetail(${p.id})">
-                    <div class="product-img">[${p.name} 이미지]</div>
-                    <div class="product-info">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-price">${p.price.toLocaleString()}원 <span>${p.unit}</span></div>
-                        <div class="tag">${p.tag}</div>
-                        <div class="product-actions" onclick="event.stopPropagation()">
-                            <button type="button" class="btn-cart" onclick="event.stopPropagation(); addToCart(${p.id})">장바구니</button>
-                            <button type="button" class="btn-order" onclick="event.stopPropagation(); quickOrder(${p.id})">주문하기</button>
-                        </div>
-                    </div>
-                </article>
-            `).join('');
+            grid.innerHTML = list.map(p => {
+                const imgSrc = (p.images && p.images[0]) ? base + p.images[0] : (p.imageUrl ? base + p.imageUrl : '');
+                const imgHtml = imgSrc ? '<img src="' + imgSrc + '" alt="' + (p.name || '') + '" style="width:100%;height:100%;object-fit:cover;">' : '<span style="color:var(--text-gray);font-size:12px;">[' + (p.name || '') + ' 이미지]</span>';
+                return '<article class="product-card" onclick="goToDetail(' + p.id + ')"><div class="product-img">' + imgHtml + '</div><div class="product-info"><div class="product-name">' + (p.name || '') + '</div><div class="product-price">' + (p.price || 0).toLocaleString() + '원 <span>' + (p.unit || '') + '</span></div><div class="tag">' + (p.tag || '') + '</div><div class="product-actions" onclick="event.stopPropagation()"><button type="button" class="btn-cart" onclick="event.stopPropagation(); addToCart(' + p.id + ')">장바구니</button><button type="button" class="btn-order" onclick="event.stopPropagation(); quickOrder(' + p.id + ')">주문하기</button></div></div></article>';
+            }).join('');
         }
 
         function goToDetail(productId) {
@@ -617,7 +609,7 @@
                 fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                    body: JSON.stringify({ productId: p.id, productName: p.name, optionLabel: p.unit || '', price: p.price, qty: 1 })
+                    body: JSON.stringify({ productId: p.id, productName: p.name, optionLabel: p.unit || '', price: p.price, qty: 1, imageUrl: (p.images && p.images[0]) || p.imageUrl || null })
                 }).then(function(r) {
                     return r.text().then(function(text) {
                         var d; try { d = text ? JSON.parse(text) : null; } catch(e) { d = null; }
@@ -664,7 +656,7 @@
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ productId: p.id, productName: p.name, optionLabel: p.unit || '', price: p.price, qty: 1 })
+                body: JSON.stringify({ productId: p.id, productName: p.name, optionLabel: p.unit || '', price: p.price, qty: 1, imageUrl: (p.images && p.images[0]) || p.imageUrl || null })
             }).then(function(r) {
                 return r.text().then(function(text) {
                     var d; try { d = text ? JSON.parse(text) : null; } catch(e) { d = null; }

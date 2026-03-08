@@ -361,7 +361,7 @@
                 </select>
             </div>
         </div>
-        <div class="detail-placeholder-mobile">
+        <div id="productDetailContentMobile" class="detail-placeholder-mobile">
             <p style="color: var(--text-gray); text-align: center;">[ 상세페이지 내용 ]</p>
         </div>
         <div class="bottom-action-bar">
@@ -445,7 +445,7 @@
                     <h3><strong>MAYDIN 약사전용몰</strong>은 본 제품의 공식 유통사와<br>직접 계약을 체결한 인증 쇼핑몰입니다.</h3>
                     <p>본사의 고객지원, 교환, 반품 등이 모두 가능하며<br>유통기한 임박 등 비정상 유통제품이 아닌<br>본사에서 관리된 제품을 발송해드리는 점 안내드립니다.</p>
                 </div>
-                <div class="detail-image-placeholder">
+                <div id="productDetailContent" class="detail-image-placeholder">
                     GMP, HACCP, ISO 9001 인증<br>
                     [ 상세페이지 이미지 영역 ]
                 </div>
@@ -586,11 +586,16 @@
                     currentProduct = {
                         id: p.id, name: p.name, price: p.price, originalPrice: p.originalPrice || p.price,
                         tag: p.tag || '', rating: p.rating || 4.8,
-                        options: (p.options || []).length ? p.options : [{ label: '1개월분', value: 1, price: p.price }]
+                        options: (p.options || []).length ? p.options : [{ label: '1개월분', value: 1, price: p.price }],
+                        images: p.images || [], imageUrl: p.imageUrl || null,
+                        description: p.description || '', detailImages: p.detailImages || []
                     };
                 }
             } catch (e) {}
             if (!currentProduct) currentProduct = products[id] || products[1];
+            if (!currentProduct.images) currentProduct.images = [];
+            if (!currentProduct.detailImages) currentProduct.detailImages = [];
+            if (currentProduct.description === undefined) currentProduct.description = '';
 
             document.getElementById('productTitle').textContent = currentProduct.name;
             var badgeEl = document.getElementById('productBadge');
@@ -659,6 +664,20 @@
             optSelect.innerHTML = optHtml;
             if (optMobile) optMobile.innerHTML = '<option value="" disabled selected>제품 선택 (필수)</option>' +
                 currentProduct.options.map(function(o, i) { return '<option value="' + i + '" data-price="' + o.price + '">' + o.label + ' - ' + o.price.toLocaleString() + '원</option>'; }).join('');
+            var base = (window.API_BASE || '');
+            var mainImg = (currentProduct.images && currentProduct.images[0]) || currentProduct.imageUrl;
+            var mainImgHtml = mainImg ? '<img src="' + base + mainImg + '" alt="' + (currentProduct.name || '') + '" style="max-width:100%;height:auto;">' : '<span style="color:var(--text-light);">[ 제품 이미지 ]</span>';
+            var areaEl = document.getElementById('productImageArea');
+            if (areaEl) areaEl.innerHTML = mainImgHtml;
+            var mobileImgEl = document.getElementById('productImageMobile');
+            if (mobileImgEl) mobileImgEl.innerHTML = mainImg ? '<img src="' + base + mainImg + '" alt="" style="width:100%;height:100%;object-fit:cover;">' : '[ 제품 이미지 ]';
+            var descHtml = currentProduct.description ? '<div style="white-space:pre-wrap;margin-bottom:20px;line-height:1.7;">' + (currentProduct.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' : '';
+            var detailImgsHtml = (currentProduct.detailImages || []).map(function(u) { return '<img src="' + base + u + '" alt="" style="width:100%;max-width:100%;height:auto;display:block;margin-bottom:12px;">'; }).join('');
+            var detailContent = descHtml + (detailImgsHtml || '<p style="color:var(--text-gray);">[ 상세페이지 이미지 영역 ]</p>');
+            var detailPanel = document.getElementById('productDetailContent');
+            if (detailPanel) detailPanel.innerHTML = detailContent;
+            var detailMobile = document.getElementById('productDetailContentMobile');
+            if (detailMobile) detailMobile.innerHTML = detailContent;
             bindMobileActions();
         }
 
@@ -686,7 +705,8 @@
                 if (confirm('로그인이 필요합니다. 메인 페이지에서 로그인할까요?')) window.location.href = 'index.html';
                 return;
             }
-            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1 };
+            var imageUrl = (currentProduct.images && currentProduct.images[0]) || currentProduct.imageUrl || null;
+            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1, imageUrl: imageUrl };
             var url = (window.API_BASE || '') + '/api/cart';
             fetch(url, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -714,7 +734,8 @@
                 if (confirm('로그인이 필요합니다. 메인 페이지에서 로그인할까요?')) window.location.href = 'index.html';
                 return;
             }
-            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1 };
+            var imageUrl = (currentProduct.images && currentProduct.images[0]) || currentProduct.imageUrl || null;
+            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1, imageUrl: imageUrl };
             var url = (window.API_BASE || '') + '/api/cart';
             fetch(url, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },

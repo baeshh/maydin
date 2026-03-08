@@ -185,6 +185,8 @@ const ordersCols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name
 const cartCols = db.prepare('PRAGMA table_info(cart)').all().map(c => c.name);
 const productCols = db.prepare('PRAGMA table_info(products)').all().map(c => c.name);
 if (!productCols.includes('margin_percent')) db.exec('ALTER TABLE products ADD COLUMN margin_percent REAL');
+if (!productCols.includes('images')) db.exec('ALTER TABLE products ADD COLUMN images TEXT');
+if (!productCols.includes('detail_images')) db.exec('ALTER TABLE products ADD COLUMN detail_images TEXT');
 if (!userCols.includes('address')) db.exec('ALTER TABLE users ADD COLUMN address TEXT');
 if (!userCols.includes('status')) db.exec('ALTER TABLE users ADD COLUMN status TEXT DEFAULT \'pending\'');
 if (!userCols.includes('open_date')) db.exec('ALTER TABLE users ADD COLUMN open_date TEXT');
@@ -203,6 +205,7 @@ if (!cartCols.includes('option_label')) db.exec('ALTER TABLE cart ADD COLUMN opt
 if (!cartCols.includes('price')) db.exec('ALTER TABLE cart ADD COLUMN price INTEGER');
 if (!cartCols.includes('qty')) db.exec('ALTER TABLE cart ADD COLUMN qty INTEGER DEFAULT 1');
 if (!cartCols.includes('created_at')) db.exec('ALTER TABLE cart ADD COLUMN created_at DATETIME');
+if (!cartCols.includes('image_url')) db.exec('ALTER TABLE cart ADD COLUMN image_url TEXT');
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)'); } catch (_) {}
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_cart_user ON cart(user_id)'); } catch (_) {}
 

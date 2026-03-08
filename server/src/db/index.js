@@ -58,9 +58,10 @@ function ensureRuntimeSchema() {
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id)'); } catch (_) {}
 
   const productCols = getColumns('products');
-  if (productCols.length && !productCols.includes('margin_percent')) {
-    db.exec('ALTER TABLE products ADD COLUMN margin_percent REAL');
-  }
+  if (productCols.length && !productCols.includes('margin_percent')) db.exec('ALTER TABLE products ADD COLUMN margin_percent REAL');
+  if (productCols.length && !productCols.includes('images')) db.exec('ALTER TABLE products ADD COLUMN images TEXT');
+  if (productCols.length && !productCols.includes('detail_images')) db.exec('ALTER TABLE products ADD COLUMN detail_images TEXT');
+  if (!cartCols.includes('image_url')) db.exec('ALTER TABLE cart ADD COLUMN image_url TEXT');
 }
 
 ensureRuntimeSchema();

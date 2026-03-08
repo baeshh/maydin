@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <script src="assets/api-config.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문/결제 - 약사몰 MAYDIN</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        :root {
+            --primary-color: #1A4D2E;
+            --secondary-color: #E8F3EC;
+            --text-dark: #212529;
+            --text-gray: #868E96;
+            --bg-light: #F8F9FA;
+            --white: #FFFFFF;
+            --border-color: #E9ECEF;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
+        a { text-decoration: none; color: inherit; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
+        header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 0;
+        }
+        .header-inner { display: flex; align-items: center; justify-content: space-between; }
+        .logo img { height: 48px; }
+        .back-link { color: var(--text-gray); font-size: 14px; }
+        .back-link:hover { color: var(--primary-color); }
+        main { padding: 32px 0 48px; }
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .card h2 { font-size: 1.1rem; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item .name { font-weight: 600; }
+        .cart-item .sub { color: var(--text-gray); font-size: 13px; }
+        .cart-item .price { font-weight: 700; color: var(--primary-color); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-family: inherit; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .bank-info {
+            background: var(--secondary-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 15px;
+        }
+        .bank-info p { margin-bottom: 8px; }
+        .bank-info strong { color: var(--primary-color); }
+        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; font-size: 18px; font-weight: 800; border-top: 2px solid var(--border-color); margin-top: 16px; }
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 24px;
+        }
+        .btn-submit:hover { opacity: 0.95; }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+        .empty-cart { text-align: center; padding: 48px 20px; color: var(--text-gray); }
+        .empty-cart a { color: var(--primary-color); font-weight: 600; text-decoration: underline; }
+        .payment-note { font-size: 13px; color: var(--text-gray); margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <a href="pharmacy.html" class="logo"><img src="assets/meidin-logo.png" alt="MAYDIN"></a>
+            <a href="pharmacy.html" class="back-link">← 약사몰로 돌아가기</a>
+        </div>
+    </header>
+    <main class="container">
+        <div id="checkoutForm" class="card" style="display:none;">
+            <h2>주문 상품</h2>
+            <div id="cartItems"></div>
+            <div class="total-row"><span>총 결제금액</span><span id="totalAmount">0원</span></div>
+
+            <h2 style="margin-top:24px;">배송지</h2>
+            <div class="form-group">
+                <label>배송지 주소 *</label>
+                <textarea id="deliveryAddress" placeholder="받으실 주소를 입력하세요" required></textarea>
+            </div>
+
+            <h2 style="margin-top:24px;">결제 방법</h2>
+            <p class="payment-note">무통장 입금으로 결제됩니다. 주문 후 아래 계좌로 입금해 주세요.</p>
+            <div class="bank-info">
+                <p><strong>은행</strong> 국민은행</p>
+                <p><strong>계좌번호</strong> 123-456-789012</p>
+                <p><strong>예금주</strong> (주)메이딘</p>
+                <p><strong>입금 기한</strong> 주문일로부터 3일 이내</p>
+            </div>
+
+            <button type="button" class="btn-submit" id="btnOrder">주문하기</button>
+        </div>
+        <div id="emptyState" class="card empty-cart" style="display:none;">
+            <p>장바구니가 비어 있습니다.</p>
+            <p style="margin-top:12px;"><a href="pharmacy.html">쇼핑 계속하기</a></p>
+        </div>
+    </main>
+    <script>
+        const API = window.API_BASE || '';
+        let cartItems = [];
+        let token = null;
+
+        function headers() {
+            return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+        }
+
+        async function init() {
+            token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            if (!token || !user) {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'index.html';
+                return;
+            }
+            try {
+                const res = await fetch(API + '/api/cart', { headers: headers() });
+                const data = await res.json();
+                if (!data.success) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+                cartItems = data.items || [];
+                if (cartItems.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+                renderCart();
+                if (user.address) document.getElementById('deliveryAddress').value = user.address;
+                document.getElementById('checkoutForm').style.display = 'block';
+            } catch (e) {
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+
+        function renderCart() {
+            const total = cartItems.reduce((sum, i) => sum + (i.price || 0) * (i.qty || 1), 0);
+            document.getElementById('cartItems').innerHTML = cartItems.map(i => {
+                const name = (i.productName || '') + (i.optionLabel ? ' ' + i.optionLabel : '');
+                const subtotal = (i.price || 0) * (i.qty || 1);
+                return '<div class="cart-item"><div><div class="name">' + name + '</div><div class="sub">' + (i.price || 0).toLocaleString() + '원 × ' + (i.qty || 1) + '</div></div><div class="price">' + subtotal.toLocaleString() + '원</div></div>';
+            }).join('');
+            document.getElementById('totalAmount').textContent = total.toLocaleString() + '원';
+        }
+
+        document.getElementById('btnOrder').addEventListener('click', async function() {
+            const address = document.getElementById('deliveryAddress').value.trim();
+            if (!address) {
+                alert('배송지 주소를 입력하세요.');
+                return;
+            }
+            const items = cartItems.map(i => ({
+                name: (i.productName || '') + (i.optionLabel ? ' ' + i.optionLabel : ''),
+                price: i.price,
+                qty: i.qty || 1
+            }));
+            const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+            this.disabled = true;
+            try {
+                const res = await fetch(API + '/api/orders', {
+                    method: 'POST',
+                    headers: headers(),
+                    body: JSON.stringify({
+                        items,
+                        total,
+                        deliveryAddress: address,
+                        paymentMethod: 'bank_transfer'
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    for (const i of cartItems) {
+                        await fetch(API + '/api/cart/' + i.id, { method: 'DELETE', headers: headers() }).catch(() => {});
+                    }
+                    alert('주문이 접수되었습니다. 안내된 계좌로 입금해 주세요.');
+                    window.location.href = 'mypage.html';
+                } else {
+                    alert(data.message || '주문 처리에 실패했습니다.');
+                    this.disabled = false;
+                }
+            } catch (e) {
+                alert('서버 연결에 실패했습니다.');
+                this.disabled = false;
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

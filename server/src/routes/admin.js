@@ -173,19 +173,42 @@ router.get('/orders', adminAuthMiddleware, (req, res) => {
     userName: o.user_name, userPhone: o.user_phone, pharmacyName: o.pharmacy_name,
     deliveryAddress: o.delivery_address || null,
     userAddress: o.user_address || null,
-    items: JSON.parse(o.items || '[]'), total: o.total, status: o.status, createdAt: o.created_at
+    items: JSON.parse(o.items || '[]'), total: o.total, status: o.status,
+    paymentMethod: o.payment_method || 'bank_transfer',
+    trackingCompany: o.tracking_company || null, trackingNumber: o.tracking_number || null, paidAt: o.paid_at || null,
+    createdAt: o.created_at
   }));
   res.json({ success: true, orders: list });
 });
 
 router.patch('/orders/:id', adminAuthMiddleware, (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { status } = req.body;
+  const { status, trackingCompany, trackingNumber } = req.body;
   const allowed = ['pending', 'paid', 'preparing', 'shipped', 'delivered', 'cancelled'];
-  if (!status || !allowed.includes(status)) {
-    return res.status(400).json({ success: false, message: '유효한 배송상태가 아닙니다.' });
+  const updates = [];
+  const values = [];
+
+  if (status && allowed.includes(status)) {
+    updates.push('status = ?');
+    values.push(status);
+    if (status === 'paid') {
+      updates.push('paid_at = CURRENT_TIMESTAMP');
+    }
   }
-  const r = db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, id);
+  if (trackingCompany !== undefined) {
+    updates.push('tracking_company = ?');
+    values.push(trackingCompany ? String(trackingCompany).trim() : null);
+  }
+  if (trackingNumber !== undefined) {
+    updates.push('tracking_number = ?');
+    values.push(trackingNumber ? String(trackingNumber).trim() : null);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ success: false, message: '변경할 항목이 없습니다.' });
+  }
+  values.push(id);
+  const r = db.prepare('UPDATE orders SET ' + updates.join(', ') + ' WHERE id = ?').run(...values);
   if (r.changes === 0) return res.status(404).json({ success: false });
   res.json({ success: true });
 });

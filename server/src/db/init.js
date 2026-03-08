@@ -190,6 +190,10 @@ if (!userCols.includes('approved_by')) db.exec('ALTER TABLE users ADD COLUMN app
 if (!userCols.includes('points_balance')) db.exec('ALTER TABLE users ADD COLUMN points_balance INTEGER DEFAULT 0');
 if (!userCols.includes('member_no')) db.exec('ALTER TABLE users ADD COLUMN member_no TEXT');
 if (!ordersCols.includes('delivery_address')) db.exec('ALTER TABLE orders ADD COLUMN delivery_address TEXT');
+if (!ordersCols.includes('payment_method')) db.exec("ALTER TABLE orders ADD COLUMN payment_method TEXT DEFAULT 'bank_transfer'");
+if (!ordersCols.includes('tracking_company')) db.exec('ALTER TABLE orders ADD COLUMN tracking_company TEXT');
+if (!ordersCols.includes('tracking_number')) db.exec('ALTER TABLE orders ADD COLUMN tracking_number TEXT');
+if (!ordersCols.includes('paid_at')) db.exec('ALTER TABLE orders ADD COLUMN paid_at DATETIME');
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)'); } catch (_) {}
 
 // 시드 데이터

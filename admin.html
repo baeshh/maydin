@@ -161,7 +161,7 @@
                         <div class="card-title">주문 목록</div>
                         <div class="table-wrap">
                             <table>
-                                <thead><tr><th>주문번호</th><th>구매자</th><th>배송지</th><th>금액</th><th>상태</th><th>주문일</th><th></th></tr></thead>
+                                <thead><tr><th>주문번호</th><th>구매자</th><th>배송지</th><th>금액</th><th>상태</th><th>운송장</th><th>주문일</th><th></th></tr></thead>
                                 <tbody id="orderList"></tbody>
                             </table>
                         </div>
@@ -287,14 +287,33 @@
         </div>
     </div>
 
-    <!-- 주문 상세 (결제 창) 모달 -->
+    <!-- 주문 상세 (결제/배송) 모달 -->
     <div class="modal" id="orderDetailModal">
-        <div class="modal-content" style="max-width: 520px;">
-            <h3>주문 상세 / 결제 정보</h3>
+        <div class="modal-content" style="max-width: 560px;">
+            <h3>주문 상세 / 결제·배송</h3>
             <div id="orderDetailBody">
                 <p class="empty-msg">주문을 선택하세요.</p>
             </div>
-            <div class="modal-footer">
+            <div id="orderDetailActions" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label>배송 상태</label>
+                    <select id="orderDetailStatus" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;">
+                        <option value="pending">입금대기</option>
+                        <option value="paid">결제완료</option>
+                        <option value="preparing">상품준비중</option>
+                        <option value="shipped">배송중</option>
+                        <option value="delivered">배송완료</option>
+                        <option value="cancelled">취소</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:8px;"><label>택배사</label><input type="text" id="orderDetailTrackingCompany" placeholder="예: CJ대한통운" style="width:100%;padding:10px;"></div>
+                <div class="form-group" style="margin-bottom:12px;"><label>운송장번호</label><input type="text" id="orderDetailTrackingNumber" placeholder="운송장 번호" style="width:100%;padding:10px;"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" style="background:#eee" onclick="closeOrderDetail()">닫기</button>
+                    <button type="button" class="btn btn-primary" onclick="saveOrderDetail()">상태/운송장 저장</button>
+                </div>
+            </div>
+            <div id="orderDetailFooterOnly" class="modal-footer" style="display:none;">
                 <button type="button" class="btn" style="background:#eee" onclick="closeOrderDetail()">닫기</button>
             </div>
         </div>
@@ -527,7 +546,7 @@
                 const data = await res.json();
                 const tbody = document.getElementById('orderList');
                 if (!data.success || !data.orders.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">주문 내역이 없습니다.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">주문 내역이 없습니다.</td></tr>';
                     return;
                 }
                 ordersCache = data.orders;
@@ -536,25 +555,30 @@
                     const items = (o.items || []).slice(0, 2).map(i => i.name).join(', ');
                     const more = (o.items || []).length > 2 ? ' 외 ' + ((o.items || []).length - 2) + '건' : '';
                     const addr = o.deliveryAddress || o.userAddress || '-';
+                    const track = (o.trackingCompany || o.trackingNumber) ? (o.trackingCompany || '') + ' ' + (o.trackingNumber || '') : '-';
                     return `<tr>
                         <td>#${o.id}</td>
                         <td>${o.userName || o.userLicense || o.userEmail || '-'}<br><small>${items}${more}</small></td>
                         <td style="max-width:180px;font-size:0.85rem;">${addr}</td>
                         <td>${o.total.toLocaleString()}원</td>
                         <td><select class="status status-${o.status}" onchange="updateOrderStatus(${o.id}, this.value)">${Object.entries(statusMap).map(([k,v]) => '<option value="'+k+'"'+(o.status===k?' selected':'')+'>'+v+'</option>').join('')}</select></td>
+                        <td style="font-size:0.8rem;">${track}</td>
                         <td>${(o.createdAt || '').slice(0,10)}</td>
-                        <td><button class="btn-sm" onclick="openOrderDetail(${o.id})">결제/상세</button></td>
+                        <td><button class="btn-sm" onclick="openOrderDetail(${o.id})">상세/운송장</button></td>
                     </tr>`;
                 }).join('');
-            } catch (e) { document.getElementById('orderList').innerHTML = '<tr><td colspan="7" class="empty-msg">로드 실패</td></tr>'; }
+            } catch (e) { document.getElementById('orderList').innerHTML = '<tr><td colspan="8" class="empty-msg">로드 실패</td></tr>'; }
         }
 
+        let currentOrderDetailId = null;
         function openOrderDetail(orderId) {
             const o = ordersCache.find(x => x.id === orderId);
             if (!o) return;
+            currentOrderDetailId = o.id;
             const statusMap = { pending: '입금대기', paid: '결제완료', preparing: '상품준비중', shipped: '배송중', delivered: '배송완료', cancelled: '취소' };
             const itemsHtml = (o.items || []).map(i => '<tr><td>' + (i.name || '-') + '</td><td>' + (i.qty || 1) + '</td><td>' + (i.price || 0).toLocaleString() + '원</td></tr>').join('');
             const deliveryAddr = o.deliveryAddress || o.userAddress || '-';
+            const trackingHtml = (o.trackingCompany || o.trackingNumber) ? '<div style="margin-top:8px;"><strong>운송장</strong>: ' + (o.trackingCompany || '') + ' ' + (o.trackingNumber || '') + '</div>' : '';
             document.getElementById('orderDetailBody').innerHTML =
                 '<div style="margin-bottom:20px;"><strong>주문번호</strong> #' + o.id + ' &nbsp; <span class="status status-' + o.status + '">' + (statusMap[o.status] || o.status) + '</span></div>' +
                 '<div style="background:#f5f7f6;padding:16px;border-radius:8px;margin-bottom:16px;">' +
@@ -564,15 +588,38 @@
                 '<div>이메일: ' + (o.userEmail || '-') + '</div>' +
                 '<div>연락처: ' + (o.userPhone || '-') + '</div>' +
                 '<div>약국명: ' + (o.pharmacyName || '-') + '</div>' +
-                '<div style="margin-top:8px;"><strong>배송지</strong>: ' + deliveryAddr + '</div>' +
+                '<div style="margin-top:8px;"><strong>배송지</strong>: ' + deliveryAddr + '</div>' + trackingHtml +
                 '</div>' +
                 '<div style="font-weight:700;margin-bottom:8px;">주문 상품</div>' +
                 '<table style="width:100%;margin-bottom:16px;"><thead><tr><th>상품명</th><th>수량</th><th>금액</th></tr></thead><tbody>' + itemsHtml + '</tbody></table>' +
-                '<div style="text-align:right;font-size:18px;font-weight:800;">총 결제금액: ' + (o.total || 0).toLocaleString() + '원</div>' +
+                '<div style="text-align:right;font-size:18px;font-weight:800;">총 결제금액: ' + (o.total || 0).toLocaleString() + '원 (무통장입금)</div>' +
                 '<div style="margin-top:8px;color:#666;font-size:13px;">주문일: ' + (o.createdAt || '') + '</div>';
+            document.getElementById('orderDetailStatus').value = o.status || 'pending';
+            document.getElementById('orderDetailTrackingCompany').value = o.trackingCompany || '';
+            document.getElementById('orderDetailTrackingNumber').value = o.trackingNumber || '';
+            document.getElementById('orderDetailActions').style.display = 'block';
+            document.getElementById('orderDetailFooterOnly').style.display = 'none';
             document.getElementById('orderDetailModal').classList.add('active');
         }
-        function closeOrderDetail() { document.getElementById('orderDetailModal').classList.remove('active'); }
+        function closeOrderDetail() {
+            document.getElementById('orderDetailModal').classList.remove('active');
+            currentOrderDetailId = null;
+        }
+        async function saveOrderDetail() {
+            if (!currentOrderDetailId) return;
+            const status = document.getElementById('orderDetailStatus').value;
+            const trackingCompany = document.getElementById('orderDetailTrackingCompany').value.trim();
+            const trackingNumber = document.getElementById('orderDetailTrackingNumber').value.trim();
+            try {
+                const res = await fetch(API + '/api/admin/orders/' + currentOrderDetailId, {
+                    method: 'PATCH', headers: headers(),
+                    body: JSON.stringify({ status, trackingCompany, trackingNumber })
+                });
+                const data = await res.json();
+                if (data.success) { loadOrders(); closeOrderDetail(); }
+                else alert(data.message || '저장 실패');
+            } catch (e) { alert('저장 실패'); }
+        }
 
         async function updateOrderStatus(id, status) {
             try {

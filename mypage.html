@@ -493,7 +493,8 @@
                 if (orders.length) {
                     document.getElementById('orderList').innerHTML = orders.slice(0, 5).map(o => {
                         const items = (o.items || []).map(i => i.name + ' x' + (i.qty || 1)).join(', ');
-                        return '<div style="padding:12px;border-bottom:1px solid #eee;"><strong>#' + o.id + '</strong> ' + items + ' - ' + (o.total || 0).toLocaleString() + '원 <span class="status">' + (statusLabels[o.status] || o.status) + '</span> <span style="color:#868e96;font-size:12px;">' + (o.createdAt || '') + '</span></div>';
+                        const track = (o.trackingCompany || o.trackingNumber) ? ' <span style="font-size:12px;"> · ' + (o.trackingCompany || '') + ' ' + (o.trackingNumber || '') + '</span>' : '';
+                        return '<div style="padding:12px;border-bottom:1px solid #eee;"><strong>#' + o.id + '</strong> ' + items + ' - ' + (o.total || 0).toLocaleString() + '원 <span class="status">' + (statusLabels[o.status] || o.status) + '</span>' + track + ' <span style="color:#868e96;font-size:12px;">' + (o.createdAt || '') + '</span></div>';
                     }).join('');
                     document.getElementById('orderList').classList.remove('empty-order');
                 }
@@ -511,10 +512,11 @@
                 const data = await res.json();
                 const orders = (data.success && data.orders) ? data.orders : [];
                 if (!orders.length) { el.innerHTML = '<p class="empty-order">주문 내역이 없습니다.</p>'; return; }
-                el.innerHTML = '<table class="order-table"><thead><tr><th>주문번호</th><th>상품</th><th>배송지</th><th>금액</th><th>상태</th><th>주문일</th></tr></thead><tbody>' +
+                el.innerHTML = '<table class="order-table"><thead><tr><th>주문번호</th><th>상품</th><th>배송지</th><th>금액</th><th>상태</th><th>운송장</th><th>주문일</th></tr></thead><tbody>' +
                     orders.map(o => {
                         const items = (o.items || []).map(i => (i.name || '') + ' x' + (i.qty || 1)).join(', ');
-                        return '<tr><td>#' + o.id + '</td><td>' + items + '</td><td>' + (o.deliveryAddress || '-') + '</td><td>' + (o.total || 0).toLocaleString() + '원</td><td>' + (statusLabels[o.status] || o.status) + '</td><td>' + (o.createdAt || '').slice(0, 10) + '</td></tr>';
+                        const track = (o.trackingCompany || o.trackingNumber) ? (o.trackingCompany || '') + ' ' + (o.trackingNumber || '') : '-';
+                        return '<tr><td>#' + o.id + '</td><td>' + items + '</td><td>' + (o.deliveryAddress || '-') + '</td><td>' + (o.total || 0).toLocaleString() + '원</td><td>' + (statusLabels[o.status] || o.status) + '</td><td style="font-size:12px;">' + track + '</td><td>' + (o.createdAt || '').slice(0, 10) + '</td></tr>';
                     }).join('') + '</tbody></table>';
             } catch (e) { el.innerHTML = '<p class="empty-order">로드 실패</p>'; }
         }

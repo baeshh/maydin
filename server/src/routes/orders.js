@@ -25,7 +25,7 @@ router.post('/', (req, res) => {
     } catch (e) {}
   }
 
-  const { items, total, userEmail: bodyEmail, deliveryAddress } = req.body;
+  const { items, total, userEmail: bodyEmail, deliveryAddress, paymentMethod } = req.body;
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ success: false, message: '주문 항목이 필요합니다.' });
   }
@@ -39,13 +39,15 @@ router.post('/', (req, res) => {
     if (user && user.address) finalAddress = user.address;
   }
 
+  const payment_method = paymentMethod || 'bank_transfer';
+
   const stmt = db.prepare(`
-    INSERT INTO orders (user_id, user_license, user_email, items, total, status, delivery_address)
-    VALUES (?, ?, ?, ?, ?, 'pending', ?)
+    INSERT INTO orders (user_id, user_license, user_email, items, total, status, delivery_address, payment_method)
+    VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
   `);
 
   const email = userEmail || bodyEmail || null;
-  const result = stmt.run(userId || 0, userLicense || null, email, JSON.stringify(items), orderTotal, finalAddress);
+  const result = stmt.run(userId || 0, userLicense || null, email, JSON.stringify(items), orderTotal, finalAddress, payment_method);
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(result.lastInsertRowid);
 
   res.json({
@@ -67,6 +69,9 @@ router.get('/', authMiddleware, (req, res) => {
     total: o.total,
     status: o.status,
     deliveryAddress: o.delivery_address,
+    trackingCompany: o.tracking_company || null,
+    trackingNumber: o.tracking_number || null,
+    paidAt: o.paid_at || null,
     createdAt: o.created_at
   }));
 

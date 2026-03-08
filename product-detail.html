@@ -659,7 +659,19 @@
         function handleBuy() {
             var opt = getSelectedOption();
             if (!opt) { alert('제품을 선택해주세요.'); return; }
-            window.location.href = 'pharmacy.html?order=' + currentProduct.id + '&opt=' + encodeURIComponent(opt.label) + '&price=' + opt.price;
+            var token = localStorage.getItem('token');
+            if (!token) {
+                if (confirm('로그인이 필요합니다. 메인 페이지에서 로그인할까요?')) window.location.href = 'index.html';
+                return;
+            }
+            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1 };
+            fetch((window.API_BASE || '') + '/api/cart', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(item)
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                if (d.success) window.location.href = 'checkout.html';
+                else alert(d.message || '실패');
+            }).catch(function() { alert('서버 연결 실패'); });
         }
 
         function handleCart() {

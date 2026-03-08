@@ -493,6 +493,7 @@
             if (currentUser) {
                 el.innerHTML = `
                     <span class="user-badge">${currentUser.name} 약사님</span>
+                    <a href="checkout.html" class="btn-cart" style="padding:8px 14px;">장바구니 ${cart.length ? '(' + cart.length + ')' : ''}</a>
                     <a href="mypage.html" class="btn-mypage">내 정보</a>
                     <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
                 `;
@@ -545,8 +546,11 @@
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: JSON.stringify({ productId: p.id, productName: p.name, optionLabel: p.unit || '', price: p.price, qty: 1 })
                 }).then(function(r) { return r.json(); }).then(function(d) {
-                    if (d.success) alert(p.name + '이(가) 장바구니에 추가되었습니다.');
-                    else alert(d.message || '실패');
+                    if (d.success) {
+                        cart = (d.items || []).map(function(i) { return { id: i.productId, name: i.productName, price: i.price, qty: i.qty }; });
+                        renderUserArea();
+                        alert(p.name + '이(가) 장바구니에 추가되었습니다.');
+                    } else alert(d.message || '실패');
                 }).catch(function() { alert('서버 연결 실패'); });
             } else {
                 cart.push(p);
@@ -561,7 +565,18 @@
                 }
                 return;
             }
-            alert('주문 기능은 준비 중입니다.');
+            var p = products.find(function(x) { return x.id === productId; });
+            if (!p) return;
+            var token = localStorage.getItem('token');
+            if (!token) { alert('로그인이 필요합니다.'); return; }
+            fetch((window.API_BASE || '') + '/api/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ productId: p.id, productName: p.name, optionLabel: p.unit || '', price: p.price, qty: 1 })
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                if (d.success) window.location.href = 'checkout.html';
+                else alert(d.message || '장바구니 추가 실패');
+            }).catch(function() { alert('서버 연결 실패'); });
         }
 
         function searchProducts() {

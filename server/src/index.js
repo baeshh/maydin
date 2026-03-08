@@ -18,6 +18,7 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// CORS: AWS(EC2)에서는 프론트/API 같은 origin. 로컬 개발 시에만 cross-origin
 app.use(cors({ origin: true }));
 app.use(express.json());
 

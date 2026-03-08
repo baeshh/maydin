@@ -553,7 +553,7 @@
                         renderUserArea();
                         alert(p.name + '이(가) 장바구니에 추가되었습니다.');
                     } else alert(d.message || '실패');
-                }).catch(function() { alert('장바구니에 연결할 수 없습니다. maydin.co.kr 에서 접속해 주세요.'); });
+                }).catch(function() { alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'); });
             } else {
                 cart.push(p);
                 alert(p.name + '이(가) 장바구니에 추가되었습니다.');
@@ -578,7 +578,7 @@
             }).then(function(r) { return r.json(); }).then(function(d) {
                 if (d.success) window.location.href = 'checkout.html';
                 else alert(d.message || '장바구니 추가 실패');
-            }).catch(function() { alert('장바구니/주문에 연결할 수 없습니다. maydin.co.kr 에서 접속해 주세요.'); });
+            }).catch(function() { alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'); });
         }
 
         function searchProducts() {

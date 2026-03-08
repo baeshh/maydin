@@ -22,7 +22,10 @@ function userToResponse(row) {
     pharmacyUniv: rest.pharmacy_univ,
     taxEmail: rest.tax_email,
     openDate: rest.open_date,
-    status: rest.status || 'approved'
+    status: rest.status || 'approved',
+    address: rest.address,
+    pointsBalance: rest.points_balance != null ? rest.points_balance : 0,
+    memberNo: rest.member_no
   };
 }
 
@@ -260,6 +263,45 @@ router.get('/me', (req, res) => {
     res.json({ success: true, user: userToResponse(user) });
   } catch (e) {
     res.status(401).json({ success: false });
+  }
+});
+
+// PATCH /api/auth/me - 회원정보 수정 (본인)
+router.patch('/me', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false });
+  }
+  try {
+    const token = authHeader.slice(7);
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.userId);
+    if (!user) return res.status(404).json({ success: false });
+
+    const body = req.body || {};
+    const updates = [];
+    const values = [];
+    const get = (k, alt) => (body[k] !== undefined ? String(body[k]).trim() : (alt && body[alt] !== undefined ? String(body[alt]).trim() : undefined));
+    const pairs = [
+      ['name', 'name'], ['email', 'email'], ['phone', 'phone'], ['address', 'address'],
+      ['pharmacyName', 'pharmacy_name'], ['pharmacyCode', 'pharmacy_code'], ['bizNo', 'biz_no'], ['taxEmail', 'tax_email']
+    ];
+    for (const [bodyKey, dbKey] of pairs) {
+      const val = get(bodyKey);
+      if (val !== undefined) {
+        updates.push(dbKey + ' = ?');
+        values.push(val || null);
+      }
+    }
+    if (updates.length === 0) {
+      return res.json({ success: true, user: userToResponse(user) });
+    }
+    values.push(user.id);
+    db.prepare('UPDATE users SET ' + updates.join(', ') + ' WHERE id = ?').run(...values);
+    const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+    res.json({ success: true, user: userToResponse(updated) });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 });
 

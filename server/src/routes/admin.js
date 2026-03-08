@@ -100,30 +100,55 @@ router.delete('/products/:id', adminAuthMiddleware, (req, res) => {
 // ---- 회원 관리 ----
 router.get('/users', adminAuthMiddleware, (req, res) => {
   const rows = db.prepare(`
-    SELECT id, license, name, email, phone, address, pharmacy_name, biz_no, open_date, pharmacy_code, pharmacy_univ, tax_email, status, created_at, approved_at
+    SELECT id, license, name, email, phone, address, pharmacy_name, biz_no, open_date, pharmacy_code, pharmacy_univ, tax_email, status, created_at, approved_at, points_balance, member_no
     FROM users ORDER BY created_at DESC
   `).all();
   const list = rows.map(u => ({
     id: u.id, license: u.license, name: u.name, email: u.email, phone: u.phone, address: u.address,
     pharmacyName: u.pharmacy_name, bizNo: u.biz_no, openDate: u.open_date, pharmacyCode: u.pharmacy_code, pharmacyUniv: u.pharmacy_univ, taxEmail: u.tax_email,
-    status: u.status || 'pending', createdAt: u.created_at, approvedAt: u.approved_at
+    status: u.status || 'pending', createdAt: u.created_at, approvedAt: u.approved_at,
+    pointsBalance: u.points_balance != null ? u.points_balance : 0, memberNo: u.member_no
   }));
   res.json({ success: true, users: list });
 });
 
 router.patch('/users/:id', adminAuthMiddleware, (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { status } = req.body;
-  const allowed = ['pending', 'approved', 'rejected', 'withdrawn'];
-  if (!status || !allowed.includes(status)) {
-    return res.status(400).json({ success: false, message: '유효한 상태가 아닙니다.' });
-  }
+  const body = req.body || {};
   const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
   if (!user) return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
-  if (status === 'approved') {
-    db.prepare('UPDATE users SET status = ?, approved_at = CURRENT_TIMESTAMP, approved_by = ? WHERE id = ?').run(status, req.admin.id, id);
-  } else {
-    db.prepare('UPDATE users SET status = ? WHERE id = ?').run(status, id);
+
+  if (body.status !== undefined) {
+    const allowed = ['pending', 'approved', 'rejected', 'withdrawn'];
+    if (!allowed.includes(body.status)) {
+      return res.status(400).json({ success: false, message: '유효한 상태가 아닙니다.' });
+    }
+    if (body.status === 'approved') {
+      db.prepare('UPDATE users SET status = ?, approved_at = CURRENT_TIMESTAMP, approved_by = ? WHERE id = ?').run(body.status, req.admin.id, id);
+    } else {
+      db.prepare('UPDATE users SET status = ? WHERE id = ?').run(body.status, id);
+    }
+  }
+
+  const allowFields = ['name', 'email', 'phone', 'address', 'pharmacy_name', 'biz_no', 'pharmacy_code', 'tax_email', 'member_no', 'memberNo', 'points_balance'];
+  const dbKeys = { pharmacy_name: 'pharmacy_name', biz_no: 'biz_no', pharmacy_code: 'pharmacy_code', tax_email: 'tax_email', member_no: 'member_no', memberNo: 'member_no', points_balance: 'points_balance' };
+  const updates = [];
+  const values = [];
+  for (const key of allowFields) {
+    const dbKey = dbKeys[key] || key;
+    const val = body[key] !== undefined ? body[key] : (key === 'member_no' ? body.memberNo : undefined);
+    if (val === undefined) continue;
+    if (dbKey === 'points_balance') {
+      updates.push('points_balance = ?');
+      values.push(parseInt(val, 10) || 0);
+    } else {
+      updates.push(dbKey + ' = ?');
+      values.push(typeof val === 'string' ? val.trim() : val);
+    }
+  }
+  if (updates.length) {
+    values.push(id);
+    db.prepare('UPDATE users SET ' + updates.join(', ') + ' WHERE id = ?').run(...values);
   }
   res.json({ success: true });
 });
@@ -199,6 +224,106 @@ router.put('/posts/:id', adminAuthMiddleware, (req, res) => {
 router.delete('/posts/:id', adminAuthMiddleware, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const r = db.prepare('DELETE FROM posts WHERE id = ?').run(id);
+  if (r.changes === 0) return res.status(404).json({ success: false });
+  res.json({ success: true });
+});
+
+// ---- 취소/교환/반품 관리 ----
+router.get('/refunds', adminAuthMiddleware, (req, res) => {
+  const rows = db.prepare(`
+    SELECT r.*, u.name as user_name, u.license, u.email, o.total as order_total, o.items as order_items
+    FROM refunds r
+    LEFT JOIN users u ON u.id = r.user_id
+    LEFT JOIN orders o ON o.id = r.order_id
+    ORDER BY r.created_at DESC
+  `).all();
+  const list = rows.map(r => ({
+    id: r.id, orderId: r.order_id, userId: r.user_id, userName: r.user_name, userLicense: r.license, userEmail: r.email,
+    type: r.type, reason: r.reason, status: r.status, adminComment: r.admin_comment,
+    orderTotal: r.order_total, orderItems: r.order_items ? JSON.parse(r.order_items) : [],
+    createdAt: r.created_at, updatedAt: r.updated_at
+  }));
+  res.json({ success: true, refunds: list });
+});
+
+router.patch('/refunds/:id', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { status, adminComment } = req.body;
+  const allowed = ['pending', 'approved', 'rejected'];
+  if (!status || !allowed.includes(status)) {
+    return res.status(400).json({ success: false, message: '유효한 상태가 아닙니다.' });
+  }
+  const r = db.prepare('UPDATE refunds SET status = ?, admin_comment = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .run(status, (adminComment || '').trim(), id);
+  if (r.changes === 0) return res.status(404).json({ success: false });
+  res.json({ success: true });
+});
+
+// ---- 쿠폰 관리 ----
+router.get('/coupons', adminAuthMiddleware, (req, res) => {
+  const rows = db.prepare('SELECT * FROM coupons ORDER BY id DESC').all();
+  const list = rows.map(c => ({
+    id: c.id, name: c.name, code: c.code, type: c.type, value: c.value, minOrder: c.min_order, startAt: c.start_at, endAt: c.end_at, createdAt: c.created_at
+  }));
+  res.json({ success: true, coupons: list });
+});
+
+router.post('/coupons', adminAuthMiddleware, (req, res) => {
+  const { name, code, type, value, minOrder, endAt } = req.body;
+  if (!name || value == null) {
+    return res.status(400).json({ success: false, message: '쿠폰명과 할인값은 필수입니다.' });
+  }
+  db.prepare('INSERT INTO coupons (name, code, type, value, min_order, end_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(String(name).trim(), (code || '').trim(), type || 'fixed', parseInt(value, 10) || 0, parseInt(minOrder, 10) || 0, endAt || null);
+  const row = db.prepare('SELECT * FROM coupons ORDER BY id DESC LIMIT 1').get();
+  res.json({ success: true, coupon: { id: row.id, name: row.name } });
+});
+
+router.post('/coupons/issue', adminAuthMiddleware, (req, res) => {
+  const { userId, couponId } = req.body;
+  if (!userId || !couponId) {
+    return res.status(400).json({ success: false, message: '회원 ID와 쿠폰 ID가 필요합니다.' });
+  }
+  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+  const coupon = db.prepare('SELECT id FROM coupons WHERE id = ?').get(couponId);
+  if (!user) return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+  if (!coupon) return res.status(404).json({ success: false, message: '쿠폰을 찾을 수 없습니다.' });
+  db.prepare('INSERT INTO user_coupons (user_id, coupon_id) VALUES (?, ?)').run(userId, couponId);
+  res.json({ success: true, message: '쿠폰이 지급되었습니다.' });
+});
+
+// ---- 적립금 지급 ----
+router.post('/users/:id/points', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { points } = req.body;
+  const user = db.prepare('SELECT id, points_balance FROM users WHERE id = ?').get(id);
+  if (!user) return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+  const add = parseInt(points, 10) || 0;
+  const newBalance = (user.points_balance || 0) + add;
+  db.prepare('UPDATE users SET points_balance = ? WHERE id = ?').run(newBalance, id);
+  res.json({ success: true, pointsBalance: newBalance });
+});
+
+// ---- 1:1 문의 관리 ----
+router.get('/inquiries', adminAuthMiddleware, (req, res) => {
+  const rows = db.prepare(`
+    SELECT i.*, u.name as user_name, u.license, u.email
+    FROM inquiries i
+    LEFT JOIN users u ON u.id = i.user_id
+    ORDER BY i.created_at DESC
+  `).all();
+  const list = rows.map(i => ({
+    id: i.id, userId: i.user_id, userName: i.user_name, userLicense: i.license, userEmail: i.email,
+    subject: i.subject, content: i.content, adminReply: i.admin_reply, status: i.status, createdAt: i.created_at, repliedAt: i.replied_at
+  }));
+  res.json({ success: true, inquiries: list });
+});
+
+router.patch('/inquiries/:id', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { adminReply } = req.body;
+  const r = db.prepare('UPDATE inquiries SET admin_reply = ?, status = ?, replied_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .run((adminReply || '').trim(), adminReply ? 'answered' : 'pending', id);
   if (r.changes === 0) return res.status(404).json({ success: false });
   res.json({ success: true });
 });

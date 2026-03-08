@@ -109,9 +109,74 @@ db.exec(`
     hours TEXT
   );
 
+  -- 취소/교환/반품
+  CREATE TABLE IF NOT EXISTS refunds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    reason TEXT,
+    status TEXT DEFAULT 'pending',
+    admin_comment TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+  -- 쿠폰
+  CREATE TABLE IF NOT EXISTS coupons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    code TEXT,
+    type TEXT DEFAULT 'fixed',
+    value INTEGER NOT NULL,
+    min_order INTEGER DEFAULT 0,
+    start_at DATETIME,
+    end_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  -- 회원별 쿠폰 지급
+  CREATE TABLE IF NOT EXISTS user_coupons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    coupon_id INTEGER NOT NULL,
+    used_at DATETIME,
+    order_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (coupon_id) REFERENCES coupons(id)
+  );
+  -- 1:1 문의
+  CREATE TABLE IF NOT EXISTS inquiries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    admin_reply TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    replied_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+  -- 배송지 (회원별 여러 개)
+  CREATE TABLE IF NOT EXISTS delivery_addresses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    label TEXT,
+    recipient TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    address TEXT NOT NULL,
+    is_default INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
   CREATE INDEX IF NOT EXISTS idx_users_license ON users(license);
   CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
   CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+  CREATE INDEX IF NOT EXISTS idx_refunds_user ON refunds(user_id);
+  CREATE INDEX IF NOT EXISTS idx_inquiries_user ON inquiries(user_id);
+  CREATE INDEX IF NOT EXISTS idx_delivery_addresses_user ON delivery_addresses(user_id);
 `);
 
 // 기존 DB에 컬럼 추가 (이미 있으면 무시)
@@ -122,6 +187,8 @@ if (!userCols.includes('status')) db.exec('ALTER TABLE users ADD COLUMN status T
 if (!userCols.includes('open_date')) db.exec('ALTER TABLE users ADD COLUMN open_date TEXT');
 if (!userCols.includes('approved_at')) db.exec('ALTER TABLE users ADD COLUMN approved_at DATETIME');
 if (!userCols.includes('approved_by')) db.exec('ALTER TABLE users ADD COLUMN approved_by INTEGER');
+if (!userCols.includes('points_balance')) db.exec('ALTER TABLE users ADD COLUMN points_balance INTEGER DEFAULT 0');
+if (!userCols.includes('member_no')) db.exec('ALTER TABLE users ADD COLUMN member_no TEXT');
 if (!ordersCols.includes('delivery_address')) db.exec('ALTER TABLE orders ADD COLUMN delivery_address TEXT');
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)'); } catch (_) {}
 

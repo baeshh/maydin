@@ -66,6 +66,7 @@ router.get('/', authMiddleware, (req, res) => {
     items: JSON.parse(o.items || '[]'),
     total: o.total,
     status: o.status,
+    deliveryAddress: o.delivery_address,
     createdAt: o.created_at
   }));
 

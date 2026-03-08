@@ -122,6 +122,9 @@
                 <a href="#" data-tab="products">상품 관리</a>
                 <a href="#" data-tab="orders">주문 관리</a>
                 <a href="#" data-tab="users">회원 관리</a>
+                <a href="#" data-tab="refunds">취소/반품</a>
+                <a href="#" data-tab="coupons">쿠폰</a>
+                <a href="#" data-tab="inquiries">1:1 문의</a>
                 <a href="#" data-tab="posts">블로그/소식</a>
                 <a href="index.html" target="_blank">홈페이지 보기 ↗</a>
             </nav>
@@ -170,8 +173,47 @@
                         <div class="card-title">회원 목록 (가입 정보·승인/거절/탈퇴/삭제)</div>
                         <div class="table-wrap">
                             <table>
-                                <thead><tr><th>ID</th><th>면허번호</th><th>이름</th><th>이메일</th><th>약국명</th><th>상태</th><th>가입일</th><th></th></tr></thead>
+                                <thead><tr><th>ID</th><th>회원번호</th><th>면허번호</th><th>이름</th><th>이메일</th><th>약국명</th><th>적립금</th><th>상태</th><th>가입일</th><th></th></tr></thead>
                                 <tbody id="userList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-refunds">
+                    <div class="card">
+                        <div class="card-title">취소/교환/반품 신청 목록</div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>주문번호</th><th>회원</th><th>유형</th><th>사유</th><th>상태</th><th>신청일</th><th></th></tr></thead>
+                                <tbody id="refundList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-coupons">
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <div class="card-title" style="margin:0;">쿠폰 목록</div>
+                            <button class="btn btn-primary" onclick="openCouponModal()">+ 쿠폰 생성</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>쿠폰명</th><th>유형</th><th>할인값</th><th>최소주문</th><th>만료</th></tr></thead>
+                                <tbody id="couponList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-inquiries">
+                    <div class="card">
+                        <div class="card-title">1:1 문의 목록</div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>회원</th><th>제목</th><th>상태</th><th>등록일</th><th></th></tr></thead>
+                                <tbody id="inquiryList"></tbody>
                             </table>
                         </div>
                     </div>
@@ -263,9 +305,80 @@
         <div class="modal-content" style="max-width: 560px;">
             <h3>회원 상세 정보</h3>
             <div id="userDetailBody"></div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <div class="form-group" style="margin-bottom:8px;"><label>회원번호</label><input type="text" id="userDetailMemberNo" style="width:100%;padding:8px;"></div>
+                <div class="form-group" style="margin-bottom:8px;"><label>적립금</label><input type="number" id="userDetailPoints" style="width:100%;padding:8px;" min="0"></div>
+                <button type="button" class="btn btn-primary" onclick="saveUserDetail()" style="margin-right:8px;">회원정보 저장</button>
+                <button type="button" class="btn" style="background:#eee" onclick="openIssuePointsModal()">적립금 지급</button>
+                <button type="button" class="btn" style="background:#eee" onclick="openIssueCouponModal()">쿠폰 지급</button>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn" style="background:#eee" onclick="closeUserDetail()">닫기</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 쿠폰 생성 모달 -->
+    <div class="modal" id="couponModal">
+        <div class="modal-content">
+            <h3>쿠폰 생성</h3>
+            <form onsubmit="return saveCoupon(event)">
+                <div class="form-group"><label>쿠폰명 *</label><input type="text" id="couponName" required></div>
+                <div class="form-group"><label>코드 (선택)</label><input type="text" id="couponCode"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>유형</label><select id="couponType"><option value="fixed">정액</option><option value="percent">정률</option></select></div>
+                    <div class="form-group"><label>할인값 *</label><input type="number" id="couponValue" required min="0"></div>
+                </div>
+                <div class="form-group"><label>최소 주문금액</label><input type="number" id="couponMinOrder" min="0" value="0"></div>
+                <div class="form-group"><label>만료일 (YYYY-MM-DD)</label><input type="text" id="couponEndAt" placeholder="비우면 무제한"></div>
+                <div class="modal-footer"><button type="button" class="btn" style="background:#eee" onclick="closeCouponModal()">취소</button><button type="submit" class="btn btn-primary">저장</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 쿠폰 지급 모달 (회원에게) -->
+    <div class="modal" id="issueCouponModal">
+        <div class="modal-content">
+            <h3>쿠폰 지급</h3>
+            <input type="hidden" id="issueCouponUserId">
+            <div class="form-group"><label>쿠폰 선택</label><select id="issueCouponSelect"></select></div>
+            <div class="modal-footer"><button type="button" class="btn" style="background:#eee" onclick="closeIssueCouponModal()">취소</button><button type="button" class="btn btn-primary" onclick="submitIssueCoupon()">지급</button></div>
+        </div>
+    </div>
+
+    <!-- 적립금 지급 모달 -->
+    <div class="modal" id="issuePointsModal">
+        <div class="modal-content">
+            <h3>적립금 지급</h3>
+            <input type="hidden" id="issuePointsUserId">
+            <div class="form-group"><label>지급할 적립금 (P)</label><input type="number" id="issuePointsAmount" min="1" value="100"></div>
+            <div class="modal-footer"><button type="button" class="btn" style="background:#eee" onclick="closeIssuePointsModal()">취소</button><button type="button" class="btn btn-primary" onclick="submitIssuePoints()">지급</button></div>
+        </div>
+    </div>
+
+    <!-- 취소/반품 처리 모달 -->
+    <div class="modal" id="refundModal">
+        <div class="modal-content">
+            <h3>취소/교환/반품 처리</h3>
+            <input type="hidden" id="refundModalId">
+            <div id="refundModalBody"></div>
+            <div class="form-group"><label>관리자 답변</label><textarea id="refundAdminComment" rows="3" style="width:100%;padding:8px;"></textarea></div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background:#eee" onclick="closeRefundModal()">취소</button>
+                <button type="button" class="btn btn-primary" onclick="submitRefundStatus('approved')">승인</button>
+                <button type="button" class="btn danger" onclick="submitRefundStatus('rejected')">거절</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1:1 문의 답변 모달 -->
+    <div class="modal" id="inquiryModal">
+        <div class="modal-content">
+            <h3>1:1 문의 답변</h3>
+            <input type="hidden" id="inquiryModalId">
+            <div id="inquiryModalBody"></div>
+            <div class="form-group"><label>관리자 답변</label><textarea id="inquiryAdminReply" rows="4" style="width:100%;padding:8px;"></textarea></div>
+            <div class="modal-footer"><button type="button" class="btn" style="background:#eee" onclick="closeInquiryModal()">취소</button><button type="button" class="btn btn-primary" onclick="submitInquiryReply()">답변 저장</button></div>
         </div>
     </div>
 
@@ -363,6 +476,9 @@
                 this.classList.add('active');
                 document.getElementById('panel-' + this.dataset.tab).classList.add('active');
                 if (this.dataset.tab === 'users') loadUsers();
+                if (this.dataset.tab === 'refunds') loadRefunds();
+                if (this.dataset.tab === 'coupons') loadCoupons();
+                if (this.dataset.tab === 'inquiries') loadInquiries();
             });
         });
 
@@ -474,7 +590,7 @@
                 const data = await res.json();
                 const tbody = document.getElementById('userList');
                 if (!data.success || !data.users.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">가입 회원이 없습니다.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="10" class="empty-msg">가입 회원이 없습니다.</td></tr>';
                     return;
                 }
                 usersCache = data.users;
@@ -482,10 +598,12 @@
                 tbody.innerHTML = data.users.map(u => `
                     <tr>
                         <td>${u.id}</td>
+                        <td>${u.memberNo || '-'}</td>
                         <td>${u.license || '-'}</td>
                         <td>${u.name || '-'}</td>
                         <td>${u.email || '-'}</td>
                         <td>${u.pharmacyName || '-'}</td>
+                        <td>${u.pointsBalance != null ? u.pointsBalance : 0}</td>
                         <td><span class="status status-${u.status || 'pending'}">${statusLabel[u.status] || u.status}</span></td>
                         <td>${(u.createdAt || '').slice(0,10)}</td>
                         <td>
@@ -496,12 +614,14 @@
                         </td>
                     </tr>
                 `).join('');
-            } catch (e) { document.getElementById('userList').innerHTML = '<tr><td colspan="8" class="empty-msg">로드 실패</td></tr>'; }
+            } catch (e) { document.getElementById('userList').innerHTML = '<tr><td colspan="10" class="empty-msg">로드 실패</td></tr>'; }
         }
 
+        let currentDetailUserId = null;
         function openUserDetail(id) {
             const u = usersCache.find(x => x.id === id);
             if (!u) return;
+            currentDetailUserId = id;
             const statusLabel = { pending: '승인대기', approved: '승인', rejected: '거절', withdrawn: '탈퇴' };
             document.getElementById('userDetailBody').innerHTML =
                 '<div style="background:#f5f7f6;padding:16px;border-radius:8px;">' +
@@ -515,11 +635,160 @@
                 '<div><strong>개업일자</strong>: ' + (u.openDate || '-') + '</div>' +
                 '<div><strong>요양기관기호</strong>: ' + (u.pharmacyCode || '-') + '</div>' +
                 '<div><strong>상태</strong>: <span class="status status-' + (u.status || 'pending') + '">' + (statusLabel[u.status] || u.status) + '</span></div>' +
+                '<div><strong>적립금</strong>: ' + (u.pointsBalance != null ? u.pointsBalance : 0) + ' P</div>' +
                 '<div><strong>가입일</strong>: ' + (u.createdAt || '-') + '</div>' +
                 '</div>';
+            document.getElementById('userDetailMemberNo').value = u.memberNo || '';
+            document.getElementById('userDetailPoints').value = u.pointsBalance != null ? u.pointsBalance : 0;
+            document.getElementById('issueCouponUserId').value = id;
+            document.getElementById('issuePointsUserId').value = id;
             document.getElementById('userDetailModal').classList.add('active');
         }
         function closeUserDetail() { document.getElementById('userDetailModal').classList.remove('active'); }
+
+        async function saveUserDetail() {
+            if (!currentDetailUserId) return;
+            try {
+                const res = await fetch(API + '/api/admin/users/' + currentDetailUserId, {
+                    method: 'PATCH', headers: headers(),
+                    body: JSON.stringify({
+                        memberNo: document.getElementById('userDetailMemberNo').value.trim(),
+                        points_balance: parseInt(document.getElementById('userDetailPoints').value, 10) || 0
+                    })
+                });
+                if ((await res.json()).success) { loadUsers(); loadStats(); const u = usersCache.find(x => x.id === currentDetailUserId); if (u) { u.memberNo = document.getElementById('userDetailMemberNo').value.trim(); u.pointsBalance = parseInt(document.getElementById('userDetailPoints').value, 10) || 0; } }
+            } catch (e) { alert('저장 실패'); }
+        }
+
+        function openIssuePointsModal() {
+            document.getElementById('issuePointsUserId').value = currentDetailUserId;
+            document.getElementById('issuePointsAmount').value = 100;
+            document.getElementById('issuePointsModal').classList.add('active');
+        }
+        function closeIssuePointsModal() { document.getElementById('issuePointsModal').classList.remove('active'); }
+        async function submitIssuePoints() {
+            const userId = document.getElementById('issuePointsUserId').value;
+            const points = parseInt(document.getElementById('issuePointsAmount').value, 10) || 0;
+            if (!userId || points < 1) { alert('회원과 지급액을 확인하세요.'); return; }
+            try {
+                const res = await fetch(API + '/api/admin/users/' + userId + '/points', { method: 'POST', headers: headers(), body: JSON.stringify({ points }) });
+                const data = await res.json();
+                if (data.success) { alert('적립금이 지급되었습니다.'); closeIssuePointsModal(); loadUsers(); const u = usersCache.find(x => x.id == userId); if (u) u.pointsBalance = data.pointsBalance; openUserDetail(parseInt(userId, 10)); }
+                else alert(data.message || '실패');
+            } catch (e) { alert('실패'); }
+        }
+
+        let couponsCache = [];
+        function openIssueCouponModal() {
+            document.getElementById('issueCouponUserId').value = currentDetailUserId;
+            fetch(API + '/api/admin/coupons', { headers: headers() }).then(r => r.json()).then(d => {
+                if (d.success && d.coupons && d.coupons.length) {
+                    couponsCache = d.coupons;
+                    const sel = document.getElementById('issueCouponSelect');
+                    sel.innerHTML = d.coupons.map(c => '<option value="' + c.id + '">' + c.name + ' (' + (c.type === 'percent' ? c.value + '%' : c.value + '원') + ')</option>').join('');
+                } else { document.getElementById('issueCouponSelect').innerHTML = '<option value="">쿠폰 없음</option>'; }
+            });
+            document.getElementById('issueCouponModal').classList.add('active');
+        }
+        function closeIssueCouponModal() { document.getElementById('issueCouponModal').classList.remove('active'); }
+        async function submitIssueCoupon() {
+            const userId = document.getElementById('issueCouponUserId').value;
+            const couponId = document.getElementById('issueCouponSelect').value;
+            if (!userId || !couponId) { alert('회원과 쿠폰을 선택하세요.'); return; }
+            try {
+                const res = await fetch(API + '/api/admin/coupons/issue', { method: 'POST', headers: headers(), body: JSON.stringify({ userId, couponId }) });
+                const data = await res.json();
+                if (data.success) { alert('쿠폰이 지급되었습니다.'); closeIssueCouponModal(); }
+                else alert(data.message || '실패');
+            } catch (e) { alert('실패'); }
+        }
+
+        function openCouponModal() { document.getElementById('couponModal').classList.add('active'); document.getElementById('couponName').value = ''; document.getElementById('couponCode').value = ''; document.getElementById('couponValue').value = ''; document.getElementById('couponMinOrder').value = '0'; document.getElementById('couponEndAt').value = ''; }
+        function closeCouponModal() { document.getElementById('couponModal').classList.remove('active'); }
+        async function saveCoupon(e) {
+            e.preventDefault();
+            const payload = { name: document.getElementById('couponName').value, code: document.getElementById('couponCode').value, type: document.getElementById('couponType').value, value: parseInt(document.getElementById('couponValue').value, 10), minOrder: parseInt(document.getElementById('couponMinOrder').value, 10) || 0, endAt: document.getElementById('couponEndAt').value || null };
+            try {
+                const res = await fetch(API + '/api/admin/coupons', { method: 'POST', headers: headers(), body: JSON.stringify(payload) });
+                if ((await res.json()).success) { closeCouponModal(); loadCoupons(); }
+            } catch (err) { alert('저장 실패'); }
+            return false;
+        }
+
+        async function loadRefunds() {
+            try {
+                const res = await fetch(API + '/api/admin/refunds', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('refundList');
+                if (!data.success || !data.refunds.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">신청 내역이 없습니다.</td></tr>'; return; }
+                const typeLabel = { cancel: '취소', exchange: '교환', return: '반품' };
+                const statusLabel = { pending: '대기', approved: '승인', rejected: '거절' };
+                tbody.innerHTML = data.refunds.map(r => '<tr><td>' + r.id + '</td><td>#' + r.orderId + '</td><td>' + (r.userName || '') + ' ' + (r.userLicense || '') + '</td><td>' + (typeLabel[r.type] || r.type) + '</td><td>' + (r.reason || '-') + '</td><td>' + (statusLabel[r.status] || r.status) + '</td><td>' + (r.createdAt || '').slice(0, 10) + '</td><td>' + (r.status === 'pending' ? '<button class="btn-sm" onclick="openRefundModal(' + r.id + ')">처리</button>' : '') + '</td></tr>').join('');
+            } catch (e) { document.getElementById('refundList').innerHTML = '<tr><td colspan="8" class="empty-msg">로드 실패</td></tr>'; }
+        }
+        let refundsCache = [];
+        async function openRefundModal(id) {
+            const res = await fetch(API + '/api/admin/refunds', { headers: headers() });
+            const data = await res.json();
+            refundsCache = (data.success && data.refunds) ? data.refunds : [];
+            const r = refundsCache.find(x => x.id === id);
+            if (!r) return;
+            document.getElementById('refundModalId').value = id;
+            document.getElementById('refundModalBody').innerHTML = '주문 #' + r.orderId + ' / ' + r.type + ' / ' + (r.reason || '') + '<br>회원: ' + r.userName + ' ' + r.userEmail;
+            document.getElementById('refundAdminComment').value = r.adminComment || '';
+            document.getElementById('refundModal').classList.add('active');
+        }
+        function closeRefundModal() { document.getElementById('refundModal').classList.remove('active'); }
+        async function submitRefundStatus(status) {
+            const id = document.getElementById('refundModalId').value;
+            const adminComment = document.getElementById('refundAdminComment').value;
+            try {
+                const res = await fetch(API + '/api/admin/refunds/' + id, { method: 'PATCH', headers: headers(), body: JSON.stringify({ status, adminComment }) });
+                if ((await res.json()).success) { closeRefundModal(); loadRefunds(); }
+            } catch (e) { alert('처리 실패'); }
+        }
+
+        async function loadCoupons() {
+            try {
+                const res = await fetch(API + '/api/admin/coupons', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('couponList');
+                if (!data.success || !data.coupons.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">쿠폰이 없습니다.</td></tr>'; return; }
+                couponsCache = data.coupons;
+                tbody.innerHTML = data.coupons.map(c => '<tr><td>' + c.id + '</td><td>' + c.name + '</td><td>' + c.type + '</td><td>' + (c.type === 'percent' ? c.value + '%' : c.value + '원') + '</td><td>' + (c.minOrder || 0) + '</td><td>' + (c.endAt || '-').toString().slice(0, 10) + '</td></tr>').join('');
+            } catch (e) { document.getElementById('couponList').innerHTML = '<tr><td colspan="6" class="empty-msg">로드 실패</td></tr>'; }
+        }
+
+        async function loadInquiries() {
+            try {
+                const res = await fetch(API + '/api/admin/inquiries', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('inquiryList');
+                if (!data.success || !data.inquiries.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">문의가 없습니다.</td></tr>'; return; }
+                tbody.innerHTML = data.inquiries.map(i => '<tr><td>' + i.id + '</td><td>' + (i.userName || '') + ' ' + (i.userLicense || '') + '</td><td>' + (i.subject || '') + '</td><td>' + (i.status === 'answered' ? '답변완료' : '대기') + '</td><td>' + (i.createdAt || '').slice(0, 10) + '</td><td><button class="btn-sm" onclick="openInquiryModal(' + i.id + ')">답변</button></td></tr>').join('');
+            } catch (e) { document.getElementById('inquiryList').innerHTML = '<tr><td colspan="6" class="empty-msg">로드 실패</td></tr>'; }
+        }
+        let inquiriesCache = [];
+        async function openInquiryModal(id) {
+            const res = await fetch(API + '/api/admin/inquiries', { headers: headers() });
+            const data = await res.json();
+            inquiriesCache = (data.success && data.inquiries) ? data.inquiries : [];
+            const i = inquiriesCache.find(x => x.id === id);
+            if (!i) return;
+            document.getElementById('inquiryModalId').value = id;
+            document.getElementById('inquiryModalBody').innerHTML = '<strong>' + (i.subject || '') + '</strong><br>' + (i.content || '') + (i.adminReply ? '<br><br>기존 답변: ' + i.adminReply : '');
+            document.getElementById('inquiryAdminReply').value = i.adminReply || '';
+            document.getElementById('inquiryModal').classList.add('active');
+        }
+        function closeInquiryModal() { document.getElementById('inquiryModal').classList.remove('active'); }
+        async function submitInquiryReply() {
+            const id = document.getElementById('inquiryModalId').value;
+            const adminReply = document.getElementById('inquiryAdminReply').value;
+            try {
+                const res = await fetch(API + '/api/admin/inquiries/' + id, { method: 'PATCH', headers: headers(), body: JSON.stringify({ adminReply }) });
+                if ((await res.json()).success) { closeInquiryModal(); loadInquiries(); }
+            } catch (e) { alert('저장 실패'); }
+        }
 
         async function updateUserStatus(id, status) {
             const msg = { approved: '승인', rejected: '거절', withdrawn: '탈퇴 처리' }[status];

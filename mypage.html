@@ -206,11 +206,16 @@
             border-bottom: 1px solid var(--border-color);
             vertical-align: middle;
         }
+        .content-panel { display: none; }
+        .content-panel.active { display: flex; flex-direction: column; gap: 30px; }
         .empty-order {
             padding: 60px 20px;
             text-align: center;
             color: var(--text-light);
         }
+        .btn-primary { background: var(--primary-color); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-primary:hover { opacity: 0.9; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
 
         .info-table {
             width: 100%;
@@ -257,112 +262,182 @@
         <aside class="sidebar">
             <h2>마이페이지</h2>
             <ul class="sidebar-menu">
-                <li><a href="#" class="active">내 정보 홈</a></li>
-                <li><a href="#">주문/배송 조회</a></li>
-                <li><a href="#">취소/교환/반품 내역</a></li>
-                <li><a href="#">쿠폰/적립금</a></li>
-                <li><a href="#">1:1 문의내역</a></li>
-                <li><a href="#">배송지 관리</a></li>
-                <li><a href="#">회원정보 수정</a></li>
+                <li><a href="#" class="active" data-panel="home">내 정보 홈</a></li>
+                <li><a href="#" data-panel="orders">주문/배송 조회</a></li>
+                <li><a href="#" data-panel="refunds">취소/교환/반품 내역</a></li>
+                <li><a href="#" data-panel="coupons">쿠폰/적립금</a></li>
+                <li><a href="#" data-panel="inquiries">1:1 문의내역</a></li>
+                <li><a href="#" data-panel="addresses">배송지 관리</a></li>
+                <li><a href="#" data-panel="profile">회원정보 수정</a></li>
             </ul>
         </aside>
 
         <section class="content">
-            <article class="card profile-card">
-                <div class="profile-info">
-                    <h3><span id="userName">-</span> 약사님</h3>
-                    <div class="profile-details">
-                        <p>약국명 : <span id="pharmacyName">-</span></p>
-                        <p>사업자번호 : <span id="bizNo">-</span></p>
-                        <p>면허번호 : <span id="license">-</span></p>
-                        <p>이메일 : <span id="userEmail">-</span></p>
-                        <p>연락처 : <span id="userPhone">-</span></p>
+            <div id="panel-home" class="content-panel active">
+                <article class="card profile-card">
+                    <div class="profile-info">
+                        <h3><span id="userName">-</span> 약사님</h3>
+                        <div class="profile-details">
+                            <p>약국명 : <span id="pharmacyName">-</span></p>
+                            <p>사업자번호 : <span id="bizNo">-</span></p>
+                            <p>면허번호 : <span id="license">-</span></p>
+                            <p>이메일 : <span id="userEmail">-</span></p>
+                            <p>연락처 : <span id="userPhone">-</span></p>
+                        </div>
                     </div>
-                </div>
-                <div class="benefit-summary">
-                    <div class="benefit-item">
-                        <span>보유 적립금</span>
-                        <strong>0 P</strong>
+                    <div class="benefit-summary">
+                        <div class="benefit-item">
+                            <span>보유 적립금</span>
+                            <strong id="pointsDisplay">0 P</strong>
+                        </div>
+                        <div class="benefit-item">
+                            <span>사용가능 쿠폰</span>
+                            <strong id="couponsCountDisplay">0 장</strong>
+                        </div>
                     </div>
-                    <div class="benefit-item">
-                        <span>사용가능 쿠폰</span>
-                        <strong>0 장</strong>
+                </article>
+                <article class="card">
+                    <div class="section-title">회원 정보</div>
+                    <table class="info-table" id="infoTable"></table>
+                </article>
+                <article class="card">
+                    <div class="section-title">진행 중인 주문 <span style="font-size: 13px; font-weight: normal; color: var(--text-light);">(최근 1개월)</span></div>
+                    <div class="order-status-board">
+                        <div class="status-step"><span class="count" id="countPending">0</span><span class="label">입금/결제대기</span></div>
+                        <div class="status-step"><span class="count" id="countPaid">0</span><span class="label">결제완료</span></div>
+                        <div class="status-step"><span class="count" id="countShipped">0</span><span class="label">배송중</span></div>
+                        <div class="status-step"><span class="count" id="countDelivered">0</span><span class="label">배송완료</span></div>
+                        <div class="status-step"><span class="count" id="countRefund">0</span><span class="label">취소/교환/반품</span></div>
                     </div>
-                </div>
-            </article>
+                </article>
+                <article class="card">
+                    <div class="section-title">최근 주문 내역</div>
+                    <div id="orderList" class="empty-order">아직 주문 내역이 없습니다.</div>
+                </article>
+            </div>
 
-            <article class="card">
-                <div class="section-title">회원 정보</div>
-                <table class="info-table" id="infoTable">
-                    <!-- 동적 생성 -->
-                </table>
-            </article>
+            <div id="panel-orders" class="content-panel" style="display:none;">
+                <article class="card">
+                    <div class="section-title">주문/배송 조회</div>
+                    <div id="orderListFull"></div>
+                </article>
+            </div>
 
-            <article class="card">
-                <div class="section-title">진행 중인 주문 <span style="font-size: 13px; font-weight: normal; color: var(--text-light);">(최근 1개월)</span></div>
-                <div class="order-status-board">
-                    <div class="status-step">
-                        <span class="count">0</span>
-                        <span class="label">입금/결제대기</span>
+            <div id="panel-refunds" class="content-panel" style="display:none;">
+                <article class="card">
+                    <div class="section-title">취소/교환/반품 내역</div>
+                    <div style="margin-bottom:20px;">
+                        <input type="number" id="refundOrderId" placeholder="주문번호" style="width:120px;padding:8px;margin-right:8px;">
+                        <select id="refundType" style="padding:8px;margin-right:8px;"><option value="cancel">취소</option><option value="exchange">교환</option><option value="return">반품</option></select>
+                        <input type="text" id="refundReason" placeholder="사유 (선택)" style="padding:8px;margin-right:8px;width:200px;">
+                        <button type="button" class="btn-primary" onclick="submitRefundRequest()" style="padding:8px 16px;">신청</button>
                     </div>
-                    <div class="status-step">
-                        <span class="count">0</span>
-                        <span class="label">결제완료</span>
-                    </div>
-                    <div class="status-step">
-                        <span class="count">0</span>
-                        <span class="label">배송중</span>
-                    </div>
-                    <div class="status-step">
-                        <span class="count">0</span>
-                        <span class="label">배송완료</span>
-                    </div>
-                    <div class="status-step">
-                        <span class="count">0</span>
-                        <span class="label">취소/교환/반품</span>
-                    </div>
-                </div>
-            </article>
+                    <div id="refundList"></div>
+                </article>
+            </div>
 
-            <article class="card">
-                <div class="section-title">최근 주문 내역</div>
-                <div id="orderList" class="empty-order">
-                    아직 주문 내역이 없습니다.
-                </div>
-            </article>
+            <div id="panel-coupons" class="content-panel" style="display:none;">
+                <article class="card">
+                    <div class="section-title">쿠폰/적립금</div>
+                    <p style="margin-bottom:16px;">보유 적립금: <strong id="pointsPanel">0</strong> P</p>
+                    <p style="margin-bottom:16px;">사용 가능 쿠폰</p>
+                    <div id="couponList"></div>
+                </article>
+            </div>
+
+            <div id="panel-inquiries" class="content-panel" style="display:none;">
+                <article class="card">
+                    <div class="section-title">1:1 문의내역</div>
+                    <div style="margin-bottom:20px;">
+                        <input type="text" id="inquirySubject" placeholder="제목" style="width:100%;padding:10px;margin-bottom:8px;">
+                        <textarea id="inquiryContent" placeholder="문의 내용" rows="4" style="width:100%;padding:10px;margin-bottom:8px;"></textarea>
+                        <button type="button" class="btn-primary" onclick="submitInquiry()" style="padding:10px 20px;">문의 등록</button>
+                    </div>
+                    <div id="inquiryList"></div>
+                </article>
+            </div>
+
+            <div id="panel-addresses" class="content-panel" style="display:none;">
+                <article class="card">
+                    <div class="section-title">배송지 관리</div>
+                    <div style="margin-bottom:20px;">
+                        <input type="text" id="addrLabel" placeholder="배송지 별칭 (선택)" style="width:100%;padding:10px;margin-bottom:8px;">
+                        <input type="text" id="addrRecipient" placeholder="수령인 *" style="width:100%;padding:10px;margin-bottom:8px;">
+                        <input type="text" id="addrPhone" placeholder="연락처 *" style="width:100%;padding:10px;margin-bottom:8px;">
+                        <input type="text" id="addrAddress" placeholder="주소 *" style="width:100%;padding:10px;margin-bottom:8px;">
+                        <label><input type="checkbox" id="addrDefault"> 기본 배송지</label>
+                        <button type="button" class="btn-primary" onclick="addAddress()" style="padding:10px 20px;margin-top:8px;">배송지 추가</button>
+                    </div>
+                    <div id="addressList"></div>
+                </article>
+            </div>
+
+            <div id="panel-profile" class="content-panel" style="display:none;">
+                <article class="card">
+                    <div class="section-title">회원정보 수정</div>
+                    <div style="max-width:400px;">
+                        <div class="form-group" style="margin-bottom:12px;"><label>성명</label><input type="text" id="editName" style="width:100%;padding:10px;"></div>
+                        <div class="form-group" style="margin-bottom:12px;"><label>이메일</label><input type="email" id="editEmail" style="width:100%;padding:10px;"></div>
+                        <div class="form-group" style="margin-bottom:12px;"><label>연락처</label><input type="tel" id="editPhone" style="width:100%;padding:10px;"></div>
+                        <div class="form-group" style="margin-bottom:12px;"><label>주소</label><input type="text" id="editAddress" style="width:100%;padding:10px;"></div>
+                        <div class="form-group" style="margin-bottom:12px;"><label>약국명</label><input type="text" id="editPharmacyName" style="width:100%;padding:10px;"></div>
+                        <div class="form-group" style="margin-bottom:12px;"><label>사업자번호</label><input type="text" id="editBizNo" style="width:100%;padding:10px;"></div>
+                        <div class="form-group" style="margin-bottom:12px;"><label>요양기관기호</label><input type="text" id="editPharmacyCode" style="width:100%;padding:10px;"></div>
+                        <div class="form-group" style="margin-bottom:12px;"><label>세금계산서 이메일</label><input type="email" id="editTaxEmail" style="width:100%;padding:10px;"></div>
+                        <button type="button" class="btn-primary" onclick="saveProfile()" style="padding:10px 24px;">저장</button>
+                    </div>
+                </article>
+            </div>
         </section>
     </main>
 
     <script>
+        const API = window.API_BASE || '';
         let currentUser = null;
+        let token = null;
+
+        function headers() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
 
         async function init() {
             currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-            if (!currentUser) {
+            token = localStorage.getItem('token');
+            if (!currentUser || !token) {
                 alert('로그인이 필요합니다.');
                 window.location.href = 'pharmacy.html';
                 return;
             }
+            document.getElementById('logoutLink').addEventListener('click', handleLogout);
+            document.querySelectorAll('.sidebar-menu a[data-panel]').forEach(a => {
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.sidebar-menu a').forEach(x => x.classList.remove('active'));
+                    document.querySelectorAll('.content-panel').forEach(x => { x.classList.remove('active'); x.style.display = 'none'; });
+                    this.classList.add('active');
+                    const panel = document.getElementById('panel-' + this.dataset.panel');
+                    if (panel) { panel.style.display = 'flex'; panel.classList.add('active'); }
+                    if (this.dataset.panel === 'orders') loadOrderListFull();
+                    if (this.dataset.panel === 'refunds') loadRefunds();
+                    if (this.dataset.panel === 'coupons') loadCoupons();
+                    if (this.dataset.panel === 'inquiries') loadInquiries();
+                    if (this.dataset.panel === 'addresses') loadAddresses();
+                    if (this.dataset.panel === 'profile') fillProfileForm();
+                });
+            });
+            await refreshUser();
             renderProfile();
             renderInfoTable();
-            document.getElementById('logoutLink').addEventListener('click', handleLogout);
-            var token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    var res = await fetch((window.API_BASE || '') + '/api/orders', {
-                        headers: { 'Authorization': 'Bearer ' + token }
-                    });
-                    var data = await res.json();
-                    if (data.success && data.orders && data.orders.length) {
-                        var html = data.orders.map(function(o) {
-                            var items = (o.items || []).map(function(i) { return i.name + ' x' + (i.qty || 1); }).join(', ');
-                            return '<div style="padding:12px;border-bottom:1px solid #eee;"><strong>#' + o.id + '</strong> ' + items + ' - ' + o.total.toLocaleString() + '원 <span style="color:#868e96;font-size:12px;">' + (o.createdAt || '') + '</span></div>';
-                        }).join('');
-                        document.getElementById('orderList').innerHTML = html;
-                        document.getElementById('orderList').classList.remove('empty-order');
-                    }
-                } catch (e) {}
-            }
+            loadOrdersHome();
+        }
+
+        async function refreshUser() {
+            try {
+                const res = await fetch(API + '/api/auth/me', { headers: headers() });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+            } catch (e) {}
         }
 
         function handleLogout(e) {
@@ -380,31 +455,192 @@
             document.getElementById('license').textContent = currentUser.license || '-';
             document.getElementById('userEmail').textContent = currentUser.email || '-';
             document.getElementById('userPhone').textContent = currentUser.phone || '-';
+            document.getElementById('pointsDisplay').textContent = (currentUser.pointsBalance != null ? currentUser.pointsBalance : 0) + ' P';
+            document.getElementById('couponsCountDisplay').textContent = (currentUser.couponsCount != null ? currentUser.couponsCount : 0) + ' 장';
         }
 
         function renderInfoTable() {
-            var rows = [
+            const rows = [
+                { label: '회원번호', value: currentUser.memberNo },
                 { label: '성명', value: currentUser.name },
                 { label: '약사면허번호', value: currentUser.license },
                 { label: '이메일', value: currentUser.email },
                 { label: '연락처', value: currentUser.phone },
+                { label: '주소', value: currentUser.address },
                 { label: '사업자번호', value: currentUser.bizNo },
                 { label: '약국명', value: currentUser.pharmacyName },
-                { label: '약국 요양기관기호', value: currentUser.pharmacyCode },
-                { label: '약학대학', value: currentUser.pharmacyUniv },
+                { label: '요양기관기호', value: currentUser.pharmacyCode },
                 { label: '세금계산서 이메일', value: currentUser.taxEmail }
             ];
+            document.getElementById('infoTable').innerHTML = rows.map(r => '<tr><th>' + r.label + '</th><td>' + (r.value || '-') + '</td></tr>').join('');
+        }
 
-            var html = rows.filter(function(r) { return r.value; }).map(function(r) {
-                return '<tr><th>' + r.label + '</th><td>' + (r.value || '-') + '</td></tr>';
-            }).join('');
+        const statusLabels = { pending: '입금대기', paid: '결제완료', preparing: '준비중', shipped: '배송중', delivered: '배송완료', cancelled: '취소' };
+        async function loadOrdersHome() {
+            try {
+                const res = await fetch(API + '/api/orders', { headers: headers() });
+                const data = await res.json();
+                const orders = (data.success && data.orders) ? data.orders : [];
+                const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
+                const recent = orders.filter(o => new Date(o.createdAt) >= monthAgo);
+                document.getElementById('countPending').textContent = recent.filter(o => o.status === 'pending' || o.status === 'paid').length;
+                document.getElementById('countPaid').textContent = recent.filter(o => o.status === 'paid').length;
+                document.getElementById('countShipped').textContent = recent.filter(o => o.status === 'shipped').length;
+                document.getElementById('countDelivered').textContent = recent.filter(o => o.status === 'delivered').length;
+                const refRes = await fetch(API + '/api/refunds', { headers: headers() });
+                const refData = await refRes.json();
+                const refunds = (refData.success && refData.refunds) ? refData.refunds : [];
+                document.getElementById('countRefund').textContent = refunds.filter(r => r.status === 'pending').length;
+                if (orders.length) {
+                    document.getElementById('orderList').innerHTML = orders.slice(0, 5).map(o => {
+                        const items = (o.items || []).map(i => i.name + ' x' + (i.qty || 1)).join(', ');
+                        return '<div style="padding:12px;border-bottom:1px solid #eee;"><strong>#' + o.id + '</strong> ' + items + ' - ' + (o.total || 0).toLocaleString() + '원 <span class="status">' + (statusLabels[o.status] || o.status) + '</span> <span style="color:#868e96;font-size:12px;">' + (o.createdAt || '') + '</span></div>';
+                    }).join('');
+                    document.getElementById('orderList').classList.remove('empty-order');
+                }
+                const cupRes = await fetch(API + '/api/coupons', { headers: headers() });
+                const cupData = await cupRes.json();
+                if (cupData.success && cupData.coupons) currentUser.couponsCount = cupData.coupons.length;
+                renderProfile();
+            } catch (e) {}
+        }
 
-            if (!html) {
-                html = '<tr><th>성명</th><td>' + (currentUser.name || '-') + '</td></tr>' +
-                       '<tr><th>면허번호</th><td>' + (currentUser.license || '-') + '</td></tr>' +
-                       '<tr><th>이메일</th><td>' + (currentUser.email || '-') + '</td></tr>';
-            }
-            document.getElementById('infoTable').innerHTML = html;
+        async function loadOrderListFull() {
+            const el = document.getElementById('orderListFull');
+            try {
+                const res = await fetch(API + '/api/orders', { headers: headers() });
+                const data = await res.json();
+                const orders = (data.success && data.orders) ? data.orders : [];
+                if (!orders.length) { el.innerHTML = '<p class="empty-order">주문 내역이 없습니다.</p>'; return; }
+                el.innerHTML = '<table class="order-table"><thead><tr><th>주문번호</th><th>상품</th><th>배송지</th><th>금액</th><th>상태</th><th>주문일</th></tr></thead><tbody>' +
+                    orders.map(o => {
+                        const items = (o.items || []).map(i => (i.name || '') + ' x' + (i.qty || 1)).join(', ');
+                        return '<tr><td>#' + o.id + '</td><td>' + items + '</td><td>' + (o.deliveryAddress || '-') + '</td><td>' + (o.total || 0).toLocaleString() + '원</td><td>' + (statusLabels[o.status] || o.status) + '</td><td>' + (o.createdAt || '').slice(0, 10) + '</td></tr>';
+                    }).join('') + '</tbody></table>';
+            } catch (e) { el.innerHTML = '<p class="empty-order">로드 실패</p>'; }
+        }
+
+        async function loadRefunds() {
+            const el = document.getElementById('refundList');
+            try {
+                const res = await fetch(API + '/api/refunds', { headers: headers() });
+                const data = await res.json();
+                const list = (data.success && data.refunds) ? data.refunds : [];
+                if (!list.length) { el.innerHTML = '<p class="empty-order">취소/교환/반품 내역이 없습니다.</p>'; return; }
+                const typeLabel = { cancel: '취소', exchange: '교환', return: '반품' };
+                const statusLabel = { pending: '처리대기', approved: '승인', rejected: '거절' };
+                el.innerHTML = list.map(r => '<div class="card" style="margin-bottom:16px;"><strong>#' + r.orderId + ' ' + (typeLabel[r.type] || r.type) + '</strong> - ' + (statusLabel[r.status] || r.status) + '<br>사유: ' + (r.reason || '-') + (r.adminComment ? '<br>관리자 답변: ' + r.adminComment : '') + '<br><small>' + r.createdAt + '</small></div>').join('');
+            } catch (e) { el.innerHTML = '<p class="empty-order">로드 실패</p>'; }
+        }
+
+        async function submitRefundRequest() {
+            const orderId = parseInt(document.getElementById('refundOrderId').value, 10);
+            const type = document.getElementById('refundType').value;
+            const reason = document.getElementById('refundReason').value.trim();
+            if (!orderId) { alert('주문번호를 입력하세요.'); return; }
+            try {
+                const res = await fetch(API + '/api/refunds', { method: 'POST', headers: headers(), body: JSON.stringify({ orderId, type, reason }) });
+                const data = await res.json();
+                if (data.success) { alert('신청이 접수되었습니다.'); document.getElementById('refundOrderId').value = ''; document.getElementById('refundReason').value = ''; loadRefunds(); }
+                else alert(data.message || '신청 실패');
+            } catch (e) { alert('신청 실패'); }
+        }
+
+        async function loadCoupons() {
+            document.getElementById('pointsPanel').textContent = currentUser.pointsBalance != null ? currentUser.pointsBalance : 0;
+            const el = document.getElementById('couponList');
+            try {
+                const res = await fetch(API + '/api/coupons', { headers: headers() });
+                const data = await res.json();
+                const list = (data.success && data.coupons) ? data.coupons : [];
+                if (!list.length) { el.innerHTML = '<p class="empty-order">사용 가능한 쿠폰이 없습니다.</p>'; return; }
+                el.innerHTML = list.map(c => '<div class="card" style="margin-bottom:12px;">' + c.name + ' - ' + (c.type === 'percent' ? c.value + '%' : c.value + '원') + ' 할인' + (c.minOrder ? ' (최소 ' + c.minOrder.toLocaleString() + '원)' : '') + (c.endAt ? ' ~ ' + c.endAt.slice(0, 10) : '') + '</div>').join('');
+            } catch (e) { el.innerHTML = '<p class="empty-order">로드 실패</p>'; }
+        }
+
+        async function loadInquiries() {
+            const el = document.getElementById('inquiryList');
+            try {
+                const res = await fetch(API + '/api/inquiries', { headers: headers() });
+                const data = await res.json();
+                const list = (data.success && data.inquiries) ? data.inquiries : [];
+                if (!list.length) { el.innerHTML = '<p class="empty-order">문의 내역이 없습니다.</p>'; return; }
+                el.innerHTML = list.map(i => '<div class="card" style="margin-bottom:12px;"><strong>' + i.subject + '</strong> ' + (i.status === 'answered' ? '[답변완료]' : '[대기]') + '<br>' + i.content + (i.adminReply ? '<br><span style="color:var(--primary-color);">관리자: ' + i.adminReply + '</span>' : '') + '<br><small>' + i.createdAt + '</small></div>').join('');
+            } catch (e) { el.innerHTML = '<p class="empty-order">로드 실패</p>'; }
+        }
+
+        async function submitInquiry() {
+            const subject = document.getElementById('inquirySubject').value.trim();
+            const content = document.getElementById('inquiryContent').value.trim();
+            if (!subject || !content) { alert('제목과 내용을 입력하세요.'); return; }
+            try {
+                const res = await fetch(API + '/api/inquiries', { method: 'POST', headers: headers(), body: JSON.stringify({ subject, content }) });
+                const data = await res.json();
+                if (data.success) { alert('문의가 등록되었습니다.'); document.getElementById('inquirySubject').value = ''; document.getElementById('inquiryContent').value = ''; loadInquiries(); }
+                else alert(data.message || '등록 실패');
+            } catch (e) { alert('등록 실패'); }
+        }
+
+        async function loadAddresses() {
+            const el = document.getElementById('addressList');
+            try {
+                const res = await fetch(API + '/api/addresses', { headers: headers() });
+                const data = await res.json();
+                const list = (data.success && data.addresses) ? data.addresses : [];
+                if (!list.length) { el.innerHTML = '<p class="empty-order">등록된 배송지가 없습니다.</p>'; return; }
+                el.innerHTML = list.map(a => '<div class="card" style="margin-bottom:12px;">' + (a.label ? a.label + ' ' : '') + a.recipient + ' / ' + a.phone + '<br>' + a.address + (a.isDefault ? ' [기본]' : '') + ' <button class="btn-sm" onclick="deleteAddress(' + a.id + ')">삭제</button></div>').join('');
+            } catch (e) { el.innerHTML = '<p class="empty-order">로드 실패</p>'; }
+        }
+
+        async function addAddress() {
+            const recipient = document.getElementById('addrRecipient').value.trim();
+            const phone = document.getElementById('addrPhone').value.trim();
+            const address = document.getElementById('addrAddress').value.trim();
+            if (!recipient || !phone || !address) { alert('수령인, 연락처, 주소를 입력하세요.'); return; }
+            try {
+                const res = await fetch(API + '/api/addresses', { method: 'POST', headers: headers(), body: JSON.stringify({ label: document.getElementById('addrLabel').value.trim(), recipient, phone, address, isDefault: document.getElementById('addrDefault').checked }) });
+                const data = await res.json();
+                if (data.success) { alert('배송지가 추가되었습니다.'); document.getElementById('addrRecipient').value = ''; document.getElementById('addrPhone').value = ''; document.getElementById('addrAddress').value = ''; document.getElementById('addrLabel').value = ''; loadAddresses(); }
+                else alert(data.message || '추가 실패');
+            } catch (e) { alert('추가 실패'); }
+        }
+
+        async function deleteAddress(id) {
+            if (!confirm('이 배송지를 삭제하시겠습니까?')) return;
+            try {
+                const res = await fetch(API + '/api/addresses/' + id, { method: 'DELETE', headers: headers() });
+                if ((await res.json()).success) loadAddresses();
+            } catch (e) {}
+        }
+
+        function fillProfileForm() {
+            document.getElementById('editName').value = currentUser.name || '';
+            document.getElementById('editEmail').value = currentUser.email || '';
+            document.getElementById('editPhone').value = currentUser.phone || '';
+            document.getElementById('editAddress').value = currentUser.address || '';
+            document.getElementById('editPharmacyName').value = currentUser.pharmacyName || '';
+            document.getElementById('editBizNo').value = currentUser.bizNo || '';
+            document.getElementById('editPharmacyCode').value = currentUser.pharmacyCode || '';
+            document.getElementById('editTaxEmail').value = currentUser.taxEmail || '';
+        }
+
+        async function saveProfile() {
+            const payload = {
+                name: document.getElementById('editName').value.trim(),
+                email: document.getElementById('editEmail').value.trim(),
+                phone: document.getElementById('editPhone').value.trim(),
+                address: document.getElementById('editAddress').value.trim(),
+                pharmacyName: document.getElementById('editPharmacyName').value.trim(),
+                bizNo: document.getElementById('editBizNo').value.trim(),
+                pharmacyCode: document.getElementById('editPharmacyCode').value.trim(),
+                taxEmail: document.getElementById('editTaxEmail').value.trim()
+            };
+            try {
+                const res = await fetch(API + '/api/auth/me', { method: 'PATCH', headers: headers(), body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (data.success) { currentUser = data.user; localStorage.setItem('currentUser', JSON.stringify(currentUser)); renderProfile(); renderInfoTable(); alert('저장되었습니다.'); }
+                else alert(data.message || '저장 실패');
+            } catch (e) { alert('저장 실패'); }
         }
 
         init();

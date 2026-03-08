@@ -131,8 +131,11 @@
             }
             try {
                 const res = await fetch(API + '/api/cart', { headers: headers() });
-                const data = await res.json();
-                if (!data.success) {
+                const text = await res.text();
+                let data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (_) { }
+                if (!data || !data.success) {
+                    if (!res.ok && text) console.error('장바구니 API 오류', res.status, text.slice(0, 200));
                     document.getElementById('emptyState').style.display = 'block';
                     return;
                 }
@@ -145,6 +148,7 @@
                 if (user.address) document.getElementById('deliveryAddress').value = user.address;
                 document.getElementById('checkoutForm').style.display = 'block';
             } catch (e) {
+                console.error('장바구니 로드 실패', e);
                 document.getElementById('emptyState').style.display = 'block';
             }
         }
@@ -183,19 +187,22 @@
                         paymentMethod: 'bank_transfer'
                     })
                 });
-                const data = await res.json();
-                if (data.success) {
+                const text = await res.text();
+                let data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (_) { }
+                if (data && data.success) {
                     for (const i of cartItems) {
                         await fetch(API + '/api/cart/' + i.id, { method: 'DELETE', headers: headers() }).catch(() => {});
                     }
                     alert('주문이 접수되었습니다. 안내된 계좌로 입금해 주세요.');
                     window.location.href = 'mypage.html';
                 } else {
-                    alert(data.message || '주문 처리에 실패했습니다.');
+                    alert((data && data.message) || '주문 처리에 실패했습니다.');
                     this.disabled = false;
                 }
             } catch (e) {
-                alert('주문 서버에 연결할 수 없습니다. maydin.co.kr 에서 접속해 주세요.');
+                console.error('주문 연결 실패', e);
+                alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.');
                 this.disabled = false;
             }
         });

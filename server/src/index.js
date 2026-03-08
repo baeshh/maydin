@@ -42,6 +42,12 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, message: 'MAYDIN API' });
 });
 
+// 에러 시에도 HTML 대신 JSON 반환 (프론트에서 "연결 실패"로 오해 방지)
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ success: false, message: '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' });
+});
+
 app.listen(PORT, () => {
   console.log(`MAYDIN API running at http://localhost:${PORT}`);
 });

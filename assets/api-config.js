@@ -1,4 +1,4 @@
-// API 기본 URL (로컬/EC2/ GitHub Pages 구분)
+// API 기본 URL (로컬 / maydin.co.kr / GitHub Pages 구분)
 (function() {
   var h = location.hostname;
   var isLocal = !h || h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:';
@@ -6,10 +6,10 @@
   if (isLocal) {
     window.API_BASE = 'http://localhost:3001';
   } else if (h === 'baeshh.github.io') {
-    // GitHub Pages(HTTPS)에서는 반드시 HTTPS로 API 호출 (mixed content 방지). EC2에 SSL 없으면 이 사이트 대신 EC2 주소로 접속하세요.
-    window.API_BASE = 'https://3.26.7.116';
+    // GitHub Pages에서는 운영 도메인으로 API 호출 (장바구니/주문 등 전부 사용 가능)
+    window.API_BASE = 'https://maydin.co.kr';
   } else {
-    // EC2 등 같은 호스트에서 서빙 시 같은 origin (Nginx가 /api → 3001 프록시 필요)
+    // maydin.co.kr, 3.26.7.116 등 서버에서 서빙 시 같은 origin
     window.API_BASE = '';
   }
 })();

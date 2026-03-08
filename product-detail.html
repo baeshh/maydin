@@ -671,7 +671,7 @@
             }).then(function(r) { return r.json(); }).then(function(d) {
                 if (d.success) window.location.href = 'checkout.html';
                 else alert(d.message || '실패');
-            }).catch(function() { alert('API 서버에 연결할 수 없습니다. 로컬에서는 server 폴더에서 npm start를 실행했는지 확인하세요.'); });
+            }).catch(function() { alert('장바구니/주문에 연결할 수 없습니다. maydin.co.kr 에서 접속해 주세요.'); });
         }
 
         function handleCart() {
@@ -686,7 +686,7 @@
                 }).then(function(r) { return r.json(); }).then(function(d) {
                     if (d.success) alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
                     else alert(d.message || '실패');
-                }).catch(function() { alert('API 서버에 연결할 수 없습니다. 로컬에서는 server 폴더에서 npm start를 실행했는지 확인하세요.'); });
+                }).catch(function() { alert('장바구니/주문에 연결할 수 없습니다. maydin.co.kr 에서 접속해 주세요.'); });
             } else {
                 var cart = JSON.parse(localStorage.getItem('pharmacyCart') || '[]');
                 cart.push({ id: currentProduct.id, name: currentProduct.name, price: opt.price, optionLabel: opt.label });

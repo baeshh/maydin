@@ -668,6 +668,7 @@
                 if (!url || typeof url !== 'string') return '';
                 var u = url.trim();
                 if (/^https?:\/\//i.test(u)) return u;
+                if (u.indexOf('/uploads/') === 0) u = '/api' + u;
                 var base = (window.API_BASE || '').replace(/\/$/, '');
                 return base + (u.indexOf('/') === 0 ? u : '/' + u);
             }

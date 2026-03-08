@@ -155,13 +155,21 @@
             }
         }
 
+        function toImageUrl(url) {
+            if (!url) return '';
+            let u = String(url).trim();
+            if (/^https?:\/\//i.test(u)) return u;
+            if (u.indexOf('/uploads/') === 0) u = '/api' + u;
+            const base = (API || '').replace(/\/api\/?$/, '').replace(/\/$/, '');
+            return base + (u.indexOf('/') === 0 ? u : '/' + u);
+        }
+
         function renderCart() {
-            const base = (API || '').replace(/\/api\/?$/, '');
             const total = cartItems.reduce((sum, i) => sum + (i.price || 0) * (i.qty || 1), 0);
             document.getElementById('cartItems').innerHTML = cartItems.map(i => {
                 const name = (i.productName || '') + (i.optionLabel ? ' ' + i.optionLabel : '');
                 const subtotal = (i.price || 0) * (i.qty || 1);
-                const imgSrc = i.imageUrl ? (base + (i.imageUrl.indexOf('/') === 0 ? '' : '/') + i.imageUrl) : '';
+                const imgSrc = toImageUrl(i.imageUrl);
                 const imgHtml = imgSrc ? '<img class="thumb" src="' + imgSrc + '" alt="">' : '';
                 return '<div class="cart-item"><div>' + imgHtml + '<div><div class="name">' + name + '</div><div class="sub">' + (i.price || 0).toLocaleString() + '원 × ' + (i.qty || 1) + '</div></div></div><div class="price">' + subtotal.toLocaleString() + '원</div></div>';
             }).join('');

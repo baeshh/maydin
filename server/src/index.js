@@ -36,6 +36,7 @@ app.use('/api/refunds', refundsRouter);
 app.use('/api/coupons', couponsRouter);
 app.use('/api/inquiries', inquiriesRouter);
 app.use('/api/addresses', addressesRouter);
+app.use('/api/uploads', express.static(uploadsDir));
 app.use('/uploads', express.static(uploadsDir));
 
 app.get('/api/posts', (req, res) => {

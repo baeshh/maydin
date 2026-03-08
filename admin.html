@@ -1096,10 +1096,18 @@
         let productImagesUrls = [];
         let productDetailImagesUrls = [];
 
+        function toImageUrl(url) {
+            if (!url) return '';
+            let u = String(url).trim();
+            if (/^https?:\/\//i.test(u)) return u;
+            if (u.indexOf('/uploads/') === 0) u = '/api' + u;
+            const base = (window.API_BASE || '').replace(/\/$/, '');
+            return base + (u.indexOf('/') === 0 ? u : '/' + u);
+        }
+
         function renderImagePreviews(containerId, urls, onRemove) {
             const el = document.getElementById(containerId);
-            const base = (window.API_BASE || '');
-            el.innerHTML = urls.map((url, i) => '<div class="preview-item"><img src="' + base + url + '" alt=""><button type="button" class="remove-btn" onclick="' + onRemove + '(' + i + ')">×</button></div>').join('');
+            el.innerHTML = urls.map((url, i) => '<div class="preview-item"><img src="' + toImageUrl(url) + '" alt=""><button type="button" class="remove-btn" onclick="' + onRemove + '(' + i + ')">×</button></div>').join('');
         }
 
         function removeProductImage(i) {

@@ -26,7 +26,7 @@ router.post('/upload', adminAuthMiddleware, (req, res, next) => {
       return res.status(400).json({ success: false, message: msg });
     }
     if (!req.file) return res.status(400).json({ success: false, message: '파일이 없습니다.' });
-    res.json({ success: true, url: '/uploads/' + req.file.filename });
+    res.json({ success: true, url: '/api/uploads/' + req.file.filename });
   });
 });
 

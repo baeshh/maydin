@@ -688,31 +688,28 @@
             var opt = getSelectedOption();
             if (!opt) { alert('제품을 선택해주세요.'); return; }
             var token = localStorage.getItem('token');
-            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1 };
-            if (token) {
-                var url = (window.API_BASE || '') + '/api/cart';
-                fetch(url, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                    body: JSON.stringify(item)
-                }).then(function(r) {
-                    return r.text().then(function(text) {
-                        var d; try { d = text ? JSON.parse(text) : null; } catch(e) { d = null; }
-                        if (!d && !r.ok) console.error('장바구니 API 오류', r.status, url, text && text.slice(0, 200));
-                        return { ok: r.ok, data: d, status: r.status };
-                    });
-                }).then(function(x) {
-                    if (x.ok && x.data && x.data.success) alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
-                    else alert((x.data && x.data.message) || '실패');
-                }).catch(function(e) {
-                    console.error('장바구니 연결 실패', e && e.message, 'URL:', url, e);
-                    alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요. (F12 → Network에서 실패한 요청 확인)');
-                });
-            } else {
-                var cart = JSON.parse(localStorage.getItem('pharmacyCart') || '[]');
-                cart.push({ id: currentProduct.id, name: currentProduct.name, price: opt.price, optionLabel: opt.label });
-                localStorage.setItem('pharmacyCart', JSON.stringify(cart));
-                alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
+            if (!token) {
+                if (confirm('로그인이 필요합니다. 메인 페이지에서 로그인할까요?')) window.location.href = 'index.html';
+                return;
             }
+            var item = { productId: currentProduct.id, productName: currentProduct.name, optionLabel: opt.label, price: opt.price, qty: 1 };
+            var url = (window.API_BASE || '') + '/api/cart';
+            fetch(url, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(item)
+            }).then(function(r) {
+                return r.text().then(function(text) {
+                    var d; try { d = text ? JSON.parse(text) : null; } catch(e) { d = null; }
+                    if (!d && !r.ok) console.error('장바구니 API 오류', r.status, url, text && text.slice(0, 200));
+                    return { ok: r.ok, data: d, status: r.status };
+                });
+            }).then(function(x) {
+                if (x.ok && x.data && x.data.success) alert(currentProduct.name + '이(가) 장바구니에 추가되었습니다.');
+                else alert((x.data && x.data.message) || '실패');
+            }).catch(function(e) {
+                console.error('장바구니 연결 실패', e && e.message, 'URL:', url, e);
+                alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요. (F12 → Network에서 실패한 요청 확인)');
+            });
         }
 
         init();

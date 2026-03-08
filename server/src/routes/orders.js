@@ -48,14 +48,20 @@ router.post('/', (req, res) => {
 
     const payment_method = paymentMethod || 'bank_transfer';
 
-    const stmt = db.prepare(`
-      INSERT INTO orders (user_id, user_license, user_email, items, total, status, delivery_address, payment_method)
-      VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
-    `);
-
     const email = userEmail || bodyEmail || null;
-    const result = stmt.run(userId || 0, userLicense || null, email, JSON.stringify(items), orderTotal, finalAddress, payment_method);
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(result.lastInsertRowid);
+    const createOrder = db.transaction(() => {
+      const stmt = db.prepare(`
+        INSERT INTO orders (user_id, user_license, user_email, items, total, status, delivery_address, payment_method)
+        VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+      `);
+      const result = stmt.run(userId || 0, userLicense || null, email, JSON.stringify(items), orderTotal, finalAddress, payment_method);
+      if (userId) {
+        db.prepare('DELETE FROM cart WHERE user_id = ?').run(userId);
+      }
+      return db.prepare('SELECT * FROM orders WHERE id = ?').get(result.lastInsertRowid);
+    });
+
+    const order = createOrder();
 
     return res.json({
       success: true,

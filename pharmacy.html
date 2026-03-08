@@ -428,6 +428,11 @@
 
         async function init() {
             currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            var token = localStorage.getItem('token');
+            if (currentUser && !token) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+            }
             try {
                 var res = await fetch((window.API_BASE || '') + '/api/products');
                 var data = await res.json();
@@ -437,7 +442,6 @@
                     });
                 }
             } catch (e) { console.warn('API 연결 실패, 기본 상품 사용:', e); }
-            var token = localStorage.getItem('token');
             if (currentUser && token) {
                 try {
                     var cartRes = await fetch((window.API_BASE || '') + '/api/cart', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -445,7 +449,16 @@
                     var cartData = null;
                     try { cartData = cartText ? JSON.parse(cartText) : null; } catch (_) { }
                     if (cartData && cartData.success && cartData.items && cartData.items.length) {
-                        cart = cartData.items.map(function(i) { return { id: i.productId, name: i.productName, price: i.price, qty: i.qty }; });
+                        cart = cartData.items.map(function(i) {
+                            return {
+                                id: i.id,
+                                productId: i.productId,
+                                name: i.productName,
+                                optionLabel: i.optionLabel,
+                                price: i.price,
+                                qty: i.qty
+                            };
+                        });
                     }
                     if (!cartData && !cartRes.ok) console.warn('장바구니 로드 실패', cartRes.status, cartText && cartText.slice(0, 150));
                 } catch (e) { console.warn('장바구니 로드 오류', e); }
@@ -509,6 +522,7 @@
 
         function handleLogout() {
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
             currentUser = null;
             cart = [];
             renderUserArea();
@@ -559,7 +573,16 @@
                     });
                 }).then(function(x) {
                     if (x.ok && x.data && x.data.success) {
-                        cart = (x.data.items || []).map(function(i) { return { id: i.productId, name: i.productName, price: i.price, qty: i.qty }; });
+                        cart = (x.data.items || []).map(function(i) {
+                            return {
+                                id: i.id,
+                                productId: i.productId,
+                                name: i.productName,
+                                optionLabel: i.optionLabel,
+                                price: i.price,
+                                qty: i.qty
+                            };
+                        });
                         renderUserArea();
                         alert(p.name + '이(가) 장바구니에 추가되었습니다.');
                     } else alert((x.data && x.data.message) || '실패');
@@ -568,8 +591,8 @@
                     alert('서버에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요. (F12 → Network에서 실패한 요청 확인)');
                 });
             } else {
-                cart.push(p);
-                alert(p.name + '이(가) 장바구니에 추가되었습니다.');
+                alert('로그인이 필요합니다.');
+                window.location.href = 'index.html';
             }
         }
 

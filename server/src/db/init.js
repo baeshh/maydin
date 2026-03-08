@@ -195,9 +195,12 @@ if (!ordersCols.includes('payment_method')) db.exec("ALTER TABLE orders ADD COLU
 if (!ordersCols.includes('tracking_company')) db.exec('ALTER TABLE orders ADD COLUMN tracking_company TEXT');
 if (!ordersCols.includes('tracking_number')) db.exec('ALTER TABLE orders ADD COLUMN tracking_number TEXT');
 if (!ordersCols.includes('paid_at')) db.exec('ALTER TABLE orders ADD COLUMN paid_at DATETIME');
+if (!cartCols.includes('product_id')) db.exec('ALTER TABLE cart ADD COLUMN product_id INTEGER');
 if (!cartCols.includes('product_name')) db.exec('ALTER TABLE cart ADD COLUMN product_name TEXT');
 if (!cartCols.includes('option_label')) db.exec('ALTER TABLE cart ADD COLUMN option_label TEXT');
+if (!cartCols.includes('price')) db.exec('ALTER TABLE cart ADD COLUMN price INTEGER');
 if (!cartCols.includes('qty')) db.exec('ALTER TABLE cart ADD COLUMN qty INTEGER DEFAULT 1');
+if (!cartCols.includes('created_at')) db.exec('ALTER TABLE cart ADD COLUMN created_at DATETIME');
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)'); } catch (_) {}
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_cart_user ON cart(user_id)'); } catch (_) {}
 

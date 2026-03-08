@@ -114,6 +114,17 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 `);
 
+// 기존 DB에 컬럼 추가 (이미 있으면 무시)
+const userCols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+const ordersCols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name);
+if (!userCols.includes('address')) db.exec('ALTER TABLE users ADD COLUMN address TEXT');
+if (!userCols.includes('status')) db.exec('ALTER TABLE users ADD COLUMN status TEXT DEFAULT \'pending\'');
+if (!userCols.includes('open_date')) db.exec('ALTER TABLE users ADD COLUMN open_date TEXT');
+if (!userCols.includes('approved_at')) db.exec('ALTER TABLE users ADD COLUMN approved_at DATETIME');
+if (!userCols.includes('approved_by')) db.exec('ALTER TABLE users ADD COLUMN approved_by INTEGER');
+if (!ordersCols.includes('delivery_address')) db.exec('ALTER TABLE orders ADD COLUMN delivery_address TEXT');
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)'); } catch (_) {}
+
 // 시드 데이터
 const productCount = db.prepare('SELECT COUNT(*) as cnt FROM products').get();
 if (productCount.cnt === 0) {
@@ -164,8 +175,8 @@ const testUser = db.prepare('SELECT id FROM users WHERE license = ?').get('TEST0
 if (!testUser) {
   const hash = bcrypt.hashSync('test1234', 10);
   db.prepare(`
-    INSERT INTO users (license, password, name, email, phone, pharmacy_name, biz_no)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO users (license, password, name, email, phone, pharmacy_name, biz_no, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'approved')
   `).run('TEST001', hash, '테스트 약사', 'test@maydin.kr', '010-0000-0000', '메이딘 테스트약국', '123-45-67890');
   console.log('테스트 약사 계정 생성: 면허번호 TEST001 / 비밀번호 test1234');
 }

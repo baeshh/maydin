@@ -68,6 +68,9 @@
         .status-shipped { background: #d1ecf1; color: #0c5460; }
         .status-delivered { background: #d4edda; color: #155724; }
         .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-withdrawn { background: #e2e3e5; color: #383d41; }
 
         /* 폼 모달 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
@@ -118,6 +121,7 @@
                 <a href="#" class="active" data-tab="dashboard">대시보드</a>
                 <a href="#" data-tab="products">상품 관리</a>
                 <a href="#" data-tab="orders">주문 관리</a>
+                <a href="#" data-tab="users">회원 관리</a>
                 <a href="#" data-tab="posts">블로그/소식</a>
                 <a href="index.html" target="_blank">홈페이지 보기 ↗</a>
             </nav>
@@ -154,8 +158,20 @@
                         <div class="card-title">주문 목록</div>
                         <div class="table-wrap">
                             <table>
-                                <thead><tr><th>주문번호</th><th>구매자</th><th>금액</th><th>상태</th><th>주문일</th><th></th></tr></thead>
+                                <thead><tr><th>주문번호</th><th>구매자</th><th>배송지</th><th>금액</th><th>상태</th><th>주문일</th><th></th></tr></thead>
                                 <tbody id="orderList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="panel-users">
+                    <div class="card">
+                        <div class="card-title">회원 목록 (가입 정보·승인/거절/탈퇴/삭제)</div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>ID</th><th>면허번호</th><th>이름</th><th>이메일</th><th>약국명</th><th>상태</th><th>가입일</th><th></th></tr></thead>
+                                <tbody id="userList"></tbody>
                             </table>
                         </div>
                     </div>
@@ -242,6 +258,17 @@
         </div>
     </div>
 
+    <!-- 회원 상세 모달 -->
+    <div class="modal" id="userDetailModal">
+        <div class="modal-content" style="max-width: 560px;">
+            <h3>회원 상세 정보</h3>
+            <div id="userDetailBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background:#eee" onclick="closeUserDetail()">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 글 모달 -->
     <div class="modal" id="postModal">
         <div class="modal-content">
@@ -323,9 +350,11 @@
             loadStats();
             loadProducts();
             loadOrders();
+            loadUsers();
             loadPosts();
         }
 
+        let usersCache = [];
         document.querySelectorAll('.admin-sidebar a[data-tab]').forEach(a => {
             a.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -333,6 +362,7 @@
                 document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
                 this.classList.add('active');
                 document.getElementById('panel-' + this.dataset.tab).classList.add('active');
+                if (this.dataset.tab === 'users') loadUsers();
             });
         });
 
@@ -381,7 +411,7 @@
                 const data = await res.json();
                 const tbody = document.getElementById('orderList');
                 if (!data.success || !data.orders.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">주문 내역이 없습니다.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">주문 내역이 없습니다.</td></tr>';
                     return;
                 }
                 ordersCache = data.orders;
@@ -389,16 +419,18 @@
                 tbody.innerHTML = data.orders.map(o => {
                     const items = (o.items || []).slice(0, 2).map(i => i.name).join(', ');
                     const more = (o.items || []).length > 2 ? ' 외 ' + ((o.items || []).length - 2) + '건' : '';
+                    const addr = o.deliveryAddress || o.userAddress || '-';
                     return `<tr>
                         <td>#${o.id}</td>
                         <td>${o.userName || o.userLicense || o.userEmail || '-'}<br><small>${items}${more}</small></td>
+                        <td style="max-width:180px;font-size:0.85rem;">${addr}</td>
                         <td>${o.total.toLocaleString()}원</td>
                         <td><select class="status status-${o.status}" onchange="updateOrderStatus(${o.id}, this.value)">${Object.entries(statusMap).map(([k,v]) => '<option value="'+k+'"'+(o.status===k?' selected':'')+'>'+v+'</option>').join('')}</select></td>
                         <td>${(o.createdAt || '').slice(0,10)}</td>
                         <td><button class="btn-sm" onclick="openOrderDetail(${o.id})">결제/상세</button></td>
                     </tr>`;
                 }).join('');
-            } catch (e) { document.getElementById('orderList').innerHTML = '<tr><td colspan="6" class="empty-msg">로드 실패</td></tr>'; }
+            } catch (e) { document.getElementById('orderList').innerHTML = '<tr><td colspan="7" class="empty-msg">로드 실패</td></tr>'; }
         }
 
         function openOrderDetail(orderId) {
@@ -406,6 +438,7 @@
             if (!o) return;
             const statusMap = { pending: '입금대기', paid: '결제완료', preparing: '상품준비중', shipped: '배송중', delivered: '배송완료', cancelled: '취소' };
             const itemsHtml = (o.items || []).map(i => '<tr><td>' + (i.name || '-') + '</td><td>' + (i.qty || 1) + '</td><td>' + (i.price || 0).toLocaleString() + '원</td></tr>').join('');
+            const deliveryAddr = o.deliveryAddress || o.userAddress || '-';
             document.getElementById('orderDetailBody').innerHTML =
                 '<div style="margin-bottom:20px;"><strong>주문번호</strong> #' + o.id + ' &nbsp; <span class="status status-' + o.status + '">' + (statusMap[o.status] || o.status) + '</span></div>' +
                 '<div style="background:#f5f7f6;padding:16px;border-radius:8px;margin-bottom:16px;">' +
@@ -415,6 +448,7 @@
                 '<div>이메일: ' + (o.userEmail || '-') + '</div>' +
                 '<div>연락처: ' + (o.userPhone || '-') + '</div>' +
                 '<div>약국명: ' + (o.pharmacyName || '-') + '</div>' +
+                '<div style="margin-top:8px;"><strong>배송지</strong>: ' + deliveryAddr + '</div>' +
                 '</div>' +
                 '<div style="font-weight:700;margin-bottom:8px;">주문 상품</div>' +
                 '<table style="width:100%;margin-bottom:16px;"><thead><tr><th>상품명</th><th>수량</th><th>금액</th></tr></thead><tbody>' + itemsHtml + '</tbody></table>' +
@@ -432,6 +466,79 @@
                 });
                 if ((await res.json()).success) loadOrders();
             } catch (e) { alert('저장 실패'); }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch(API + '/api/admin/users', { headers: headers() });
+                const data = await res.json();
+                const tbody = document.getElementById('userList');
+                if (!data.success || !data.users.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">가입 회원이 없습니다.</td></tr>';
+                    return;
+                }
+                usersCache = data.users;
+                const statusLabel = { pending: '승인대기', approved: '승인', rejected: '거절', withdrawn: '탈퇴' };
+                tbody.innerHTML = data.users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${u.license || '-'}</td>
+                        <td>${u.name || '-'}</td>
+                        <td>${u.email || '-'}</td>
+                        <td>${u.pharmacyName || '-'}</td>
+                        <td><span class="status status-${u.status || 'pending'}">${statusLabel[u.status] || u.status}</span></td>
+                        <td>${(u.createdAt || '').slice(0,10)}</td>
+                        <td>
+                            <button class="btn-sm" onclick="openUserDetail(${u.id})">상세</button>
+                            ${(u.status === 'pending') ? '<button class="btn-sm" onclick="updateUserStatus('+u.id+',\'approved\')">승인</button><button class="btn-sm danger" onclick="updateUserStatus('+u.id+',\'rejected\')">거절</button>' : ''}
+                            ${(u.status === 'approved') ? '<button class="btn-sm" onclick="updateUserStatus('+u.id+',\'withdrawn\')">탈퇴</button>' : ''}
+                            <button class="btn-sm danger" onclick="deleteUser(${u.id}, \''+(u.name||'').replace(/'/g,"\\'")+'\')">삭제</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { document.getElementById('userList').innerHTML = '<tr><td colspan="8" class="empty-msg">로드 실패</td></tr>'; }
+        }
+
+        function openUserDetail(id) {
+            const u = usersCache.find(x => x.id === id);
+            if (!u) return;
+            const statusLabel = { pending: '승인대기', approved: '승인', rejected: '거절', withdrawn: '탈퇴' };
+            document.getElementById('userDetailBody').innerHTML =
+                '<div style="background:#f5f7f6;padding:16px;border-radius:8px;">' +
+                '<div><strong>면허번호</strong>: ' + (u.license || '-') + '</div>' +
+                '<div><strong>이름</strong>: ' + (u.name || '-') + '</div>' +
+                '<div><strong>이메일</strong>: ' + (u.email || '-') + '</div>' +
+                '<div><strong>전화번호</strong>: ' + (u.phone || '-') + '</div>' +
+                '<div><strong>주소</strong>: ' + (u.address || '-') + '</div>' +
+                '<div><strong>약국명</strong>: ' + (u.pharmacyName || '-') + '</div>' +
+                '<div><strong>사업자번호</strong>: ' + (u.bizNo || '-') + '</div>' +
+                '<div><strong>개업일자</strong>: ' + (u.openDate || '-') + '</div>' +
+                '<div><strong>요양기관기호</strong>: ' + (u.pharmacyCode || '-') + '</div>' +
+                '<div><strong>상태</strong>: <span class="status status-' + (u.status || 'pending') + '">' + (statusLabel[u.status] || u.status) + '</span></div>' +
+                '<div><strong>가입일</strong>: ' + (u.createdAt || '-') + '</div>' +
+                '</div>';
+            document.getElementById('userDetailModal').classList.add('active');
+        }
+        function closeUserDetail() { document.getElementById('userDetailModal').classList.remove('active'); }
+
+        async function updateUserStatus(id, status) {
+            const msg = { approved: '승인', rejected: '거절', withdrawn: '탈퇴 처리' }[status];
+            if (!confirm('이 회원을 ' + msg + ' 하시겠습니까?')) return;
+            try {
+                const res = await fetch(API + '/api/admin/users/' + id, {
+                    method: 'PATCH', headers: headers(),
+                    body: JSON.stringify({ status })
+                });
+                if ((await res.json()).success) { loadUsers(); loadStats(); closeUserDetail(); }
+            } catch (e) { alert('처리 실패'); }
+        }
+
+        async function deleteUser(id, name) {
+            if (!confirm('"' + (name || '회원') + '" 회원을 삭제하시겠습니까? 복구할 수 없습니다.')) return;
+            try {
+                const res = await fetch(API + '/api/admin/users/' + id, { method: 'DELETE', headers: headers() });
+                if ((await res.json()).success) { loadUsers(); loadStats(); closeUserDetail(); }
+            } catch (e) { alert('삭제 실패'); }
         }
 
         async function loadPosts() {

@@ -97,10 +97,48 @@ router.delete('/products/:id', adminAuthMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
+// ---- 회원 관리 ----
+router.get('/users', adminAuthMiddleware, (req, res) => {
+  const rows = db.prepare(`
+    SELECT id, license, name, email, phone, address, pharmacy_name, biz_no, open_date, pharmacy_code, pharmacy_univ, tax_email, status, created_at, approved_at
+    FROM users ORDER BY created_at DESC
+  `).all();
+  const list = rows.map(u => ({
+    id: u.id, license: u.license, name: u.name, email: u.email, phone: u.phone, address: u.address,
+    pharmacyName: u.pharmacy_name, bizNo: u.biz_no, openDate: u.open_date, pharmacyCode: u.pharmacy_code, pharmacyUniv: u.pharmacy_univ, taxEmail: u.tax_email,
+    status: u.status || 'pending', createdAt: u.created_at, approvedAt: u.approved_at
+  }));
+  res.json({ success: true, users: list });
+});
+
+router.patch('/users/:id', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { status } = req.body;
+  const allowed = ['pending', 'approved', 'rejected', 'withdrawn'];
+  if (!status || !allowed.includes(status)) {
+    return res.status(400).json({ success: false, message: '유효한 상태가 아닙니다.' });
+  }
+  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+  if (!user) return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+  if (status === 'approved') {
+    db.prepare('UPDATE users SET status = ?, approved_at = CURRENT_TIMESTAMP, approved_by = ? WHERE id = ?').run(status, req.admin.id, id);
+  } else {
+    db.prepare('UPDATE users SET status = ? WHERE id = ?').run(status, id);
+  }
+  res.json({ success: true });
+});
+
+router.delete('/users/:id', adminAuthMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const r = db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  if (r.changes === 0) return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+  res.json({ success: true });
+});
+
 // ---- 주문 관리 (고객 정보 조인) ----
 router.get('/orders', adminAuthMiddleware, (req, res) => {
   const rows = db.prepare(`
-    SELECT o.*, u.name as user_name, u.phone as user_phone, u.pharmacy_name
+    SELECT o.*, u.name as user_name, u.phone as user_phone, u.pharmacy_name, u.address as user_address
     FROM orders o
     LEFT JOIN users u ON u.id = o.user_id
     ORDER BY o.created_at DESC
@@ -108,6 +146,8 @@ router.get('/orders', adminAuthMiddleware, (req, res) => {
   const list = rows.map(o => ({
     id: o.id, userId: o.user_id, userLicense: o.user_license, userEmail: o.user_email,
     userName: o.user_name, userPhone: o.user_phone, pharmacyName: o.pharmacy_name,
+    deliveryAddress: o.delivery_address || null,
+    userAddress: o.user_address || null,
     items: JSON.parse(o.items || '[]'), total: o.total, status: o.status, createdAt: o.created_at
   }));
   res.json({ success: true, orders: list });

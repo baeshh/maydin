@@ -25,7 +25,7 @@ router.post('/', (req, res) => {
     } catch (e) {}
   }
 
-  const { items, total, userEmail: bodyEmail } = req.body;
+  const { items, total, userEmail: bodyEmail, deliveryAddress } = req.body;
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ success: false, message: '주문 항목이 필요합니다.' });
   }
@@ -33,13 +33,19 @@ router.post('/', (req, res) => {
   const computedTotal = items.reduce((sum, i) => sum + (i.price || 0) * (i.qty || 1), 0);
   const orderTotal = typeof total === 'number' ? total : computedTotal;
 
+  let finalAddress = deliveryAddress || null;
+  if (userId && !finalAddress) {
+    const user = db.prepare('SELECT address FROM users WHERE id = ?').get(userId);
+    if (user && user.address) finalAddress = user.address;
+  }
+
   const stmt = db.prepare(`
-    INSERT INTO orders (user_id, user_license, user_email, items, total, status)
-    VALUES (?, ?, ?, ?, ?, 'pending')
+    INSERT INTO orders (user_id, user_license, user_email, items, total, status, delivery_address)
+    VALUES (?, ?, ?, ?, ?, 'pending', ?)
   `);
 
   const email = userEmail || bodyEmail || null;
-  const result = stmt.run(userId || 0, userLicense || null, email, JSON.stringify(items), orderTotal);
+  const result = stmt.run(userId || 0, userLicense || null, email, JSON.stringify(items), orderTotal, finalAddress);
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(result.lastInsertRowid);
 
   res.json({

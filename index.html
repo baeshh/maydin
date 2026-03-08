@@ -824,6 +824,7 @@
             font-size: 0.85rem;
         }
         .file-upload-row .file-name { font-size: 0.8rem; color: #666; margin-top: 4px; }
+        .register-section { margin-bottom: 24px; }
         .pharmacy-section-title {
             font-size: 0.95rem;
             font-weight: 800;
@@ -2468,116 +2469,111 @@
                 <div class="register-intro">
                     <ul>
                         <li>교육자료 및 쇼핑몰 이용은 <strong>개국 약사님</strong>만 가능합니다.</li>
-                        <li>약사면허증, 사업자등록증 사본을 직접 업로드 해주세요.</li>
+                        <li>가입 후 관리자 승인 시 로그인할 수 있습니다.</li>
                     </ul>
                 </div>
 
-                <div class="agreement-group">
-                    <div class="agreement-title">약관 동의</div>
-                    <label class="agreement-item">
-                        <input type="checkbox" id="agreeTerms" name="agreeTerms">
-                        <span>회원가입약관에 동의합니다.</span>
-                        <a href="javascript:void(0)" class="terms-link" onclick="event.preventDefault();event.stopPropagation();openTermsModal('membership')">보기</a>
-                    </label>
-                    <label class="agreement-item">
-                        <input type="checkbox" id="agreePrivacy" name="agreePrivacy">
-                        <span>개인정보 수집·이용에 동의합니다. (제3자·위탁업체 포함)</span>
-                        <a href="javascript:void(0)" class="terms-link" onclick="event.preventDefault();event.stopPropagation();openTermsModal('privacy')">보기</a>
-                    </label>
-                    <label class="agreement-item required">
-                        <input type="checkbox" id="agreeAge" name="agreeAge" required>
-                        <span>만 14세 이상입니다. (필수)</span>
-                    </label>
-                    <label class="agreement-item required">
-                        <input type="checkbox" id="agreeTrade" name="agreeTrade" required>
-                        <span>메이딘 거래 규정에 동의합니다. (필수)</span>
-                        <a href="javascript:void(0)" class="terms-link" onclick="event.preventDefault();event.stopPropagation();openTermsModal('trade')">보기</a>
-                    </label>
-                </div>
-
-                <div class="form-group">
-                    <label>이름 *</label>
-                    <input type="text" id="registerName" placeholder="이름을 입력하세요" required>
-                </div>
-
-                <div class="pharmacy-section-title">사업자 정보 <span class="required-note">*는 필수 입력 사항입니다.</span></div>
-
-                <div class="form-group">
-                    <label>세금계산서 받을 이메일 *</label>
-                    <input type="email" id="registerTaxEmail" placeholder="세금계산서 수령 이메일을 입력하세요" required>
-                    <div class="radio-group tax-email-radio">
-                        <span class="radio-question">이메일로 받으시겠습니까?</span>
-                        <div class="radio-options">
-                            <label><input type="radio" name="emailOptIn" value="yes" checked> 예</label>
-                            <label><input type="radio" name="emailOptIn" value="no"> 아니오</label>
+                <div class="register-section">
+                    <div class="pharmacy-section-title">1️⃣ 약사 인증</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>약사면허번호 *</label>
+                            <input type="text" id="registerLicense" placeholder="숫자만 입력하세요" required>
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="checkLicenseDuplicate()">중복확인</button>
+                    </div>
+                    <div class="file-upload-row form-group">
+                        <div style="flex:1;">
+                            <label>약사면허증 업로드 *</label>
+                            <input type="file" id="registerLicenseCert" accept=".pdf,.jpg,.jpeg,.png" required onchange="document.getElementById('licenseCertFileName').textContent = this.files[0] ? this.files[0].name : ''">
+                            <div class="file-name" id="licenseCertFileName"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-row">
+                <div class="register-section">
+                    <div class="pharmacy-section-title">2️⃣ 계정 정보</div>
                     <div class="form-group">
-                        <label>사업자번호 *</label>
-                        <input type="text" id="registerBizNo" placeholder="숫자만 10자리 (예: 1234567890)" required maxlength="12">
+                        <label>이메일 *</label>
+                        <input type="email" id="registerEmail" placeholder="이메일을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호 *</label>
+                        <input type="password" id="registerPassword" placeholder="비밀번호를 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label>전화번호 *</label>
+                        <input type="tel" id="registerPhone" placeholder="전화번호를 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label>이름 *</label>
+                        <input type="text" id="registerName" placeholder="이름을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label>주소 *</label>
+                        <input type="text" id="registerAddress" placeholder="주소를 입력하세요" required>
+                    </div>
+                </div>
+
+                <div class="register-section">
+                    <div class="pharmacy-section-title">3️⃣ 약국 정보</div>
+                    <div class="file-upload-row form-group">
+                        <div style="flex:1;">
+                            <label>사업자등록증 업로드 *</label>
+                            <input type="file" id="registerBizCert" accept=".pdf,.jpg,.jpeg,.png" required onchange="document.getElementById('bizCertFileName').textContent = this.files[0] ? this.files[0].name : ''">
+                            <div class="file-name" id="bizCertFileName"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>사업자번호 *</label>
+                            <input type="text" id="registerBizNo" placeholder="숫자만 10자리" required maxlength="12">
+                        </div>
+                        <button type="button" class="btn-secondary" id="btnValidateBiz" onclick="validateBusiness()">인증</button>
+                    </div>
+                    <p class="form-hint" id="bizValidateResult" style="display:none; margin-top:4px; font-size:0.9rem;"></p>
+                    <p class="form-hint" style="margin-top:2px; font-size:0.85rem; color:#666;">인증 시 위 계정 정보의 이름, 아래 약국명이 사용됩니다.</p>
+                    <div class="form-group">
+                        <label>약국명 *</label>
+                        <input type="text" id="registerPharmacyName" placeholder="약국명을 입력하세요" required>
                     </div>
                     <div class="form-group">
                         <label>개업일자 *</label>
                         <input type="text" id="registerOpenDate" placeholder="YYYYMMDD (예: 20200101)" required maxlength="8" pattern="[0-9]*" inputmode="numeric">
                     </div>
-                    <button type="button" class="btn-secondary" id="btnValidateBiz" onclick="validateBusiness()">사업자 정보 인증</button>
-                </div>
-                <p class="form-hint" id="bizValidateResult" style="display:none; margin-top:4px; font-size:0.9rem;"></p>
-                <p class="form-hint" style="margin-top:2px; font-size:0.85rem; color:#666;">사업자 정보 인증 시 위에 입력한 대표자성명(이름), 상호(약국명)이 사용됩니다.</p>
-                <div class="file-upload-row form-group">
-                    <div style="flex:1;">
-                        <label>사업자등록증 사본 *</label>
-                        <input type="file" id="registerBizCert" accept=".pdf,.jpg,.jpeg,.png" required onchange="document.getElementById('bizCertFileName').textContent = this.files[0] ? this.files[0].name : ''">
-                        <div class="file-name" id="bizCertFileName"></div>
-                    </div>
-                </div>
-
-                <div class="form-row">
                     <div class="form-group">
-                        <label>약사 면허번호 *</label>
-                        <input type="text" id="registerLicense" placeholder="숫자만 입력하세요" required>
-                    </div>
-                    <button type="button" class="btn-secondary" onclick="checkLicenseDuplicate()">중복확인</button>
-                </div>
-                <div class="file-upload-row form-group">
-                    <div style="flex:1;">
-                        <label>약사면허증 사본 *</label>
-                        <input type="file" id="registerLicenseCert" accept=".pdf,.jpg,.jpeg,.png" required onchange="document.getElementById('licenseCertFileName').textContent = this.files[0] ? this.files[0].name : ''">
-                        <div class="file-name" id="licenseCertFileName"></div>
+                        <label>요양기관기호 *</label>
+                        <input type="text" id="registerPharmacyCode" placeholder="요양기관기호를 입력하세요" required>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>약국 요양기관기호 *</label>
-                    <input type="text" id="registerPharmacyCode" placeholder="요양기관기호를 입력하세요" required>
-                </div>
-                <div class="form-group">
-                    <label>약국명 *</label>
-                    <input type="text" id="registerPharmacyName" placeholder="약국명을 입력하세요" required>
-                </div>
-                <div class="form-group">
-                    <label>약학대학 *</label>
-                    <input type="text" id="registerPharmacyUniv" placeholder="졸업 약학대학을 입력하세요" required>
-                </div>
-                <div class="form-group">
-                    <label>가입경로 *</label>
-                    <input type="text" id="registerJoinPath" placeholder="예: 검색, 지인 소개 등" required>
-                </div>
-
-                <div class="form-group">
-                    <label>이메일 (로그인/연락용) *</label>
-                    <input type="email" id="registerEmail" placeholder="이메일을 입력하세요" required>
-                </div>
-                <div class="form-group">
-                    <label>비밀번호 *</label>
-                    <input type="password" id="registerPassword" placeholder="비밀번호를 입력하세요" required>
-                </div>
-                <div class="form-group">
-                    <label>전화번호 *</label>
-                    <input type="tel" id="registerPhone" placeholder="전화번호를 입력하세요" required>
+                <div class="register-section">
+                    <div class="pharmacy-section-title">4️⃣ 약관 동의</div>
+                    <label class="agreement-item" style="margin-bottom:12px;">
+                        <input type="checkbox" id="agreeAll" onchange="toggleAgreeAll(this)">
+                        <span><strong>전체 동의</strong></span>
+                    </label>
+                    <div class="agreement-group">
+                        <label class="agreement-item">
+                            <input type="checkbox" id="agreeTerms" name="agreeTerms">
+                            <span>회원가입약관</span>
+                            <a href="javascript:void(0)" class="terms-link" onclick="event.preventDefault();event.stopPropagation();openTermsModal('membership')">보기</a>
+                        </label>
+                        <label class="agreement-item">
+                            <input type="checkbox" id="agreePrivacy" name="agreePrivacy">
+                            <span>개인정보 수집·이용</span>
+                            <a href="javascript:void(0)" class="terms-link" onclick="event.preventDefault();event.stopPropagation();openTermsModal('privacy')">보기</a>
+                        </label>
+                        <label class="agreement-item required">
+                            <input type="checkbox" id="agreeAge" name="agreeAge" required>
+                            <span>만 14세 이상</span>
+                        </label>
+                        <label class="agreement-item required">
+                            <input type="checkbox" id="agreeTrade" name="agreeTrade" required>
+                            <span>메이딘 거래 규정</span>
+                            <a href="javascript:void(0)" class="terms-link" onclick="event.preventDefault();event.stopPropagation();openTermsModal('trade')">보기</a>
+                        </label>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary">회원가입</button>
@@ -3099,6 +3095,14 @@
             document.getElementById('pharmacy').classList.remove('active');
         }
 
+        function toggleAgreeAll(checkbox) {
+            var checked = checkbox.checked;
+            document.getElementById('agreeTerms').checked = checked;
+            document.getElementById('agreePrivacy').checked = checked;
+            document.getElementById('agreeAge').checked = checked;
+            document.getElementById('agreeTrade').checked = checked;
+        }
+
         // 회원가입 처리 (API 연동)
         async function handleRegister(event) {
             event.preventDefault();
@@ -3131,18 +3135,17 @@
                 return;
             }
 
-            var emailOptIn = document.querySelector('input[name="emailOptIn"]:checked');
             var payload = {
                 license: document.getElementById('registerLicense').value.trim(),
                 name: document.getElementById('registerName').value.trim(),
                 email: document.getElementById('registerEmail').value.trim(),
                 password: document.getElementById('registerPassword').value,
                 phone: document.getElementById('registerPhone').value.trim(),
-                taxEmail: document.getElementById('registerTaxEmail').value.trim(),
-                bizNo: document.getElementById('registerBizNo').value.trim(),
+                address: document.getElementById('registerAddress').value.trim(),
+                bizNo: document.getElementById('registerBizNo').value.trim().replace(/\D/g, ''),
+                openDate: document.getElementById('registerOpenDate').value.trim().replace(/\D/g, '').slice(0, 8),
                 pharmacyCode: document.getElementById('registerPharmacyCode').value.trim(),
-                pharmacyName: document.getElementById('registerPharmacyName').value.trim(),
-                pharmacyUniv: document.getElementById('registerPharmacyUniv').value.trim()
+                pharmacyName: document.getElementById('registerPharmacyName').value.trim()
             };
             try {
                 var res = await fetch((window.API_BASE || '') + '/api/auth/register', {
@@ -3152,14 +3155,12 @@
                 });
                 var data = await res.json();
                 if (data.success) {
-                    currentUser = data.user;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    localStorage.setItem('token', data.token);
-                    alert('회원가입이 완료되었습니다. 자동으로 로그인됩니다.');
+                    alert(data.message || '가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.');
+                    document.getElementById('registerForm').reset();
+                    document.getElementById('bizCertFileName').textContent = '';
+                    document.getElementById('licenseCertFileName').textContent = '';
                     switchTab('login');
                     closeLoginModal();
-                    updateNavAfterLogin();
-                    showPharmacySection();
                 } else {
                     alert(data.message || '회원가입에 실패했습니다.');
                 }
@@ -3167,9 +3168,6 @@
                 console.error(err);
                 alert('서버에 연결할 수 없습니다. 네트워크를 확인하거나 잠시 후 다시 시도해 주세요.');
             }
-            document.getElementById('registerForm').reset();
-            document.getElementById('bizCertFileName').textContent = '';
-            document.getElementById('licenseCertFileName').textContent = '';
         }
 
         async function validateBusiness() {
@@ -3224,17 +3222,22 @@
                 resultEl.style.color = '#c00';
             }
             btn.disabled = false;
-            btn.textContent = '사업자 정보 인증';
+            btn.textContent = '인증';
         }
-        function checkLicenseDuplicate() {
+        async function checkLicenseDuplicate() {
             var license = document.getElementById('registerLicense').value.trim();
             if (!license) { alert('약사 면허번호를 입력한 뒤 중복확인해 주세요.'); return; }
-            var users = JSON.parse(localStorage.getItem('pharmacyUsers') || '[]');
-            if (users.some(function(u) { return u.license === license; })) {
-                alert('이미 가입된 면허번호입니다.');
-                return;
+            try {
+                var res = await fetch((window.API_BASE || '') + '/api/auth/check-license?license=' + encodeURIComponent(license));
+                var data = await res.json();
+                if (data.available) {
+                    alert('사용 가능한 면허번호입니다.');
+                } else {
+                    alert('이미 가입된 면허번호입니다.');
+                }
+            } catch (e) {
+                alert('확인 중 오류가 발생했습니다.');
             }
-            alert('사용 가능한 면허번호입니다.');
         }
 
         // 제품 목록 표시 (API 연동)

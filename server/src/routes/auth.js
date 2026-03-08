@@ -15,13 +15,26 @@ function userToResponse(row) {
     name: rest.name,
     email: rest.email,
     phone: rest.phone,
+    address: rest.address,
     pharmacyName: rest.pharmacy_name,
     bizNo: rest.biz_no,
     pharmacyCode: rest.pharmacy_code,
     pharmacyUniv: rest.pharmacy_univ,
-    taxEmail: rest.tax_email
+    taxEmail: rest.tax_email,
+    openDate: rest.open_date,
+    status: rest.status || 'approved'
   };
 }
+
+// GET /api/auth/check-license?license=XXX — 면허번호 중복 확인 (회원가입용)
+router.get('/check-license', (req, res) => {
+  const license = (req.query.license || '').trim();
+  if (!license) {
+    return res.status(400).json({ available: false, message: '면허번호를 입력하세요.' });
+  }
+  const existing = db.prepare('SELECT id FROM users WHERE license = ?').get(license);
+  return res.json({ available: !existing });
+});
 
 // POST /api/auth/login
 router.post('/login', (req, res) => {
@@ -40,6 +53,17 @@ router.post('/login', (req, res) => {
     const ok = bcrypt.compareSync(password, user.password);
     if (!ok) {
       return res.status(401).json({ success: false, message: '비밀번호가 일치하지 않습니다.' });
+    }
+
+    const status = user.status || 'approved';
+    if (status === 'pending') {
+      return res.status(403).json({ success: false, message: '가입 승인 대기 중입니다. 관리자 승인 후 로그인할 수 있습니다.' });
+    }
+    if (status === 'rejected') {
+      return res.status(403).json({ success: false, message: '가입이 거절되었습니다.' });
+    }
+    if (status === 'withdrawn') {
+      return res.status(403).json({ success: false, message: '탈퇴된 계정입니다.' });
     }
 
     const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
@@ -120,31 +144,41 @@ router.post('/register', (req, res) => {
     const name = body.name ? String(body.name).trim() : '';
     const email = body.email ? String(body.email).trim() : null;
     const phone = body.phone ? String(body.phone).trim() : null;
+    const address = body.address ? String(body.address).trim() : null;
     const pharmacyName = body.pharmacyName ? String(body.pharmacyName).trim() : null;
     const bizNo = body.bizNo ? String(body.bizNo).trim() : null;
+    const openDate = body.openDate ? String(body.openDate).trim().replace(/\D/g, '').slice(0, 8) : null;
     const pharmacyCode = body.pharmacyCode ? String(body.pharmacyCode).trim() : null;
     const pharmacyUniv = body.pharmacyUniv ? String(body.pharmacyUniv).trim() : null;
     const taxEmail = body.taxEmail ? String(body.taxEmail).trim() : null;
 
-    if (!license || !password || !name) {
-      return res.status(400).json({ success: false, message: '면허번호, 비밀번호, 성명은 필수입니다.' });
+    if (!license || !password || !name || !email) {
+      return res.status(400).json({ success: false, message: '면허번호, 비밀번호, 성명, 이메일은 필수입니다.' });
     }
 
     const existing = db.prepare('SELECT id FROM users WHERE license = ?').get(license);
     if (existing) {
       return res.status(400).json({ success: false, message: '이미 가입된 면허번호입니다.' });
     }
+    const existingEmail = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    if (existingEmail) {
+      return res.status(400).json({ success: false, message: '이미 사용 중인 이메일입니다.' });
+    }
 
     const hash = bcrypt.hashSync(password, 10);
     const stmt = db.prepare(`
-      INSERT INTO users (license, password, name, email, phone, pharmacy_name, biz_no, pharmacy_code, pharmacy_univ, tax_email)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (license, password, name, email, phone, address, pharmacy_name, biz_no, open_date, pharmacy_code, pharmacy_univ, tax_email, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `);
-    stmt.run(license, hash, name, email, phone, pharmacyName, bizNo, pharmacyCode, pharmacyUniv, taxEmail);
+    stmt.run(license, hash, name, email, phone, address, pharmacyName, bizNo, openDate, pharmacyCode, pharmacyUniv, taxEmail);
 
     const user = db.prepare('SELECT * FROM users WHERE license = ?').get(license);
-    const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ success: true, user: userToResponse(user), token });
+    return res.json({
+      success: true,
+      pending: true,
+      message: '가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.',
+      user: userToResponse(user)
+    });
   } catch (e) {
     console.error('[auth/register]', e);
     return res.status(500).json({ success: false, message: e.message || '회원가입 처리 중 오류가 발생했습니다.' });
@@ -194,8 +228,15 @@ router.post('/kakao', async (req, res) => {
     if (!user) {
       const license = `K${kakaoId.slice(-8)}`;
       const hash = bcrypt.hashSync(kakaoId + JWT_SECRET, 10);
-      db.prepare('INSERT INTO users (license, password, name, email, kakao_id) VALUES (?, ?, ?, ?, ?)').run(license, hash, nickname, email, kakaoId);
+      db.prepare("INSERT INTO users (license, password, name, email, kakao_id, status) VALUES (?, ?, ?, ?, ?, 'pending')").run(license, hash, nickname, email, kakaoId);
       user = db.prepare('SELECT * FROM users WHERE kakao_id = ?').get(kakaoId);
+    }
+    const status = user.status || 'approved';
+    if (status === 'pending') {
+      return res.status(403).json({ success: false, message: '가입 승인 대기 중입니다.' });
+    }
+    if (status === 'rejected' || status === 'withdrawn') {
+      return res.status(403).json({ success: false, message: '이용이 제한된 계정입니다.' });
     }
 
     const token = jwt.sign({ userId: user.id, license: user.license }, JWT_SECRET, { expiresIn: '7d' });

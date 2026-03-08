@@ -262,13 +262,13 @@
         <aside class="sidebar">
             <h2>마이페이지</h2>
             <ul class="sidebar-menu">
-                <li><a href="#" class="active" data-panel="home">내 정보 홈</a></li>
-                <li><a href="#" data-panel="orders">주문/배송 조회</a></li>
-                <li><a href="#" data-panel="refunds">취소/교환/반품 내역</a></li>
-                <li><a href="#" data-panel="coupons">쿠폰/적립금</a></li>
-                <li><a href="#" data-panel="inquiries">1:1 문의내역</a></li>
-                <li><a href="#" data-panel="addresses">배송지 관리</a></li>
-                <li><a href="#" data-panel="profile">회원정보 수정</a></li>
+                <li><a href="javascript:void(0)" class="active" data-panel="home" onclick="switchPanel('home'); return false;">내 정보 홈</a></li>
+                <li><a href="javascript:void(0)" data-panel="orders" onclick="switchPanel('orders'); return false;">주문/배송 조회</a></li>
+                <li><a href="javascript:void(0)" data-panel="refunds" onclick="switchPanel('refunds'); return false;">취소/교환/반품 내역</a></li>
+                <li><a href="javascript:void(0)" data-panel="coupons" onclick="switchPanel('coupons'); return false;">쿠폰/적립금</a></li>
+                <li><a href="javascript:void(0)" data-panel="inquiries" onclick="switchPanel('inquiries'); return false;">1:1 문의내역</a></li>
+                <li><a href="javascript:void(0)" data-panel="addresses" onclick="switchPanel('addresses'); return false;">배송지 관리</a></li>
+                <li><a href="javascript:void(0)" data-panel="profile" onclick="switchPanel('profile'); return false;">회원정보 수정</a></li>
             </ul>
         </aside>
 
@@ -398,6 +398,21 @@
 
         function headers() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
 
+        function switchPanel(panelId) {
+            document.querySelectorAll('.sidebar-menu a[data-panel]').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.content-panel').forEach(x => { x.classList.remove('active'); x.style.display = 'none'; });
+            const link = document.querySelector('.sidebar-menu a[data-panel="' + panelId + '"]');
+            const panel = document.getElementById('panel-' + panelId);
+            if (link) link.classList.add('active');
+            if (panel) { panel.style.display = 'flex'; panel.classList.add('active'); }
+            if (panelId === 'orders') loadOrderListFull();
+            if (panelId === 'refunds') loadRefunds();
+            if (panelId === 'coupons') loadCoupons();
+            if (panelId === 'inquiries') loadInquiries();
+            if (panelId === 'addresses') loadAddresses();
+            if (panelId === 'profile') fillProfileForm();
+        }
+
         async function init() {
             currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
             token = localStorage.getItem('token');
@@ -407,22 +422,6 @@
                 return;
             }
             document.getElementById('logoutLink').addEventListener('click', handleLogout);
-            document.querySelectorAll('.sidebar-menu a[data-panel]').forEach(a => {
-                a.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    document.querySelectorAll('.sidebar-menu a').forEach(x => x.classList.remove('active'));
-                    document.querySelectorAll('.content-panel').forEach(x => { x.classList.remove('active'); x.style.display = 'none'; });
-                    this.classList.add('active');
-                    const panel = document.getElementById('panel-' + this.dataset.panel');
-                    if (panel) { panel.style.display = 'flex'; panel.classList.add('active'); }
-                    if (this.dataset.panel === 'orders') loadOrderListFull();
-                    if (this.dataset.panel === 'refunds') loadRefunds();
-                    if (this.dataset.panel === 'coupons') loadCoupons();
-                    if (this.dataset.panel === 'inquiries') loadInquiries();
-                    if (this.dataset.panel === 'addresses') loadAddresses();
-                    if (this.dataset.panel === 'profile') fillProfileForm();
-                });
-            });
             await refreshUser();
             renderProfile();
             renderInfoTable();

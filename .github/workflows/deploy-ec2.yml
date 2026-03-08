@@ -1,5 +1,6 @@
 # EC2 자동 배포 (main 푸시 시)
 # 필수 Secrets: EC2_HOST, SSH_PRIVATE_KEY
+# 선택 Secrets: ODCLOUD_SERVICE_KEY (사업자 정보 인증용, 없으면 해당 기능만 비활성화)
 # 서버 구조: 프로젝트 /home/ubuntu/apps/maydin, Nginx 프론트 /var/www/maydin, API 3001
 
 name: Deploy to EC2
@@ -35,10 +36,14 @@ jobs:
           chmod 644 key.pem
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ODCLOUD_SERVICE_KEY: ${{ secrets.ODCLOUD_SERVICE_KEY }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key_path: key.pem
+          envs: ODCLOUD_SERVICE_KEY
+          script_stop: true
           script: |
             set -e
             cd /home/ubuntu/apps/maydin
@@ -53,7 +58,13 @@ jobs:
               --exclude='*.db' \
               ./ /var/www/maydin/
             # 백엔드 (DB 초기화: 테이블·테스트 계정 TEST001 없으면 생성)
-            cd server
+            cd /home/ubuntu/apps/maydin/server
             npm ci --omit=dev
             npm run init-db
+            # OD Cloud 사업자 인증키: GitHub Secret → 서버 .env (Secret 설정 시에만)
+            if [ -n "$ODCLOUD_SERVICE_KEY" ]; then
+              touch .env
+              sed -i '/^ODCLOUD_SERVICE_KEY=/d' .env 2>/dev/null || true
+              echo "ODCLOUD_SERVICE_KEY=$ODCLOUD_SERVICE_KEY" >> .env
+            fi
             pm2 restart maydin-api

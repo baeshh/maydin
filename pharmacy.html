@@ -266,6 +266,8 @@
             display: flex;
             gap: 8px;
             margin-top: 12px;
+            position: relative;
+            z-index: 2;
         }
         .product-actions button {
             flex: 1;
@@ -520,8 +522,8 @@
                         <div class="product-price">${p.price.toLocaleString()}원 <span>${p.unit}</span></div>
                         <div class="tag">${p.tag}</div>
                         <div class="product-actions" onclick="event.stopPropagation()">
-                            <button class="btn-cart" onclick="addToCart(${p.id})">장바구니</button>
-                            <button class="btn-order" onclick="quickOrder(${p.id})">주문하기</button>
+                            <button type="button" class="btn-cart" onclick="event.stopPropagation(); addToCart(${p.id})">장바구니</button>
+                            <button type="button" class="btn-order" onclick="event.stopPropagation(); quickOrder(${p.id})">주문하기</button>
                         </div>
                     </div>
                 </article>
@@ -551,7 +553,7 @@
                         renderUserArea();
                         alert(p.name + '이(가) 장바구니에 추가되었습니다.');
                     } else alert(d.message || '실패');
-                }).catch(function() { alert('서버 연결 실패'); });
+                }).catch(function() { alert('API 서버에 연결할 수 없습니다. 로컬에서는 server 폴더에서 npm start를 실행했는지 확인하세요.'); });
             } else {
                 cart.push(p);
                 alert(p.name + '이(가) 장바구니에 추가되었습니다.');

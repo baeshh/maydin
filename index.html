@@ -2496,6 +2496,13 @@
                 </div>
 
                 <div class="form-group">
+                    <label>이름 *</label>
+                    <input type="text" id="registerName" placeholder="이름을 입력하세요" required>
+                </div>
+
+                <div class="pharmacy-section-title">사업자 정보 <span class="required-note">*는 필수 입력 사항입니다.</span></div>
+
+                <div class="form-group">
                     <label>세금계산서 받을 이메일 *</label>
                     <input type="email" id="registerTaxEmail" placeholder="세금계산서 수령 이메일을 입력하세요" required>
                     <div class="radio-group tax-email-radio">
@@ -2506,8 +2513,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="pharmacy-section-title">약국정보 <span class="required-note">*는 필수 입력 사항입니다.</span></div>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -2521,7 +2526,7 @@
                     <button type="button" class="btn-secondary" id="btnValidateBiz" onclick="validateBusiness()">사업자 정보 인증</button>
                 </div>
                 <p class="form-hint" id="bizValidateResult" style="display:none; margin-top:4px; font-size:0.9rem;"></p>
-                <p class="form-hint" style="margin-top:2px; font-size:0.85rem; color:#666;">사업자 정보 인증 시 아래 입력한 대표자성명(이름), 상호(약국명)이 사용됩니다.</p>
+                <p class="form-hint" style="margin-top:2px; font-size:0.85rem; color:#666;">사업자 정보 인증 시 위에 입력한 대표자성명(이름), 상호(약국명)이 사용됩니다.</p>
                 <div class="file-upload-row form-group">
                     <div style="flex:1;">
                         <label>사업자등록증 사본 *</label>
@@ -2562,10 +2567,6 @@
                     <input type="text" id="registerJoinPath" placeholder="예: 검색, 지인 소개 등" required>
                 </div>
 
-                <div class="form-group">
-                    <label>이름 *</label>
-                    <input type="text" id="registerName" placeholder="이름을 입력하세요" required>
-                </div>
                 <div class="form-group">
                     <label>이메일 (로그인/연락용) *</label>
                     <input type="email" id="registerEmail" placeholder="이메일을 입력하세요" required>

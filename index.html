@@ -3673,9 +3673,21 @@
                 var data = await res.json();
                 if (data.success && data.posts && data.posts.length) {
                     var fallbackImg = 'assets/nature-research-section.png';
+                    var apiBase = window.API_BASE || '';
                     el.innerHTML = data.posts.slice(0, 4).map(function(p) {
                         var d = formatNaverBlogDate(p.pubDate);
-                        var thumb = (p.thumbnail && /^https?:\/\//i.test(p.thumbnail)) ? p.thumbnail : fallbackImg;
+                        var thumb = fallbackImg;
+                        if (p.thumbnail) {
+                            if (/^https?:\/\//i.test(p.thumbnail)) {
+                                if (/pstatic\.net|phinf\.naver\.net/i.test(p.thumbnail)) {
+                                    thumb = apiBase + '/api/blog/naver/thumb?u=' + encodeURIComponent(p.thumbnail);
+                                } else {
+                                    thumb = p.thumbnail;
+                                }
+                            } else {
+                                thumb = apiBase + p.thumbnail;
+                            }
+                        }
                         var tag = escapeBlogHtml(p.category || '공식 블로그');
                         return '<a href="' + escapeBlogAttr(p.url) + '" target="_blank" rel="noopener noreferrer" class="blog-card">' +
                             '<div class="blog-img"><img src="' + escapeBlogAttr(thumb) + '" alt="" loading="lazy"></div>' +

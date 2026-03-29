@@ -165,13 +165,9 @@ router.get('/thumb', async (req, res) => {
   if (!enc || typeof enc !== 'string') {
     return res.status(400).send('missing u');
   }
-  let target;
-  try {
-    target = decodeURIComponent(enc);
-  } catch (e) {
-    return res.status(400).send('bad u');
-  }
-  const clean = sanitizeThumbUrl(target);
+  // Express query parser already decodes the outer querystring once.
+  // Decoding again breaks Naver thumbnail URLs that contain percent-encoded bytes.
+  const clean = sanitizeThumbUrl(enc);
   if (!clean) {
     return res.status(403).send('forbidden');
   }

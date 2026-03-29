@@ -17,6 +17,7 @@ const refundsRouter = require('./routes/refunds');
 const couponsRouter = require('./routes/coupons');
 const inquiriesRouter = require('./routes/inquiries');
 const addressesRouter = require('./routes/addresses');
+const blogNaverRouter = require('./routes/blogNaver');
 const db = require('./db');
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/refunds', refundsRouter);
 app.use('/api/coupons', couponsRouter);
 app.use('/api/inquiries', inquiriesRouter);
 app.use('/api/addresses', addressesRouter);
+app.use('/api/blog/naver', blogNaverRouter);
 app.use('/api/uploads', express.static(uploadsDir));
 app.use('/uploads', express.static(uploadsDir));
 

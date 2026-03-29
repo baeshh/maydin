@@ -2698,10 +2698,10 @@
         <section class="container" id="blog">
             <div class="section-header">
                 <h2>공식 블로그</h2>
-                <a href="#certifications" class="btn-pill">더보기 ➔</a>
+                <a href="https://blog.naver.com/romsplatform" target="_blank" rel="noopener noreferrer" class="btn-pill">더보기 ➔</a>
             </div>
             <div class="blog-grid" id="blogGrid">
-                <!-- API에서 로드 (관리자 페이지에서 작성한 글이 표시됩니다) -->
+                <!-- 네이버 공식 블로그 RSS(API)에서 로드 -->
             </div>
         </section>
     </main>
@@ -3644,35 +3644,49 @@
         trustCards.forEach(card => trustObserver.observe(card));
 
 
-        // 소식 상세 보기 (나중에 구현)
-        var blogPostsCache = [];
+        function escapeBlogHtml(s) {
+            if (s == null || s === '') return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+        function escapeBlogAttr(s) {
+            return escapeBlogHtml(s).replace(/'/g, '&#39;');
+        }
+        function formatNaverBlogDate(pubDate) {
+            if (!pubDate) return '';
+            var t = Date.parse(pubDate);
+            if (isNaN(t)) return '';
+            var d = new Date(t);
+            var y = d.getFullYear();
+            var mo = d.getMonth() + 1;
+            var day = d.getDate();
+            return y + '.' + (mo < 10 ? '0' : '') + mo + '.' + (day < 10 ? '0' : '') + day;
+        }
         async function loadBlogPosts() {
             var el = document.getElementById('blogGrid');
             if (!el) return;
             try {
-                var res = await fetch((window.API_BASE || '') + '/api/posts');
+                var res = await fetch((window.API_BASE || '') + '/api/blog/naver');
                 var data = await res.json();
                 if (data.success && data.posts && data.posts.length) {
-                    blogPostsCache = data.posts;
+                    var fallbackImg = 'assets/nature-research-section.png';
                     el.innerHTML = data.posts.slice(0, 4).map(function(p) {
-                        var d = (p.created_at || '').slice(0, 10).replace(/-/g, '.');
-                        return '<a href="javascript:void(0)" class="blog-card" onclick="openNewsDetail(' + p.id + ')">' +
-                            '<div class="blog-img"><img src="assets/nature-research-section.png" alt="블로그 썸네일"></div>' +
-                            '<div class="blog-text"><span class="tag">' + (p.type === 'blog' ? '블로그' : '소식') + '</span>' +
-                            '<h3>' + (p.title || '') + '</h3><span class="date">' + d + '</span></div></a>';
+                        var d = formatNaverBlogDate(p.pubDate);
+                        var thumb = (p.thumbnail && /^https?:\/\//i.test(p.thumbnail)) ? p.thumbnail : fallbackImg;
+                        var tag = escapeBlogHtml(p.category || '공식 블로그');
+                        return '<a href="' + escapeBlogAttr(p.url) + '" target="_blank" rel="noopener noreferrer" class="blog-card">' +
+                            '<div class="blog-img"><img src="' + escapeBlogAttr(thumb) + '" alt="" loading="lazy"></div>' +
+                            '<div class="blog-text"><span class="tag">' + tag + '</span>' +
+                            '<h3>' + escapeBlogHtml(p.title) + '</h3><span class="date">' + escapeBlogHtml(d) + '</span></div></a>';
                     }).join('');
                 } else {
-                    el.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">등록된 소식이 없습니다.</p>';
+                    el.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">블로그 글을 불러올 수 없습니다. <a href="https://blog.naver.com/romsplatform" target="_blank" rel="noopener noreferrer">네이버 블로그</a>에서 직접 확인해 주세요.</p>';
                 }
             } catch (e) {
-                el.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">소식을 불러올 수 없습니다.</p>';
-            }
-        }
-
-        function openNewsDetail(postId) {
-            var post = blogPostsCache.find(function(p) { return p.id == postId; });
-            if (post) {
-                alert(post.title + '\n\n' + (post.content || '내용 없음'));
+                el.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">블로그 연결에 실패했습니다. 잠시 후 다시 시도하거나 <a href="https://blog.naver.com/romsplatform" target="_blank" rel="noopener noreferrer">공식 블로그</a>를 이용해 주세요.</p>';
             }
         }
 

@@ -1,0 +1,16 @@
+{
+  "name": "MAYDIN",
+  "short_name": "MAYDIN",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#135B42",
+  "icons": [
+    {
+      "src": "/assets/meidin-logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

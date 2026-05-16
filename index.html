@@ -11,14 +11,20 @@
     <meta property="og:description" content="메이딘(MAYDIN)은 엄선한 원료와 과학적 근거를 바탕으로 한 프리미엄 건강기능식품 브랜드입니다. 제품 소개와 약사 전용몰 이용 안내를 제공합니다.">
     <meta property="og:image" content="https://maydin.co.kr/assets/nature-research-section.png">
     <meta property="og:url" content="https://maydin.co.kr/">
+    <meta property="og:site_name" content="MAYDIN">
     <meta property="og:locale" content="ko_KR">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="메이딘(MAYDIN) | 프리미엄 건강기능식품">
     <meta name="twitter:description" content="메이딘(MAYDIN)은 엄선한 원료와 과학적 근거를 바탕으로 한 프리미엄 건강기능식품 브랜드입니다. 제품 소개와 약사 전용몰 이용 안내를 제공합니다.">
     <meta name="twitter:image" content="https://maydin.co.kr/assets/nature-research-section.png">
     <meta name="twitter:domain" content="maydin.co.kr">
+    <meta name="application-name" content="MAYDIN">
     <meta name="robots" content="index,follow">
     <link rel="canonical" href="https://maydin.co.kr/">
+    <link rel="icon" type="image/png" href="/assets/meidin-logo.png">
+    <link rel="shortcut icon" type="image/png" href="/assets/meidin-logo.png">
+    <link rel="apple-touch-icon" href="/assets/meidin-logo.png">
+    <link rel="manifest" href="/site.webmanifest">
     <link rel="alternate" type="application/rss+xml" title="MAYDIN 공식 블로그 RSS" href="https://rss.blog.naver.com/romsplatform.xml">
     <script type="application/ld+json">
     {
@@ -115,64 +121,136 @@
         .user-name { font-weight: 700; color: var(--primary); font-size: 0.8rem; }
         .logout-btn { padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; border: 1px solid var(--border-color); background: transparent; cursor: pointer; }
         .logout-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .desktop-nav-panel { display: contents; }
+        .mobile-nav-panel { display: none; }
 
         /* 햄버거 버튼 (데스크톱에서 숨김) */
         .nav-hamburger {
             display: none;
-            flex-direction: column;
             justify-content: center;
-            gap: 6px;
+            align-items: center;
             width: 40px;
             height: 40px;
             padding: 0;
             background: none;
             border: none;
             cursor: pointer;
+            position: relative;
         }
         .nav-hamburger span {
             display: block;
-            width: 24px;
+            width: 22px;
             height: 2px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
             background: var(--text-dark);
             border-radius: 2px;
-            transition: 0.3s;
+            transform-origin: center;
+            transition: transform 0.22s ease, opacity 0.18s ease, background 0.18s ease;
         }
-        .nav-hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .nav-hamburger span:nth-child(1) { transform: translate(-50%, calc(-50% - 7px)); }
+        .nav-hamburger span:nth-child(2) { transform: translate(-50%, -50%); }
+        .nav-hamburger span:nth-child(3) { transform: translate(-50%, calc(-50% + 7px)); }
+        .nav-hamburger.active span:nth-child(1) { transform: translate(-50%, -50%) rotate(45deg); }
         .nav-hamburger.active span:nth-child(2) { opacity: 0; }
-        .nav-hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+        .nav-hamburger.active span:nth-child(3) { transform: translate(-50%, -50%) rotate(-45deg); }
 
         /* 모바일 네비게이션 */
         @media (max-width: 900px) {
-            header { height: auto; min-height: 72px; }
-            .nav-inner { flex-wrap: wrap; padding: 12px 16px; }
-            .logo img { height: 52px; }
+            header {
+                height: 64px;
+                min-height: 64px;
+                z-index: 1200;
+            }
+            .nav-inner {
+                flex-wrap: nowrap;
+                padding: 8px 20px;
+            }
+            .logo img { height: 44px; }
             .nav-hamburger {
                 display: flex;
                 margin-left: auto;
             }
-            .nav-menu,
-            .nav-utils {
+            .desktop-nav-panel { display: none; }
+            .mobile-nav-panel {
                 display: none;
-                width: 100%;
             }
-            .nav-menu.mobile-open,
-            .nav-utils.mobile-open {
+            .mobile-nav-panel.mobile-open {
                 display: flex;
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                flex-direction: column;
+                background: #fff;
+                z-index: 1190;
+                overflow: hidden;
             }
+            .nav-hamburger {
+                border: 1px solid rgba(19, 91, 66, 0.14);
+                border-radius: 14px;
+                background: #F7FAF8;
+                transition: background 0.2s ease, border-color 0.2s ease;
+            }
+            .nav-hamburger.active {
+                background: var(--primary);
+                border-color: var(--primary);
+            }
+            .nav-hamburger.active span { background: #fff; }
             .nav-menu {
                 flex-direction: column;
                 gap: 0;
-                padding: 20px 0;
+                padding: 10px 0 28px;
+                background: #fff;
                 border-top: 1px solid var(--border-color);
-                order: 3;
+                flex: 1 1 auto;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .nav-menu.mobile-open { animation: mobileNavIn 0.24s ease both; }
+            @keyframes mobileNavIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .nav-item {
                 width: 100%;
+                border-bottom: 1px solid var(--border-color);
             }
             .nav-menu a,
             .nav-item .nav-trigger {
-                display: block;
-                padding: 14px 0;
-                font-size: 1rem;
-                border-bottom: 1px solid rgba(0,0,0,0.05);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                min-height: 58px;
+                padding: 16px 24px;
+                border-radius: 0;
+                border-bottom: none;
+                color: var(--text-dark);
+                font-size: 1.05rem;
+                font-weight: 800;
+                letter-spacing: -0.01em;
+                text-align: left;
+            }
+            .nav-menu a:hover,
+            .nav-item .nav-trigger:hover {
+                color: var(--primary);
+                background: #fff;
+            }
+            .nav-item .nav-trigger::after {
+                content: '';
+                width: 9px;
+                height: 9px;
+                margin-left: 12px;
+                border: solid currentColor;
+                border-width: 0 2px 2px 0;
+                transform: rotate(45deg);
+                transition: transform 0.22s ease;
+            }
+            .nav-item.open .nav-trigger::after {
+                transform: rotate(225deg);
             }
             .nav-item .nav-dropdown {
                 position: static;
@@ -180,31 +258,74 @@
                 visibility: visible;
                 transform: none;
                 box-shadow: none;
+                max-height: 0;
+                overflow: hidden;
                 border: none;
-                padding: 0 0 0 16px;
-                margin-bottom: 8px;
+                border-radius: 0;
+                padding: 0;
+                margin: 0;
+                background: #F8FAF9;
+                transition: max-height 0.24s ease;
+            }
+            .nav-item.open .nav-dropdown {
+                max-height: 240px;
             }
             .nav-item .nav-dropdown a {
-                padding: 10px 0;
-                font-size: 0.9rem;
+                min-height: 46px;
+                padding: 13px 24px 13px 40px;
+                font-size: 0.94rem;
+                font-weight: 700;
+                color: var(--text-gray);
             }
             .nav-item:hover .nav-dropdown { transform: none; }
             .nav-utils {
                 flex-direction: column;
                 gap: 12px;
-                padding: 20px 0;
+                padding: 20px 24px calc(20px + env(safe-area-inset-bottom));
                 border-top: 1px solid var(--border-color);
-                order: 4;
-                width: 100%;
+                background: #fff;
+                flex: 0 0 auto;
             }
             .nav-utils a,
             .nav-utils button {
                 display: block;
                 text-align: center;
-                padding: 12px 16px;
+                padding: 14px 16px;
+                border-radius: 10px;
+                font-weight: 800;
             }
-            .nav-auth { flex-direction: column; }
+            .nav-auth {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                width: 100%;
+            }
             .nav-auth .auth-divider { display: none; }
+            .mobile-nav-panel .nav-utils .pharmacy-link,
+            .mobile-nav-panel .nav-utils a.pharmacy-link.highlight {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                background: var(--primary);
+                border-color: var(--primary);
+                color: #fff !important;
+                border-radius: 10px;
+                box-shadow: none;
+            }
+            .mobile-nav-panel .nav-utils .pharmacy-link:hover,
+            .mobile-nav-panel .nav-utils a.pharmacy-link.highlight:hover {
+                background: var(--primary-hover);
+                color: #fff !important;
+            }
+            .user-info {
+                width: 100%;
+                justify-content: space-between;
+                padding: 12px;
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                background: #fff;
+            }
         }
 
         @media (max-width: 768px) {
@@ -2412,6 +2533,68 @@
             }
         }
 
+        /* Responsive polish */
+        img, video, iframe { max-width: 100%; }
+        @media (max-width: 1024px) {
+            .container { padding: 72px 24px; }
+            .hero-section { padding: 88px 24px 0; }
+            .hero-banner { height: 540px; border-radius: 22px; }
+            .hero-slide { padding: 0 56px; }
+            .hero-content h2 { font-size: clamp(2.4rem, 6vw, 3.2rem); }
+            .about-section { gap: 36px; }
+            .about-text h2 { font-size: clamp(2rem, 4.5vw, 2.6rem); }
+            .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .section-header { align-items: flex-start; gap: 16px; }
+        }
+        @media (max-width: 768px) {
+            header { min-height: 64px; }
+            .nav-inner { padding: 8px 18px; }
+            .mobile-nav-panel { max-height: calc(100vh - 64px); }
+            .nav-menu { max-height: none; overflow-y: auto; }
+            .nav-utils { max-height: none; overflow: visible; }
+            .nav-utils a, .nav-utils button { width: 100%; min-height: 44px; }
+            .container { padding: 64px 18px; }
+            .hero-section { padding: 78px 14px 0; }
+            .hero-banner {
+                height: clamp(330px, 78vw, 390px);
+                min-height: 0;
+                border-radius: 18px;
+            }
+            .hero-slide { align-items: flex-end; padding: 0 22px 56px; background-position: center; }
+            .hero-slide::before { background: linear-gradient(to top, rgba(19,91,66,0.88) 0%, rgba(19,91,66,0.58) 52%, rgba(0,0,0,0.12) 100%); }
+            .hero-content h2 { margin-bottom: 22px; font-size: clamp(1.75rem, 7.8vw, 2.35rem); line-height: 1.22; }
+            .hero-content > span { font-size: 0.85rem; margin-bottom: 10px; }
+            .slider-dots { left: 22px; right: auto; bottom: 22px; }
+            .about-section, .signature-product { flex-direction: column; }
+            .about-text, .about-image, .sig-visual, .sig-info { width: 100%; }
+            .about-image { height: auto; aspect-ratio: 4 / 3; }
+            .section-header { flex-direction: column; margin-bottom: 26px; }
+            .section-header h2 { font-size: clamp(1.7rem, 7vw, 2.1rem); }
+            .product-grid, .blog-grid { grid-template-columns: 1fr; gap: 18px; }
+            .product-card:hover { transform: none; }
+            .product-visual { height: 220px; padding: 22px; }
+            .product-info { padding: 22px; }
+            .sig-visual { min-height: 280px; padding: 24px; }
+            .sig-info { padding: 28px 22px; }
+            .sig-main-actions, .product-actions { flex-direction: column; }
+            .sig-btn-primary, .sig-btn-secondary, .btn-pill { width: 100%; justify-content: center; }
+            .modal { width: calc(100vw - 28px); max-height: calc(100vh - 40px); overflow-y: auto; }
+        }
+        @media (max-width: 480px) {
+            .nav-inner { padding: 8px 14px; }
+            .logo img { height: 44px; }
+            .container { padding: 54px 16px; }
+            .hero-section { padding: 76px 10px 0; }
+            .hero-banner { height: clamp(310px, 82vw, 360px); min-height: 0; border-radius: 18px; }
+            .hero-slide { padding: 0 18px 54px; }
+            .hero-content h2 { font-size: clamp(1.55rem, 7.4vw, 2.05rem); }
+            .hero-content > span { font-size: 0.72rem; letter-spacing: 0.7px; }
+            .btn-pill { padding: 12px 18px; }
+            .product-visual { height: 190px; }
+            .footer-inner { padding: 0 16px; }
+            .footer-info p { font-size: 0.82rem; }
+        }
+
         /* 유틸리티 클래스 */
         .hidden { display: none !important; }
         .text-center { text-align: center; }
@@ -2423,42 +2606,74 @@
     <header>
         <div class="nav-inner">
             <a href="#" class="logo" onclick="scrollToTop(); return false;"><img src="assets/meidin-logo.png" alt="메이딘"></a>
-            <button type="button" class="nav-hamburger" id="navHamburger" onclick="toggleMobileNav()" aria-label="메뉴">
+            <button type="button" class="nav-hamburger" id="navHamburger" onclick="toggleMobileNav()" aria-label="메뉴" aria-expanded="false" aria-controls="mobileNavPanel">
                 <span></span><span></span><span></span>
             </button>
-            <div class="nav-menu" id="navMenu" onclick="if(event.target.closest('a')) closeMobileNav()">
-                <div class="nav-item">
-                    <button type="button" class="nav-trigger">회사소개</button>
-                    <div class="nav-dropdown">
-                        <a href="#about">메이딘 소개</a>
-                        <a href="#about">연혁</a>
-                        <a href="#certifications">협력사</a>
+            <div class="desktop-nav-panel">
+                <div class="nav-menu">
+                    <div class="nav-item">
+                        <button type="button" class="nav-trigger">회사소개</button>
+                        <div class="nav-dropdown">
+                            <a href="#about">메이딘 소개</a>
+                            <a href="#about">연혁</a>
+                            <a href="#certifications">협력사</a>
+                        </div>
+                    </div>
+                    <a href="#product">제품소개</a>
+                    <a href="#about">제품소개 영상</a>
+                    <a href="#blog">공식블로그</a>
+                    <div class="nav-item">
+                        <button type="button" class="nav-trigger">상담문의</button>
+                        <div class="nav-dropdown">
+                            <a href="javascript:void(0)" onclick="openKakaoChat()">메이딘 카톡 문의</a>
+                        </div>
                     </div>
                 </div>
-                <a href="#product">제품소개</a>
-                <a href="#about">제품소개 영상</a>
-                <a href="#blog">공식블로그</a>
-                <div class="nav-item">
-                    <button type="button" class="nav-trigger">상담문의</button>
-                    <div class="nav-dropdown">
-                        <a href="javascript:void(0)" onclick="openKakaoChat()">메이딘 카톡 문의</a>
+                <div class="nav-utils">
+                    <div class="nav-auth">
+                        <button type="button" onclick="openLoginModal()">로그인</button>
+                        <span class="auth-divider">|</span>
+                        <button type="button" onclick="openRegisterModal()">회원가입</button>
                     </div>
-                </div>
-            </div>
-            <div class="nav-utils" id="navUtils" onclick="if(event.target.closest('a') || event.target.closest('button')) closeMobileNav()">
-                <div class="nav-auth" id="navAuth">
-                    <button type="button" id="loginNavBtn" onclick="openLoginModal()">로그인</button>
-                    <span class="auth-divider">|</span>
-                    <button type="button" onclick="openRegisterModal()">회원가입</button>
-                </div>
-                <a href="pharmacy.html" class="pharmacy-link highlight" id="pharmacyNavLink" onclick="handlePharmacyNav(event)">약사전용몰</a>
-                <div class="user-info hidden" id="userInfo">
-                    <span class="user-name" id="userName"></span>
-                    <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+                    <a href="pharmacy.html" class="pharmacy-link highlight" onclick="handlePharmacyNav(event)">약사전용몰</a>
                 </div>
             </div>
         </div>
     </header>
+
+    <div class="mobile-nav-panel" id="mobileNavPanel">
+        <div class="nav-menu" id="navMenu" onclick="if(event.target.closest('a')) closeMobileNav()">
+            <div class="nav-item">
+                <button type="button" class="nav-trigger" onclick="toggleMobileAccordion(event)" aria-expanded="false">회사소개</button>
+                <div class="nav-dropdown">
+                    <a href="#about">메이딘 소개</a>
+                    <a href="#about">연혁</a>
+                    <a href="#certifications">협력사</a>
+                </div>
+            </div>
+            <a href="#product">제품소개</a>
+            <a href="#about">제품소개 영상</a>
+            <a href="#blog">공식블로그</a>
+            <div class="nav-item">
+                <button type="button" class="nav-trigger" onclick="toggleMobileAccordion(event)" aria-expanded="false">상담문의</button>
+                <div class="nav-dropdown">
+                    <a href="javascript:void(0)" onclick="openKakaoChat()">메이딘 카톡 문의</a>
+                </div>
+            </div>
+        </div>
+        <div class="nav-utils" id="navUtils" onclick="if(event.target.closest('a') || event.target.closest('button')) closeMobileNav()">
+            <div class="nav-auth" id="navAuth">
+                <button type="button" id="loginNavBtn" onclick="openLoginModal()">로그인</button>
+                <span class="auth-divider">|</span>
+                <button type="button" onclick="openRegisterModal()">회원가입</button>
+            </div>
+            <a href="pharmacy.html" class="pharmacy-link highlight" id="pharmacyNavLink" onclick="handlePharmacyNav(event)">약사전용몰</a>
+            <div class="user-info hidden" id="userInfo">
+                <span class="user-name" id="userName"></span>
+                <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 로그인 모달 -->
     <div class="modal-overlay" id="loginModal" onclick="closeModalOnOverlay(event)">
@@ -3106,7 +3321,7 @@
         }
         function closeTermsModal() {
             document.getElementById('termsModal').classList.remove('active');
-            document.body.style.overflow = '';
+            document.body.style.overflow = document.querySelector('.modal-overlay.active') ? 'hidden' : '';
         }
         function closeTermsModalOnOverlay(event) {
             if (event.target.id === 'termsModal') closeTermsModal();
@@ -3148,8 +3363,11 @@
                     localStorage.setItem('token', data.token);
                     updateNavAfterLogin();
                     closeLoginModal();
-                    if (window._redirectAfterLogin) {
-                        window.location.href = window._redirectAfterLogin;
+                    var storedRedirect = sessionStorage.getItem('maydinLoginRedirect');
+                    if (storedRedirect) sessionStorage.removeItem('maydinLoginRedirect');
+                    var redirectAfterLogin = window._redirectAfterLogin || storedRedirect;
+                    if (redirectAfterLogin) {
+                        window.location.href = redirectAfterLogin;
                         window._redirectAfterLogin = null;
                     } else {
                         showPharmacySection();
@@ -3456,6 +3674,12 @@
                 showPharmacySection();
             } else {
                 updateNavAfterLogout();
+                var params = new URLSearchParams(window.location.search);
+                var loginRedirect = sessionStorage.getItem('maydinLoginRedirect');
+                if (params.get('login') === '1' || loginRedirect) {
+                    window._redirectAfterLogin = loginRedirect || 'pharmacy.html';
+                    openLoginModal();
+                }
             }
             // 히어로 4장 슬라이더: 자동 재생 + 점 클릭
             (function() {
@@ -3569,7 +3793,7 @@
         // 제품 상세 모달 닫기
         function closeProductDetail() {
             document.getElementById('productDetailModal').classList.remove('active');
-            document.body.style.overflow = '';
+            document.body.style.overflow = document.querySelector('.modal-overlay.active') ? 'hidden' : '';
         }
 
         // 모달 오버레이 클릭 시 닫기
@@ -3626,23 +3850,49 @@
         }
 
         function toggleMobileNav() {
+            var panel = document.getElementById('mobileNavPanel');
             var menu = document.getElementById('navMenu');
             var utils = document.getElementById('navUtils');
             var ham = document.getElementById('navHamburger');
-            if (!menu || !utils || !ham) return;
+            if (!panel || !menu || !utils || !ham) return;
+            panel.classList.toggle('mobile-open');
             menu.classList.toggle('mobile-open');
             utils.classList.toggle('mobile-open');
             ham.classList.toggle('active');
+            var isOpen = panel.classList.contains('mobile-open');
+            ham.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+        }
+
+        function toggleMobileAccordion(event) {
+            if (!window.matchMedia('(max-width: 900px)').matches) return;
+            event.preventDefault();
+            event.stopPropagation();
+            var trigger = event.currentTarget;
+            var item = trigger.closest('.nav-item');
+            if (!item) return;
+            var isOpen = item.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         }
 
         function closeMobileNav() {
+            var panel = document.getElementById('mobileNavPanel');
             var menu = document.getElementById('navMenu');
             var utils = document.getElementById('navUtils');
             var ham = document.getElementById('navHamburger');
+            if (panel) panel.classList.remove('mobile-open');
             if (menu) menu.classList.remove('mobile-open');
             if (utils) utils.classList.remove('mobile-open');
-            if (ham) ham.classList.remove('active');
-            document.body.style.overflow = '';
+            document.querySelectorAll('.nav-item.open').forEach(function(item) {
+                item.classList.remove('open');
+                var trigger = item.querySelector('.nav-trigger');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            });
+            if (ham) {
+                ham.classList.remove('active');
+                ham.setAttribute('aria-expanded', 'false');
+            }
+            document.body.style.overflow = document.querySelector('.modal-overlay.active') ? 'hidden' : '';
         }
 
         // 인증 카드 스크롤 애니메이션

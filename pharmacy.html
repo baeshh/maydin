@@ -17,7 +17,7 @@
     <meta name="twitter:description" content="MAYDIN 약사 전용 온라인 몰에서 건강기능식품을 확인하고 주문할 수 있습니다. 면허 및 사업자 확인 후 안전하게 이용하세요.">
     <meta name="twitter:image" content="https://maydin.co.kr/assets/sensibee-rendering.png">
     <meta name="twitter:domain" content="maydin.co.kr">
-    <meta name="robots" content="index,follow">
+    <meta name="robots" content="noindex,nofollow,noarchive">
     <link rel="canonical" href="https://maydin.co.kr/pharmacy.html">
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -413,6 +413,69 @@
         @media (min-width: 769px) {
             .mobile-only { display: none !important; }
         }
+
+        /* Responsive polish */
+        img { max-width: 100%; height: auto; }
+        @media (max-width: 1024px) {
+            .container { padding: 0 24px; }
+            .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .hero-banner { gap: 28px; padding: 48px; }
+        }
+        @media (max-width: 768px) {
+            .mobile-wrap {
+                width: 100%;
+                max-width: 480px;
+                margin: 0 auto;
+                background: var(--white);
+                min-height: 100vh;
+            }
+            .mobile-header {
+                min-height: 56px;
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+            }
+            .pharmacy-mobile-main { padding-bottom: 28px; }
+            .pharmacy-mobile-main .hero-banner {
+                align-items: stretch;
+                gap: 18px;
+                margin: 16px;
+                padding: 24px 20px;
+            }
+            .pharmacy-mobile-main .hero-content h2 {
+                font-size: clamp(1.35rem, 6vw, 1.75rem);
+                line-height: 1.25;
+                word-break: keep-all;
+            }
+            .pharmacy-mobile-main .hero-content p { margin-bottom: 12px; }
+            .pharmacy-mobile-main .hero-image {
+                aspect-ratio: 4 / 3;
+                height: auto;
+                min-height: 120px;
+            }
+            .pharmacy-mobile-main .product-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+            .pharmacy-mobile-main .product-card { border-radius: 16px; }
+            .pharmacy-mobile-main .product-img { aspect-ratio: 1 / 1; height: auto; }
+            .pharmacy-mobile-main .product-info { padding: 14px; }
+            .pharmacy-mobile-main .product-name {
+                white-space: normal;
+                min-height: 2.8em;
+            }
+            .pharmacy-mobile-main .product-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .pharmacy-mobile-main .product-actions button { min-height: 40px; }
+        }
+        @media (max-width: 420px) {
+            .pharmacy-mobile-main .hero-banner { margin: 12px; padding: 22px 18px; }
+            .pharmacy-mobile-main .product-section { margin: 22px 12px; }
+            .pharmacy-mobile-main .product-grid { grid-template-columns: 1fr; }
+            .pharmacy-mobile-main .product-img { aspect-ratio: 16 / 10; }
+        }
     </style>
 </head>
 <body>
@@ -495,6 +558,11 @@
             if (currentUser && !token) {
                 currentUser = null;
                 localStorage.removeItem('currentUser');
+            }
+            if (!currentUser || !token) {
+                sessionStorage.setItem('maydinLoginRedirect', 'pharmacy.html');
+                window.location.replace('index.html?login=1');
+                return;
             }
             try {
                 var res = await fetch((window.API_BASE || '') + '/api/products');
